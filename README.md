@@ -1,40 +1,81 @@
-# Sparrow — Cleaning Platform booking flow (prototype)
+# Sparrow — cleaning services platform (prototype)
 
-Interactive prototype of the customer booking flow for the cleaning services
-platform: service selection → space details → schedule → address → payment →
-confirmation with automatic professional matching.
+Interactive prototype of the customer website plus all three dashboards, built
+against the client's three specification documents.
 
-**Live demo:** https://anirudhatalmale6-alt.github.io/cleaning-platform-booking-demo/
+**Live:** https://anirudhatalmale6-alt.github.io/cleaning-platform-booking-demo/
 
-## What is real in this prototype
+| Surface | File | Built from |
+|---|---|---|
+| Website + booking flow | `index.html` | *Customer Dashboards.docx* (booking, checkout, confirmation) |
+| Customer dashboard | `dashboard.html` | *Customer Dashboards.docx* |
+| Cleaner application + dashboard | `cleaner.html` | *Cleaner dashboard.docx* (+ additions, see below) |
+| Admin dashboard | `admin.html` | *Admin Dashboards.pdf* |
 
-- **Live pricing engine.** Base rate + per-bedroom/per-bathroom + extras +
-  frequency discount + service fee, recalculated on every interaction.
-  All rates live in one `CFG` object (`index.html`) — in production this is
-  served by the API and edited from the admin dashboard, no redeploy.
-- **Duration estimation** derived from the same rules, used to size the booking
-  window and the professional's payout.
-- **Promo codes** (`SPARROW20`, `WELCOME50`) applied against the post-discount
-  subtotal, with the service fee recomputed on the net.
-- **Availability-aware slots** — slots show how many professionals are free and
-  disable when full.
-- **Guest checkout** toggle, saved-address style fields, four payment rails
-  (card / wallet / instant EFT / cash) and escrow-style capture-on-completion.
-- **Responsive**: sticky summary panel on desktop, sticky price bar on mobile
-  that drives the whole flow.
+Shared design system in `assets/app.css`, shared config/data/price-engine in
+`assets/app.js`. All four surfaces read the same booking records, so a booking
+confirmed in the admin dashboard is the same object the customer and the
+cleaner see.
+
+## Pricing — structure from the spec, numbers still open
+
+The spec fixes the *structure*; the client has not yet given the rates. Every
+number lives in `CFG` at the top of `assets/app.js`, so real rates drop in
+without touching a single screen.
+
+- **Room-based services** — `rooms × 40 min → hours × hourly rate`, floored at a
+  2 hour minimum. 40 minutes per room is taken verbatim from the spec.
+- **Office cleaning** — unit size band × number of units.
+- **Flat-rate services** — gardening, windows, pool, laundry.
+- **Checklist items** add both money and time, so the duration estimate stays
+  honest and the cleaner is paid for a real window.
+- **Checkout lines** follow the spec exactly: Service fee, Extras, Discount,
+  VAT, Total. VAT is 15% added on top, configurable and switchable.
+
+`priceBooking()` is the single price engine. The booking flow, the customer
+dashboard, the cleaner payout screen and the admin quote all call it, so they
+cannot disagree about what a job costs.
+
+## Assignment model
+
+The admin spec says the admin confirms bookings and assigns workers, so that is
+what is built: checkout leaves a booking as **awaiting confirmation** with no
+cleaner attached. The admin confirm-and-assign screen shortlists only cleaners
+who do that kind of work *and* cover that city, flags the best match and the
+customer's favourite, but never forces the choice.
+
+The cleaner dashboard also carries a **Job offers** screen showing the
+accept/decline model, so both approaches can be compared before deciding.
+
+## Named additions — not in the client's documents
+
+These were built because the product does not work without them. They are
+flagged here rather than presented as if they were specified:
+
+- **Everything a cleaner sees after approval** — the cleaner document covers
+  only the application form. Job list, checklist, availability, earnings,
+  payouts and ratings are my design.
+- **Ratings and reviews** — favourite professionals and cleaner ratings both
+  depend on a review loop that no document describes.
+- The admin document lists "Indoor cleaner" twice under *Upload new worker*;
+  the second is read as **Outdoor**.
 
 ## What is mocked
 
-Availability, the matched professional, and the confirmation reference are
-generated client-side. There is no backend in this prototype — it exists so the
-flow, the pricing rules and the visual direction can be agreed before the real
-build starts.
+No backend. Availability, the professional shortlist and reference numbers are
+generated client-side and deterministically — no `Math.random()`, so the demo
+behaves identically on every run. Maps are drawn, not embedded.
 
-## Testing
-
-`shoot.py` drives the full flow with Playwright (desktop and mobile), asserts
-the step gating and captures screenshots into `shots/`.
+## Tests
 
 ```
-python3 shoot.py
+python3 run_tests.py          # all three suites
+python3 test_booking.py       # booking flow + pricing maths
+python3 test_cleaner.py       # application validation + cleaner dashboard
+python3 test_admin.py         # confirm/assign, approvals, search, worker upload
 ```
+
+Playwright drives the real pages in desktop and mobile viewports. The pricing
+assertions recompute every total independently in Python from the spec rules
+and compare against what the page renders, so a drift in either direction
+fails. Screenshots land in `shots/`.

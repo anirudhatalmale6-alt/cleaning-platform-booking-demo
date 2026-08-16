@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparrow — Customer dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .hero-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .hero-card .hc-pts{margin-left:auto;text-align:right}
+  .hero-card .hc-pts .p-v{font-family:'Fraunces',serif;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+  .hero-card .hc-pts .p-l{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-45);margin-top:4px}
+  .tier{display:inline-flex;align-items:center;gap:6px;background:var(--gold-soft);color:#6d5504;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+  .split{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+  @media(max-width:1000px){.split{grid-template-columns:1fr}}
+  .offer{border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:14px 15px;display:flex;gap:12px;align-items:flex-start;background:var(--paper);transition:.2s var(--ease)}
+  .offer:hover{border-color:var(--moss)}
+  .offer .o-t{font-weight:600;font-size:14px}
+  .offer .o-s{font-size:12.5px;color:var(--ink-45)}
+  .map{height:170px;border-radius:var(--radius);border:1px solid var(--ink-08);position:relative;overflow:hidden;
+       background:
+         linear-gradient(rgba(44,85,72,.08),rgba(44,85,72,.08)),
+         repeating-linear-gradient(0deg,transparent 0 27px,rgba(21,32,25,.07) 27px 28px),
+         repeating-linear-gradient(90deg,transparent 0 27px,rgba(21,32,25,.07) 27px 28px),
+         var(--paper)}
+  .map::before{content:"";position:absolute;left:0;right:0;top:44%;height:9px;background:rgba(21,32,25,.10)}
+  .map::after{content:"";position:absolute;top:0;bottom:0;left:38%;width:11px;background:rgba(21,32,25,.10)}
+  .map .marker{position:absolute;left:38%;top:44%;transform:translate(-50%,-100%);color:var(--clay);z-index:2}
+  .map .mlabel{position:absolute;left:12px;bottom:12px;background:var(--paper-2);border:1px solid var(--ink-08);border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:500;z-index:2}
+  .fav-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(max-width:700px){.fav-grid{grid-template-columns:1fr}}
+  .fav{border:1px solid var(--ink-08);border-radius:var(--radius);padding:15px;background:var(--paper-2)}
+  .fav .f-top{display:flex;gap:12px;align-items:center;margin-bottom:11px}
+  .langs{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .lang{font-size:11.5px;background:var(--ink-08);color:var(--ink-70);padding:2px 8px;border-radius:999px}
+  .heart-btn{margin-left:auto;border:0;background:transparent;cursor:pointer;color:var(--ink-14);padding:2px;line-height:0;transition:.2s var(--ease)}
+  .heart-btn.on{color:var(--clay)}
+  .heart-btn.on svg{fill:var(--clay)}
+  .heart-btn:hover{transform:scale(1.12)}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:8px 16px;font-size:14px}
+  @media(max-width:520px){.kv{grid-template-columns:1fr;gap:2px 0}.kv dt{margin-top:9px}}
+  .kv dt{color:var(--ink-45);font-size:13px}
+  .kv dd{margin:0;font-weight:500}
+</style>
+</head>
+<body>
+
+<main class="wrap shell">
+  <aside class="card side"><div class="side-nav" id="sideNav"></div></aside>
+  <section id="view"></section>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+mountChrome({
+  page:'dashboard.html', role:'Customer',
+  links:[['dashboard.html','Dashboard'],['index.html','Book a service'],['dashboard.html','Support']]
+});
+
+const C = DB.customer;
+const myBookings = () => DB.bookings.filter(b => b.cust === 'cu1');
+const upcoming   = () => myBookings().filter(b => ['pending','confirmed','enroute','inprogress'].includes(b.status))
+                                     .sort((a,b) => a.date.localeCompare(b.date));
+const past       = () => myBookings().filter(b => ['completed','cancelled'].includes(b.status))
+                                     .sort((a,b) => b.date.localeCompare(a.date));
+
+const NAV = [
+  { id:'overview',  label:'Overview',       icon:'grid' },
+  { id:'bookings',  label:'My bookings',    icon:'cal',  badge: upcoming().length },
+  { id:'favourites',label:'Favourites',     icon:'heart' },
+  { id:'addresses', label:'My addresses',   icon:'pin' },
+  { id:'payments',  label:'Payment methods',icon:'card' },
+  { id:'offers',    label:'Offers & rewards',icon:'gift' },
+  { id:'notifs',    label:'Notifications',  icon:'bell', badge: DB.notifications.length },
+  { id:'profile',   label:'Profile',        icon:'user' },
+  { id:'support',   label:'Contact support',icon:'chat' }
+];
+
+let view = 'overview', detailId = null;
+
+function go(v, id){
+  view = v; detailId = id || null;
+  sideNav(NAV, v === 'detail' ? 'bookings' : v, go);
+  render();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ---------- reusable fragments ---------- */
+function bookingLine(b){
+  const q = priceBooking(b), cl = cleaner(b.cleaner), ad = address(b.addr);
+  return { q, cl, ad, when:`${fmtDate(b.date)} · ${b.time}` };
+}
+
+function upcomingCard(b){
+  const { q, cl, ad } = bookingLine(b);
+  return `<div class="card panel">
+    <div class="sect-head" style="margin-bottom:12px">
+      <div>
+        <div class="t-sub">Next booking · ${b.id}</div>
+        <h2 style="margin-top:2px">${q.serviceName}</h2>
+      </div>
+      <span class="sh-act">${statusPill(b.status)}</span>
+    </div>
+    <div class="kv" style="margin-bottom:16px">
+      <dt>Date</dt><dd>${fmtDateLong(b.date)}</dd>
+      <dt>Time</dt><dd>${b.time} · ${q.hoursLabel} on site</dd>
+      <dt>Address</dt><dd>${ad.line}, ${ad.suburb}</dd>
+      <dt>Professional</dt><dd>${cl ? `${cl.name} ${cl.surname}` : '<span style="color:var(--ink-45)">Not assigned yet — admin is confirming</span>'}</dd>
+      <dt>Estimated arrival</dt><dd>${b.eta ? b.eta : '—'}</dd>
+      <dt>Total</dt><dd class="mono">${money(q.total)} <span class="t-sub">incl. VAT</span></dd>
+    </div>
+    <div class="rc-act">
+      <button class="btn btn-primary sm" onclick="go('detail','${b.id}')">View booking</button>
+      <button class="btn btn-outline sm" onclick="reschedule('${b.id}')">Reschedule</button>
+      <button class="btn btn-danger sm" onclick="cancelBooking('${b.id}')">Cancel</button>
+      <a class="btn btn-ghost sm" href="index.html">Make a booking</a>
+    </div>
+  </div>`;
+}
+
+/* ---------- views ---------- */
+const VIEWS = {
+
+overview(){
+  const next = upcoming()[0];
+  const recent = past().slice(0, 3);
+  return `
+  <div class="page-head">
+    <h1>Welcome back, ${C.name}</h1>
+    <p>Member since ${C.joined} · ${C.memberNo}</p>
+  </div>
+
+  <div class="card panel hero-card" style="margin-bottom:18px">
+    <div class="avatar lg">${C.initials}</div>
+    <div>
+      <div style="font-family:'Fraunces',serif;font-size:22px">${C.name} ${C.surname}</div>
+      <div class="t-sub">${C.email} · ${C.phone}</div>
+      <div style="margin-top:7px"><span class="tier">${ico('star',12,2.4)} ${C.tier} member</span></div>
+    </div>
+    <div class="hc-pts">
+      <div class="p-v mono">${C.points.toLocaleString()}</div>
+      <div class="p-l">Loyalty points</div>
+    </div>
+  </div>
+
+  <div class="sect-head"><h2>Quick actions</h2></div>
+  <div class="qa-grid" style="margin-bottom:24px">
+    <a class="qa" href="index.html">${ico('plus',22)}<div><div class="q-t">Book a service</div><div class="q-s">Indoor or outdoor, 5 steps</div></div></a>
+    <button class="qa" onclick="go('bookings')">${ico('cal',22)}<div><div class="q-t">View my bookings</div><div class="q-s">${upcoming().length} upcoming</div></div></button>
+    <button class="qa" onclick="go('favourites')">${ico('heart',22)}<div><div class="q-t">Favourite professionals</div><div class="q-s">${DB.cleaners.filter(c=>c.fav).length} saved</div></div></button>
+    <button class="qa" onclick="go('payments')">${ico('card',22)}<div><div class="q-t">Payment methods</div><div class="q-s">${DB.cards.length} cards saved</div></div></button>
+    <button class="qa" onclick="go('addresses')">${ico('pin',22)}<div><div class="q-t">My addresses</div><div class="q-s">${DB.addresses.length} saved</div></div></button>
+    <button class="qa" onclick="go('support')">${ico('chat',22)}<div><div class="q-t">Contact support</div><div class="q-s">Typically replies in 8 min</div></div></button>
+  </div>
+
+  <div class="split">
+    <div>
+      ${next ? upcomingCard(next) : `<div class="card panel"><div class="empty">${ico('cal',34)}<div class="e-t">No upcoming bookings</div><div>Book a service and it will show up here.</div><div style="margin-top:14px"><a class="btn btn-primary sm" href="index.html">Book a service</a></div></div></div>`}
+
+      <div class="sect-head" style="margin-top:24px"><h2>Recent activity</h2>
+        <span class="sh-act"><button class="pill-btn sm" onclick="go('bookings')">See all</button></span></div>
+      <div class="rows">
+        ${recent.map(b => {
+          const { q, cl } = bookingLine(b);
+          return `<div class="row-card">
+            <div class="avatar sm ${cl ? cl.tone : 'mute'}">${cl ? cl.initials : '—'}</div>
+            <div class="rc-main">
+              <div class="rc-t">${q.serviceName} · ${money(q.total)}</div>
+              <div class="rc-s">${fmtDate(b.date)} · ${b.id} ${b.rated ? `· you rated <span class="stars">${starRow(b.rated)}</span>` : ''}</div>
+            </div>
+            ${statusPill(b.status)}
+            <button class="btn btn-outline sm" onclick="go('detail','${b.id}')">Details</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div>
+      <div class="card panel" style="margin-bottom:16px">
+        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Special offers</h2></div>
+        <div class="rows">
+          ${DB.offers.map(o => `<div class="offer">${ico(o.kind==='referral'?'users':'gift',20)}
+            <div><div class="o-t">${o.t}</div><div class="o-s">${o.s}</div></div></div>`).join('')}
+        </div>
+      </div>
+      <div class="card panel">
+        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Notifications</h2></div>
+        <div class="rows">
+          ${DB.notifications.slice(0,4).map(n => `<div class="offer" style="border-color:var(--ink-08)">
+            <span class="pill ${n.kind}" style="padding:4px;border-radius:50%"></span>
+            <div><div class="o-t">${n.t}</div><div class="o-s">${n.s}</div></div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+},
+
+bookings(){
+  const up = upcoming(), hist = past();
+  return `
+  <div class="page-head"><h1>My bookings</h1><p>Everything upcoming, and everything you have booked before.</p></div>
+
+  <div class="card panel" style="margin-bottom:20px">
+    <div class="sect-head" style="margin-bottom:10px">
+      <div><h2 style="font-size:20px">Make a booking</h2><div class="sh-sub">Pick a service and the flow does the rest.</div></div>
+    </div>
+    <div class="qa-grid">
+      ${CFG.services.slice(0,6).map(s => `<a class="qa" href="index.html?service=${s.id}">${ico(s.icon,22)}
+        <div><div class="q-t">${s.name}</div><div class="q-s">${s.group === 'outdoor' ? 'Outdoor' : 'Indoor'}</div></div></a>`).join('')}
+    </div>
+  </div>
+
+  <div class="sect-head"><h2>Upcoming bookings</h2><span class="sh-sub">${up.length} booked</span></div>
+  <div class="tbl-wrap" style="margin-bottom:26px">
+    <table class="tbl">
+      <thead><tr><th>Booking no.</th><th>Date</th><th>Time</th><th>Address</th><th>Professional</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      ${up.length ? up.map(b => {
+        const { cl, ad } = bookingLine(b);
+        return `<tr>
+          <td class="t-strong mono">${b.id}</td>
+          <td>${fmtDate(b.date)}</td>
+          <td class="mono">${b.time}</td>
+          <td>${ad.label}<div class="t-sub">${ad.suburb}</div></td>
+          <td>${cl ? `<div class="who"><span class="avatar sm ${cl.tone}">${cl.initials}</span><span class="w-n">${cl.name} ${cl.surname}</span></div>` : '<span class="t-sub">Not assigned</span>'}</td>
+          <td>${statusPill(b.status)}</td>
+          <td class="num">
+            <button class="btn btn-outline sm" onclick="go('detail','${b.id}')">View</button>
+            <button class="btn btn-ghost sm" onclick="reschedule('${b.id}')">Reschedule</button>
+            <button class="btn btn-ghost sm" style="color:var(--clay)" onclick="cancelBooking('${b.id}')">Cancel</button>
+          </td></tr>`;
+      }).join('') : `<tr><td colspan="7"><div class="empty">${ico('cal',30)}<div class="e-t">Nothing booked yet</div></div></td></tr>`}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sect-head"><h2>Booking history</h2></div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Booking no.</th><th>Date</th><th>Service</th><th>Professional</th><th>Status</th><th class="num">Total</th><th></th></tr></thead>
+      <tbody>
+      ${hist.map(b => {
+        const { q, cl } = bookingLine(b);
+        return `<tr>
+          <td class="t-strong mono">${b.id}</td>
+          <td>${fmtDate(b.date)}</td>
+          <td>${q.serviceName}${b.rated ? `<div class="stars">${starRow(b.rated)}</div>` : ''}</td>
+          <td>${cl ? `${cl.name} ${cl.surname}` : '<span class="t-sub">—</span>'}</td>
+          <td>${statusPill(b.status)}</td>
+          <td class="num">${b.status === 'cancelled' ? '<span class="t-sub">—</span>' : money(q.total)}</td>
+          <td class="num">
+            <button class="btn btn-outline sm" onclick="go('detail','${b.id}')">View</button>
+            ${b.status === 'completed' && !b.rated ? `<button class="btn btn-primary sm" onclick="rate('${b.id}')">Rate</button>` : ''}
+          </td></tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+},
+
+detail(){
+  const b = DB.bookings.find(x => x.id === detailId);
+  if(!b) return VIEWS.bookings();
+  const { q, cl, ad } = bookingLine(b);
+  const items = (b.extras || []).map(id => CFG.checklist.find(c => c.id === id)).filter(Boolean);
+
+  return `
+  <div class="page-head" style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+    <div>
+      <button class="btn btn-ghost sm" style="padding-left:0;margin-bottom:6px" onclick="go('bookings')">← All bookings</button>
+      <h1>${q.serviceName}</h1>
+      <p>Booking ${b.id} · placed for ${fmtDateLong(b.date)}</p>
+    </div>
+    <span style="margin-left:auto">${statusPill(b.status)}</span>
+  </div>
+
+  <div class="split">
+    <div>
+      <div class="card panel" style="margin-bottom:18px">
+        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:20px">Service information</h2></div>
+        <dl class="kv">
+          <dt>Service name</dt><dd>${q.serviceName}</dd>
+          <dt>Booking ID</dt><dd class="mono">${b.id}</dd>
+          <dt>Date</dt><dd>${fmtDateLong(b.date)}</dd>
+          <dt>Time</dt><dd class="mono">${b.time}</dd>
+          <dt>Duration</dt><dd>${q.hoursLabel}${q.model === 'rooms' ? ` · ${b.rooms} rooms × ${CFG.minutesPerRoom} min` : ''}</dd>
+          <dt>Frequency</dt><dd>${q.freqLabel}</dd>
+          <dt>Professional</dt><dd>${cl ? `${cl.name} ${cl.surname}` : 'Awaiting assignment'}</dd>
+        </dl>
+        ${items.length ? `<div class="fieldset-t">Checklist</div>
+          <div class="chips">${items.map(i => `<span class="chip on">${i.name}</span>`).join('')}</div>` : ''}
+      </div>
+
+      ${cl ? `<div class="card panel" style="margin-bottom:18px">
+        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:20px">Assigned professional</h2></div>
+        <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div class="avatar lg ${cl.tone}">${cl.initials}</div>
+          <div style="flex:1;min-width:190px">
+            <div style="font-family:'Fraunces',serif;font-size:21px">${cl.name} ${cl.surname}</div>
+            <div class="stars">${starRow(cl.rating)} <span class="t-sub" style="letter-spacing:0">${cl.rating.toFixed(2)} · ${cl.jobs} cleans</span></div>
+            <div class="t-sub" style="margin-top:4px">${cl.years} years experience</div>
+            <div class="langs">${cl.langs.map(l => `<span class="lang">${l}</span>`).join('')}</div>
+          </div>
+          <div style="display:grid;gap:8px">
+            <button class="btn ${cl.fav ? 'btn-outline' : 'btn-primary'} sm" onclick="toggleFav('${cl.id}')">
+              ${cl.fav ? 'Favourited ♥' : 'Favourite professional'}
+            </button>
+            <button class="btn btn-outline sm" onclick="toast('Chat opens here in the real build','chat')">Message</button>
+          </div>
+        </div>
+      </div>` : `<div class="card panel" style="margin-bottom:18px">
+        <div class="empty" style="padding:28px 16px">${ico('clock',30)}
+          <div class="e-t">No professional assigned yet</div>
+          <div>An admin confirms this booking and assigns a cleaner from your area. You will be notified the moment that happens.</div>
+        </div></div>`}
+
+      <div class="card panel">
+        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:20px">Address</h2></div>
+        <dl class="kv" style="margin-bottom:14px">
+          <dt>Property address</dt><dd>${ad.line}<br>${ad.suburb}, ${ad.city}</dd>
+          <dt>Access instructions</dt><dd>${ad.notes}</dd>
+        </dl>
+        <div class="map">
+          <span class="marker">${ico('pin',30,2)}</span>
+          <span class="mlabel">${ad.label} · ${ad.suburb}</span>
+        </div>
+        <div class="note">${ico('info',17,2)}<span>The live map is a Google Maps embed in the real build. It is drawn here so the layout is honest about the space it takes.</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card panel" style="margin-bottom:16px">
+        <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Payment summary</h2></div>
+        <div class="li"><span>Service fee</span><span class="v">${money(q.base)}</span></div>
+        <div class="li"><span>Extras</span><span class="v">${money(q.extras)}</span></div>
+        <div class="li ${q.discount ? 'disc' : ''}"><span>Discount</span><span class="v">${q.discount ? '−' + money(q.discount) : money(0)}</span></div>
+        <div class="li"><span>Platform &amp; insurance</span><span class="v">${money(q.fee)}</span></div>
+        <div class="li"><span>VAT (${(CFG.vatRate*100).toFixed(0)}%)</span><span class="v">${money(q.vat)}</span></div>
+        <div class="rule"></div>
+        <div class="total"><span class="t-l">Total</span><span class="t-v mono">${money(q.total)}</span></div>
+        <div style="margin-top:14px;display:grid;gap:8px">
+          <button class="btn btn-outline sm" onclick="toast('Invoice PDF generated','doc')">Request invoice</button>
+          ${['pending','confirmed'].includes(b.status) ? `
+            <button class="btn btn-outline sm" onclick="reschedule('${b.id}')">Reschedule</button>
+            <button class="btn btn-danger sm" onclick="cancelBooking('${b.id}')">Cancel booking</button>` : ''}
+          ${b.status === 'completed' && !b.rated ? `<button class="btn btn-primary sm" onclick="rate('${b.id}')">Rate this clean</button>` : ''}
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Progress</h2></div>
+        <div class="timeline">
+          ${['Booking placed','Confirmed by admin','Professional assigned','On the way','Clean in progress','Completed & rated']
+            .map((t, i) => {
+              const reached = { pending:1, confirmed:3, enroute:4, inprogress:5, completed:6, cancelled:1 }[b.status];
+              const cls = i < reached ? 'done' : (i === reached ? 'now' : '');
+              return `<div class="tl ${cls}"><div class="tl-t">${t}</div></div>`;
+            }).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+},
+
+favourites(){
+  const favs = DB.cleaners.filter(c => c.fav);
+  const others = DB.cleaners.filter(c => !c.fav && c.status === 'active');
+  const card = c => `<div class="fav">
+    <div class="f-top">
+      <div class="avatar ${c.tone}">${c.initials}</div>
+      <div>
+        <div class="w-n">${c.name} ${c.surname}</div>
+        <div class="stars">${starRow(c.rating)} <span class="t-sub" style="letter-spacing:0">${c.rating ? c.rating.toFixed(2) : 'new'}</span></div>
+      </div>
+      <button class="heart-btn ${c.fav ? 'on' : ''}" onclick="toggleFav('${c.id}')" aria-label="Favourite">${ico('heart',22,1.8)}</button>
+    </div>
+    <div class="t-sub">${c.years} years · ${c.jobs} cleans · ${c.city}</div>
+    <div class="langs">${c.langs.map(l => `<span class="lang">${l}</span>`).join('')}</div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <a class="btn btn-primary sm" href="index.html">Request for next booking</a>
+    </div>
+  </div>`;
+
+  return `
+  <div class="page-head"><h1>Favourite professionals</h1><p>Request them by name when you book. If they are free, you get them.</p></div>
+  ${favs.length ? `<div class="fav-grid" style="margin-bottom:26px">${favs.map(card).join('')}</div>`
+    : `<div class="card panel"><div class="empty">${ico('heart',34)}<div class="e-t">No favourites yet</div><div>Favourite a professional after a clean and they will appear here.</div></div></div>`}
+  <div class="sect-head"><h2>Professionals who have cleaned for you</h2></div>
+  <div class="fav-grid">${others.map(card).join('')}</div>`;
+},
+
+addresses(){
+  return `
+  <div class="page-head" style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+    <div><h1>My addresses</h1><p>Saved properties, with the access notes your cleaner sees.</p></div>
+    <button class="btn btn-primary sm" style="margin-left:auto" onclick="addAddress()">${ico('plus',15,2.4)} Add address</button>
+  </div>
+  <div class="rows">
+    ${DB.addresses.map(a => `<div class="row-card">
+      <span class="avatar sm ${a.primary ? '' : 'sky'}">${ico('pin',16,2)}</span>
+      <div class="rc-main">
+        <div class="rc-t">${a.label} ${a.primary ? '<span class="pill ok" style="margin-left:6px">Primary</span>' : ''}</div>
+        <div class="rc-s">${a.line}, ${a.suburb}, ${a.city}, ${a.prov}</div>
+        <div class="rc-s" style="margin-top:3px">${ico('info',12,2)} ${a.notes}</div>
+      </div>
+      <div class="rc-act">
+        <button class="btn btn-outline sm" onclick="toast('Edit address form opens here','pin')">Edit</button>
+        ${a.primary ? '' : `<button class="btn btn-ghost sm" onclick="makePrimary('${a.id}')">Make primary</button>`}
+      </div>
+    </div>`).join('')}
+  </div>`;
+},
+
+payments(){
+  return `
+  <div class="page-head" style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+    <div><h1>Payment methods</h1><p>Cards are tokenised by the gateway. Sparrow never stores a card number.</p></div>
+    <button class="btn btn-primary sm" style="margin-left:auto" onclick="toast('Gateway card-capture iframe opens here','card')">${ico('plus',15,2.4)} Add card</button>
+  </div>
+  <div class="rows" style="margin-bottom:22px">
+    ${DB.cards.map(c => `<div class="row-card">
+      <span class="avatar sm ${c.brand === 'Visa' ? 'sky' : 'clay'}">${ico('card',16,2)}</span>
+      <div class="rc-main">
+        <div class="rc-t">${c.brand} •••• ${c.last4} ${c.primary ? '<span class="pill ok" style="margin-left:6px">Default</span>' : ''}</div>
+        <div class="rc-s">Expires ${c.exp}</div>
+      </div>
+      <div class="rc-act">
+        ${c.primary ? '' : `<button class="btn btn-ghost sm" onclick="makeDefaultCard('${c.id}')">Make default</button>`}
+        <button class="btn btn-danger sm" onclick="removeCard('${c.id}')">Remove</button>
+      </div>
+    </div>`).join('')}
+  </div>
+  <div class="card panel">
+    <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Sparrow wallet</h2></div>
+    <div class="li"><span>Balance</span><span class="v mono">${money(0)}</span></div>
+    <div class="li"><span>Loyalty points</span><span class="v mono">${C.points.toLocaleString()} pts</span></div>
+    <div class="li"><span>Points value</span><span class="v mono">${money(C.points / 10)}</span></div>
+    <div class="note">${ico('info',17,2)}<span>Points convert at 10 points to ${CFG.currency}1 in this prototype. The rate is a setting in the admin dashboard, not a number in the code.</span></div>
+  </div>`;
+},
+
+offers(){
+  return `
+  <div class="page-head"><h1>Offers &amp; rewards</h1><p>Coupons, referrals and seasonal promotions.</p></div>
+  <div class="stats" style="margin-bottom:22px">
+    <div class="stat"><div class="s-l">Loyalty points</div><div class="s-v mono">${C.points.toLocaleString()}</div><div class="s-d">worth ${money(C.points/10)}</div></div>
+    <div class="stat"><div class="s-l">Tier</div><div class="s-v">${C.tier}</div><div class="s-d up">2 cleans to Platinum</div></div>
+    <div class="stat"><div class="s-l">Friends referred</div><div class="s-v mono">${C.referrals}</div><div class="s-d">${money(C.referrals*100)} earned</div></div>
+    <div class="stat"><div class="s-l">Active coupons</div><div class="s-v mono">2</div><div class="s-d">SPARROW20, WELCOME50</div></div>
+  </div>
+  <div class="sect-head"><h2>Available offers</h2></div>
+  <div class="rows" style="margin-bottom:22px">
+    ${DB.offers.map(o => `<div class="row-card">
+      <span class="avatar sm gold">${ico(o.kind === 'referral' ? 'users' : 'gift',16,2)}</span>
+      <div class="rc-main"><div class="rc-t">${o.t}</div><div class="rc-s">${o.s}</div></div>
+      <a class="btn btn-outline sm" href="index.html">Use it</a>
+    </div>`).join('')}
+  </div>
+  <div class="card panel">
+    <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Your referral code</h2></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <code style="font-family:'Fraunces',serif;font-size:26px;letter-spacing:.06em;background:var(--moss-soft);padding:8px 18px;border-radius:11px">THANDI100</code>
+      <button class="btn btn-outline sm" onclick="toast('Referral code copied','check')">Copy code</button>
+    </div>
+    <div class="note">${ico('gift',17,2)}<span>Your friend gets ${money(100)} off their first clean and you get ${money(100)} credited once it is completed.</span></div>
+  </div>`;
+},
+
+notifs(){
+  return `
+  <div class="page-head" style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+    <div><h1>Notifications</h1><p>Booking updates, payments and reviews.</p></div>
+    <button class="btn btn-ghost sm" style="margin-left:auto" onclick="toast('All marked as read','check')">Mark all read</button>
+  </div>
+  <div class="rows">
+    ${DB.notifications.map(n => `<div class="row-card">
+      <span class="pill ${n.kind}" style="padding:5px;border-radius:50%"></span>
+      <div class="rc-main"><div class="rc-t">${n.t}</div><div class="rc-s">${n.s}</div></div>
+    </div>`).join('')}
+  </div>`;
+},
+
+profile(){
+  return `
+  <div class="page-head"><h1>Profile</h1><p>Your details, exactly the fields your signup document specifies.</p></div>
+  <div class="split">
+    <div class="card panel">
+      <div class="grid2">
+        <div class="field"><label>Name</label><input value="${C.name}"></div>
+        <div class="field"><label>Surname</label><input value="${C.surname}"></div>
+      </div>
+      <div class="field"><label>Email address</label><input value="${C.email}"></div>
+      <div class="field"><label>Confirm email address</label><input value="${C.email}"></div>
+      <div class="field"><label>Phone number</label><input value="${C.phone}"></div>
+      <div class="field"><label>Primary address</label>
+        <select>${DB.addresses.map(a => `<option ${a.primary ? 'selected' : ''}>${a.line}, ${a.suburb}</option>`).join('')}</select>
+      </div>
+      <div class="fieldset-t">Change password</div>
+      <div class="grid2">
+        <div class="field"><label>New password</label><input type="password" placeholder="••••••••"></div>
+        <div class="field"><label>Confirm password</label><input type="password" placeholder="••••••••"></div>
+      </div>
+      <button class="btn btn-primary" onclick="toast('Profile saved','check')">Save changes</button>
+    </div>
+    <div>
+      <div class="card panel" style="margin-bottom:16px;text-align:center">
+        <div class="avatar lg" style="margin:0 auto 12px">${C.initials}</div>
+        <div style="font-family:'Fraunces',serif;font-size:20px">${C.name} ${C.surname}</div>
+        <div class="t-sub" style="margin-bottom:12px">${C.memberNo}</div>
+        <button class="btn btn-outline sm" onclick="toast('Photo picker opens here','user')">Change photo</button>
+      </div>
+      <div class="card panel">
+        <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Account</h2></div>
+        <div class="li"><span>Member since</span><span class="v">${C.joined}</span></div>
+        <div class="li"><span>Total bookings</span><span class="v mono">${myBookings().length}</span></div>
+        <div class="li"><span>Loyalty tier</span><span class="v">${C.tier}</span></div>
+      </div>
+    </div>
+  </div>`;
+},
+
+support(){
+  return `
+  <div class="page-head"><h1>Contact support</h1><p>Typically replies in under 8 minutes during business hours.</p></div>
+  <div class="split">
+    <div class="card panel">
+      <div class="field"><label>What is this about?</label>
+        <select><option>A booking</option><option>Payment or invoice</option><option>A professional</option><option>Something else</option></select>
+      </div>
+      <div class="field"><label>Which booking?</label>
+        <select><option>Not booking-related</option>${myBookings().map(b => `<option>${b.id} — ${priceBooking(b).serviceName}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Message</label><textarea rows="5" placeholder="Tell us what happened."></textarea></div>
+      <button class="btn btn-primary" onclick="toast('Support ticket opened','chat')">Send message</button>
+    </div>
+    <div class="card panel">
+      <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Quick answers</h2></div>
+      <div class="rows">
+        ${[['Can I cancel for free?','Yes, up to 12 hours before the booking.'],
+           ['When am I charged?','The card is authorised at booking, captured after the clean.'],
+           ['Can I request the same cleaner?','Favourite them, then request them at checkout.'],
+           ['What if something breaks?','Every job carries public liability cover.']]
+          .map(([q,a]) => `<div class="offer"><div><div class="o-t">${q}</div><div class="o-s">${a}</div></div></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+};
+
+/* ---------- actions ---------- */
+function render(){ $('#view').innerHTML = VIEWS[view](); }
+
+function toggleFav(id){
+  const c = cleaner(id);
+  c.fav = !c.fav;
+  toast(c.fav ? `${c.name} added to favourites` : `${c.name} removed from favourites`, 'heart');
+  render();
+}
+function makePrimary(id){
+  DB.addresses.forEach(a => a.primary = a.id === id);
+  toast('Primary address updated','pin'); render();
+}
+function makeDefaultCard(id){
+  DB.cards.forEach(c => c.primary = c.id === id);
+  toast('Default card updated','card'); render();
+}
+function removeCard(id){
+  const c = byId(DB.cards, id);
+  modal({
+    title:'Remove this card?',
+    sub:`${c.brand} •••• ${c.last4}`,
+    body:'<p style="margin:0;color:var(--ink-70)">Any booking already paid for is unaffected. You can add the card again at any time.</p>',
+    actions:[
+      { label:'Keep it', cls:'btn-outline' },
+      { label:'Remove card', cls:'btn-primary', fn(){
+          DB.cards.splice(DB.cards.findIndex(x => x.id === id), 1);
+          if(DB.cards.length && !DB.cards.some(x => x.primary)) DB.cards[0].primary = true;
+          toast('Card removed','check'); render();
+        } }
+    ]
+  });
+}
+function addAddress(){
+  modal({
+    title:'Add an address',
+    sub:'Saved addresses speed up checkout',
+    body:`<div class="field"><label>Label</label><input id="naLabel" placeholder="Home, Office, Mom's place"></div>
+          <div class="field"><label>Street address</label><input id="naLine" placeholder="18 Ocean View Drive"></div>
+          <div class="grid2">
+            <div class="field"><label>Suburb</label><input id="naSub" placeholder="Sea Point"></div>
+            <div class="field"><label>City</label><input id="naCity" placeholder="Cape Town"></div>
+          </div>
+          <div class="field"><label>Access instructions</label><textarea id="naNotes" rows="2" placeholder="Buzzer 12, key under the mat"></textarea></div>`,
+    actions:[
+      { label:'Cancel', cls:'btn-outline' },
+      { label:'Save address', cls:'btn-primary', fn(v){
+          const label = v.querySelector('#naLabel').value.trim() || 'New address';
+          DB.addresses.push({
+            id:'a' + (DB.addresses.length + 1), label,
+            line: v.querySelector('#naLine').value.trim() || '—',
+            suburb: v.querySelector('#naSub').value.trim() || '—',
+            city: v.querySelector('#naCity').value.trim() || 'Cape Town',
+            prov:'Western Cape',
+            notes: v.querySelector('#naNotes').value.trim() || 'No access notes',
+            primary:false
+          });
+          toast('Address saved','pin'); render();
+        } }
+    ]
+  });
+}
+function reschedule(id){
+  const b = DB.bookings.find(x => x.id === id);
+  modal({
+    title:'Reschedule booking',
+    sub:`${b.id} · currently ${fmtDate(b.date)} at ${b.time}`,
+    body:`<div class="grid2">
+            <div class="field"><label>New date</label><input type="date" id="rsDate" value="${b.date}"></div>
+            <div class="field"><label>New time</label><select id="rsTime">${CFG.slots.map(s => `<option ${s === b.time ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+          </div>
+          <div class="note">${ico('info',17,2)}<span>Free to reschedule up to 12 hours before. Your professional is asked to confirm the new slot.</span></div>`,
+    actions:[
+      { label:'Keep it', cls:'btn-outline' },
+      { label:'Reschedule', cls:'btn-primary', fn(v){
+          b.date = v.querySelector('#rsDate').value || b.date;
+          b.time = v.querySelector('#rsTime').value;
+          if(b.status === 'confirmed'){ b.status = 'pending'; b.cleaner = null; b.eta = null; }
+          toast('Booking rescheduled — awaiting reconfirmation','cal'); render();
+        } }
+    ]
+  });
+}
+function cancelBooking(id){
+  const b = DB.bookings.find(x => x.id === id);
+  modal({
+    title:'Cancel this booking?',
+    sub:`${b.id} · ${fmtDate(b.date)} at ${b.time}`,
+    body:`<p style="margin:0 0 12px;color:var(--ink-70)">Free cancellation applies up to 12 hours before the booking. Your authorised payment is released, not captured.</p>
+          <div class="field"><label>Reason (optional)</label>
+            <select><option>Plans changed</option><option>Booked by mistake</option><option>Found another time</option><option>Other</option></select>
+          </div>`,
+    actions:[
+      { label:'Keep booking', cls:'btn-outline' },
+      { label:'Cancel booking', cls:'btn-danger', fn(){
+          b.status = 'cancelled'; b.cleaner = null; b.eta = null;
+          toast('Booking cancelled','check');
+          NAV.find(n => n.id === 'bookings').badge = upcoming().length;
+          go('bookings');
+        } }
+    ]
+  });
+}
+function rate(id){
+  const b = DB.bookings.find(x => x.id === id);
+  let picked = 5;
+  const v = modal({
+    title:'Rate this clean',
+    sub:`${b.id} · ${priceBooking(b).serviceName}`,
+    body:`<div id="rateStars" style="display:flex;gap:8px;justify-content:center;margin-bottom:14px">
+            ${[1,2,3,4,5].map(n => `<button data-n="${n}" class="heart-btn" style="color:var(--gold)">${ico('star',30,1.8)}</button>`).join('')}
+          </div>
+          <div class="field"><label>Anything to add?</label><textarea rows="3" placeholder="Optional"></textarea></div>`,
+    actions:[
+      { label:'Not now', cls:'btn-outline' },
+      { label:'Submit rating', cls:'btn-primary', fn(){
+          b.rated = picked; toast(`Thanks — ${picked} stars submitted`,'star'); render();
+        } }
+    ]
+  });
+  const paint = () => v.querySelectorAll('#rateStars [data-n]').forEach(x => {
+    const on = +x.dataset.n <= picked;
+    x.querySelector('svg').setAttribute('fill', on ? 'var(--gold)' : 'none');
+  });
+  v.querySelectorAll('#rateStars [data-n]').forEach(x => x.onclick = () => { picked = +x.dataset.n; paint(); });
+  paint();
+}
+
+go('overview');
+</script>
+</body>
+</html>

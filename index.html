@@ -3,273 +3,133 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sparrow &mdash; Book a cleaning professional</title>
+<title>Sparrow — Book a cleaning professional</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
 <style>
-:root{
-  --paper:#F3EFE7;
-  --paper-2:#FBF9F5;
-  --ink:#152019;
-  --ink-70:rgba(21,32,25,.70);
-  --ink-45:rgba(21,32,25,.45);
-  --ink-14:rgba(21,32,25,.14);
-  --ink-08:rgba(21,32,25,.08);
-  --moss:#2C5548;
-  --moss-soft:#E3EBE5;
-  --clay:#C0522C;
-  --clay-soft:#F6E5DC;
-  --gold:#C9A227;
-  --radius:14px;
-  --radius-lg:22px;
-  --shadow-1:0 1px 2px rgba(21,32,25,.05), 0 8px 24px -12px rgba(21,32,25,.18);
-  --shadow-2:0 2px 4px rgba(21,32,25,.06), 0 24px 48px -20px rgba(21,32,25,.28);
-  --ease:cubic-bezier(.22,.61,.36,1);
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  background:var(--paper);
-  color:var(--ink);
-  font-family:'Archivo',-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:15px;
-  line-height:1.55;
-  -webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(900px 500px at 88% -10%, rgba(44,85,72,.10), transparent 60%),
-    radial-gradient(700px 420px at 4% 8%, rgba(192,82,44,.07), transparent 62%);
-  background-attachment:fixed;
-}
-body::after{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:99;opacity:.30;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
-  mix-blend-mode:multiply;
-}
-h1,h2,h3,.display{font-family:'Fraunces',Georgia,serif;font-weight:400;letter-spacing:-.015em;line-height:1.08;margin:0}
-.wrap{max-width:1180px;margin:0 auto;padding:0 26px}
-.mono{font-variant-numeric:tabular-nums}
+  .hero{padding:56px 0 26px}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--moss);background:var(--moss-soft);border-radius:999px;padding:6px 13px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--moss);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+  .hero h1{font-size:clamp(38px,6.2vw,66px);margin:20px 0 0;max-width:14ch}
+  .hero h1 .ital{font-style:italic;color:var(--moss)}
+  .hero p.lede{max-width:46ch;color:var(--ink-70);font-size:17px;margin:18px 0 0}
+  .hero-row{display:flex;gap:44px;align-items:flex-end;flex-wrap:wrap}
+  .trust{display:flex;gap:30px;margin-top:30px;flex-wrap:wrap}
+  .trust .t-num{font-family:'Fraunces',serif;font-size:27px;line-height:1}
+  .trust .t-lbl{font-size:12px;color:var(--ink-45);letter-spacing:.04em;text-transform:uppercase;margin-top:5px}
 
-/* ---------- top bar ---------- */
-.topbar{position:sticky;top:0;z-index:60;backdrop-filter:blur(14px);background:rgba(243,239,231,.78);border-bottom:1px solid var(--ink-08)}
-.topbar .wrap{display:flex;align-items:center;gap:18px;height:66px}
-.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit}
-.brand-mark{width:32px;height:32px;border-radius:9px;background:var(--moss);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.16)}
-.brand-name{font-family:'Fraunces',serif;font-size:20px;letter-spacing:-.02em}
-.brand-name em{font-style:italic;color:var(--moss)}
-.nav{margin-left:auto;display:flex;align-items:center;gap:26px}
-.nav a{color:var(--ink-70);text-decoration:none;font-size:14px;font-weight:500}
-.nav a:hover{color:var(--ink)}
-.pill-btn{border:1px solid var(--ink-14);background:transparent;color:var(--ink);padding:8px 15px;border-radius:999px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:.2s var(--ease)}
-.pill-btn:hover{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
-@media(max-width:820px){.nav .hide-sm{display:none}}
+  .booker{display:grid;grid-template-columns:1fr 344px;gap:26px;align-items:start;padding:30px 0 90px}
+  @media(max-width:940px){.booker{grid-template-columns:1fr}}
+  .booker>*{min-width:0}
 
-/* ---------- hero ---------- */
-.hero{padding:64px 0 30px;position:relative}
-.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--moss);background:var(--moss-soft);border-radius:999px;padding:6px 13px}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--moss);animation:pulse 2.4s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
-.hero h1{font-size:clamp(38px,6.2vw,68px);margin:20px 0 0;max-width:14ch}
-.hero h1 .ital{font-style:italic;color:var(--moss)}
-.hero p.lede{max-width:46ch;color:var(--ink-70);font-size:17px;margin:18px 0 0}
-.hero-row{display:flex;gap:44px;align-items:flex-end;flex-wrap:wrap}
-.trust{display:flex;gap:30px;margin-top:30px;flex-wrap:wrap}
-.trust .t-num{font-family:'Fraunces',serif;font-size:27px;line-height:1}
-.trust .t-lbl{font-size:12px;color:var(--ink-45);letter-spacing:.04em;text-transform:uppercase;margin-top:5px}
+  .stepper{display:flex;align-items:center;padding:18px 30px;border-bottom:1px solid var(--ink-08);overflow-x:auto;scrollbar-width:none}
+  .stepper::-webkit-scrollbar{display:none}
+  .step{display:flex;align-items:center;gap:9px;flex:0 0 auto;padding-right:14px;opacity:.42;transition:.35s var(--ease)}
+  .step.done,.step.active{opacity:1}
+  .step-num{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--ink-14);display:grid;place-items:center;font-size:12px;font-weight:600;transition:.35s var(--ease);flex:0 0 auto}
+  .step.active .step-num{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
+  .step.done .step-num{background:var(--moss);border-color:var(--moss);color:#fff}
+  .step-lbl{font-size:13px;font-weight:500;white-space:nowrap}
+  .step-bar{width:26px;height:1.5px;background:var(--ink-14);margin-right:14px;flex:0 0 auto}
+  @media(max-width:700px){.step:not(.active) .step-lbl{display:none}.step-bar{width:14px}}
 
-/* ---------- booking shell ---------- */
-.booker{display:grid;grid-template-columns:1fr 344px;gap:26px;align-items:start;padding:34px 0 80px}
-@media(max-width:940px){.booker{grid-template-columns:1fr}}
-.booker>*{min-width:0}
-.card{background:var(--paper-2);border:1px solid var(--ink-08);border-radius:var(--radius-lg);box-shadow:var(--shadow-1)}
-.panel{padding:28px 30px 30px}
-@media(max-width:560px){.panel{padding:22px 18px 24px}}
+  .h-step{font-size:27px;margin-bottom:5px}
+  .sub{color:var(--ink-45);font-size:14px;margin:0 0 22px}
+  .pane{display:none;animation:rise .45s var(--ease) both}
+  .pane.on{display:block}
 
-/* stepper */
-.stepper{display:flex;align-items:center;gap:0;padding:18px 30px;border-bottom:1px solid var(--ink-08);overflow-x:auto;scrollbar-width:none}
-.stepper::-webkit-scrollbar{display:none}
-.step{display:flex;align-items:center;gap:9px;flex:0 0 auto;padding-right:14px;opacity:.42;transition:.35s var(--ease)}
-.step.done,.step.active{opacity:1}
-.step-num{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--ink-14);display:grid;place-items:center;font-size:12px;font-weight:600;transition:.35s var(--ease);flex:0 0 auto}
-.step.active .step-num{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
-.step.done .step-num{background:var(--moss);border-color:var(--moss);color:#fff}
-.step-lbl{font-size:13px;font-weight:500;white-space:nowrap}
-.step-bar{width:26px;height:1.5px;background:var(--ink-14);margin-right:14px;flex:0 0 auto}
-@media(max-width:700px){.step:not(.active) .step-lbl{display:none}.step-bar{width:14px}}
+  .grp-t{font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-45);font-weight:600;margin:20px 0 10px}
+  .grp-t:first-child{margin-top:0}
+  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:760px){.svc-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:400px){.svc-grid{grid-template-columns:1fr}}
+  .svc{position:relative;text-align:left;background:transparent;border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:16px 14px 14px;cursor:pointer;font:inherit;color:inherit;transition:.24s var(--ease)}
+  .svc:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:var(--shadow-1)}
+  .svc.sel{border-color:var(--moss);background:var(--moss-soft);box-shadow:inset 0 0 0 1px var(--moss)}
+  .svc svg{color:var(--moss)}
+  .svc-name{font-weight:600;font-size:14.5px;margin-top:11px}
+  .svc-from{font-size:12.5px;color:var(--ink-45);margin-top:2px}
+  .svc .tick{position:absolute;top:11px;right:11px;opacity:0;transform:scale(.6);transition:.24s var(--ease);color:var(--moss)}
+  .svc.sel .tick{opacity:1;transform:none}
 
-.h-step{font-size:27px;margin-bottom:5px}
-.sub{color:var(--ink-45);font-size:14px;margin:0 0 22px}
-.pane{display:none;animation:rise .45s var(--ease) both}
-.pane.on{display:block}
-@keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  .row-lbl{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 0;border-bottom:1px solid var(--ink-08);flex-wrap:wrap}
+  .row-lbl:last-of-type{border-bottom:0}
+  .row-lbl .rl-t{font-weight:600;font-size:14.5px}
+  .row-lbl .rl-s{font-size:13px;color:var(--ink-45)}
+  .row-lbl select{border:1.5px solid var(--ink-14);background:var(--paper-2);border-radius:11px;padding:9px 34px 9px 12px;font:inherit;font-size:14px;color:var(--ink);width:100%;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23152019' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center}
+  .row-lbl select:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 4px rgba(44,85,72,.10)}
+  .counter{display:flex;align-items:center;gap:6px}
+  .cbtn{width:32px;height:32px;border-radius:9px;border:1.5px solid var(--ink-14);background:transparent;cursor:pointer;font-size:17px;line-height:1;color:var(--ink);display:grid;place-items:center;transition:.18s var(--ease)}
+  .cbtn:hover:not(:disabled){border-color:var(--ink);background:var(--ink);color:var(--paper-2)}
+  .cbtn:disabled{opacity:.3;cursor:not-allowed}
+  .cval{width:32px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
 
-/* service grid */
-.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:760px){.svc-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:400px){.svc-grid{grid-template-columns:1fr}}
-.svc{position:relative;text-align:left;background:transparent;border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:16px 14px 14px;cursor:pointer;font:inherit;color:inherit;transition:.24s var(--ease);overflow:hidden}
-.svc:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:var(--shadow-1)}
-.svc.sel{border-color:var(--moss);background:var(--moss-soft);box-shadow:inset 0 0 0 1px var(--moss)}
-.svc svg{color:var(--moss)}
-.svc-name{font-weight:600;font-size:14.5px;margin-top:11px}
-.svc-from{font-size:12.5px;color:var(--ink-45);margin-top:2px}
-.svc .tick{position:absolute;top:11px;right:11px;opacity:0;transform:scale(.6);transition:.24s var(--ease);color:var(--moss)}
-.svc.sel .tick{opacity:1;transform:none}
-.badge-out{position:absolute;top:11px;right:11px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--clay);background:var(--clay-soft);padding:3px 7px;border-radius:5px}
-.svc.sel .badge-out{display:none}
+  .freq{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:520px){.freq{grid-template-columns:1fr}}
+  .freq button{position:relative;text-align:left;border:1.5px solid var(--ink-14);background:transparent;border-radius:var(--radius);padding:13px 14px;cursor:pointer;font:inherit;color:inherit;transition:.2s var(--ease)}
+  .freq button:hover{border-color:var(--moss)}
+  .freq button.on{border-color:var(--moss);background:var(--moss-soft)}
+  .freq .f-t{font-weight:600;font-size:14px}
+  .freq .f-s{font-size:12.5px;color:var(--ink-45);margin-top:2px}
+  .save-tag{position:absolute;top:-9px;right:11px;background:var(--gold);color:#2b2200;font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:999px}
 
-/* steppers / counters */
-.row-lbl{display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid var(--ink-08)}
-.row-lbl:last-of-type{border-bottom:0}
-.row-lbl .rl-t{font-weight:600;font-size:14.5px}
-.row-lbl .rl-s{font-size:13px;color:var(--ink-45)}
-.counter{display:flex;align-items:center;gap:6px}
-.cbtn{width:32px;height:32px;border-radius:9px;border:1.5px solid var(--ink-14);background:transparent;cursor:pointer;font-size:17px;line-height:1;color:var(--ink);display:grid;place-items:center;transition:.18s var(--ease)}
-.cbtn:hover:not(:disabled){border-color:var(--ink);background:var(--ink);color:var(--paper-2)}
-.cbtn:disabled{opacity:.3;cursor:not-allowed}
-.cval{width:32px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+  .datestrip{display:flex;gap:9px;overflow-x:auto;padding:4px 2px 10px}
+  .dcell{flex:0 0 auto;width:66px;border:1.5px solid var(--ink-14);border-radius:var(--radius);background:transparent;padding:11px 0;cursor:pointer;font:inherit;color:inherit;text-align:center;transition:.2s var(--ease)}
+  .dcell:hover{border-color:var(--moss)}
+  .dcell.on{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
+  .dcell .dw{font-size:11px;letter-spacing:.09em;text-transform:uppercase;opacity:.55}
+  .dcell .dd{font-family:'Fraunces',serif;font-size:22px;line-height:1.25}
+  .dcell .dm{font-size:11px;opacity:.55}
+  .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+  @media(max-width:620px){.slots{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:420px){.slots{grid-template-columns:repeat(2,1fr)}}
+  .slot{border:1.5px solid var(--ink-14);background:transparent;border-radius:10px;padding:10px 6px;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);transition:.2s var(--ease)}
+  .slot:hover:not(:disabled){border-color:var(--moss)}
+  .slot.on{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
+  .slot:disabled{opacity:.32;cursor:not-allowed;text-decoration:line-through}
+  .slot .pros{display:block;font-size:11px;font-weight:400;opacity:.55;margin-top:1px}
 
-/* extras chips */
-.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px}
-.chip{border:1.5px solid var(--ink-14);background:transparent;border-radius:999px;padding:8px 14px;font:inherit;font-size:13.5px;cursor:pointer;color:var(--ink-70);transition:.2s var(--ease);display:inline-flex;align-items:center;gap:7px}
-.chip:hover{border-color:var(--moss);color:var(--ink)}
-.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
-.chip .c-price{font-size:12px;opacity:.6}
+  .pays{display:grid;gap:10px}
+  .pay{display:flex;align-items:center;gap:13px;border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:13px 15px;cursor:pointer;background:transparent;font:inherit;color:inherit;text-align:left;transition:.2s var(--ease);width:100%}
+  .pay:hover{border-color:var(--moss)}
+  .pay.on{border-color:var(--moss);background:var(--moss-soft)}
+  .pay .radio{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--ink-14);flex:0 0 auto;display:grid;place-items:center}
+  .pay.on .radio{border-color:var(--moss)}
+  .pay.on .radio::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--moss)}
+  .pay .p-t{font-weight:600;font-size:14.5px}
+  .pay .p-s{font-size:12.5px;color:var(--ink-45)}
 
-/* frequency */
-.freq{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
-@media(max-width:520px){.freq{grid-template-columns:1fr}}
-.freq button{position:relative;text-align:left;border:1.5px solid var(--ink-14);background:transparent;border-radius:var(--radius);padding:13px 14px;cursor:pointer;font:inherit;color:inherit;transition:.2s var(--ease)}
-.freq button:hover{border-color:var(--moss)}
-.freq button.on{border-color:var(--moss);background:var(--moss-soft)}
-.freq .f-t{font-weight:600;font-size:14px}
-.freq .f-s{font-size:12.5px;color:var(--ink-45);margin-top:2px}
-.save-tag{position:absolute;top:-9px;right:11px;background:var(--gold);color:#2b2200;font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:999px}
+  .actions{display:flex;align-items:center;gap:12px;margin-top:26px;padding-top:20px;border-top:1px solid var(--ink-08)}
 
-/* dates */
-.datestrip{display:flex;gap:9px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}
-.dcell{flex:0 0 auto;width:66px;border:1.5px solid var(--ink-14);border-radius:var(--radius);background:transparent;padding:11px 0;cursor:pointer;font:inherit;color:inherit;text-align:center;transition:.2s var(--ease)}
-.dcell:hover{border-color:var(--moss)}
-.dcell.on{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
-.dcell .dw{font-size:11px;letter-spacing:.09em;text-transform:uppercase;opacity:.55}
-.dcell .dd{font-family:'Fraunces',serif;font-size:22px;line-height:1.25}
-.dcell .dm{font-size:11px;opacity:.55}
-.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:6px}
-@media(max-width:620px){.slots{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:420px){.slots{grid-template-columns:repeat(2,1fr)}}
-.slot{border:1.5px solid var(--ink-14);background:transparent;border-radius:10px;padding:10px 6px;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);transition:.2s var(--ease);position:relative}
-.slot:hover:not(:disabled){border-color:var(--moss)}
-.slot.on{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
-.slot:disabled{opacity:.32;cursor:not-allowed;text-decoration:line-through}
-.slot .pros{display:block;font-size:11px;font-weight:400;opacity:.55;margin-top:1px}
+  .summary{position:sticky;top:88px}
+  .sum-head{padding:20px 22px 16px;border-bottom:1px solid var(--ink-08)}
+  .sum-head .s-svc{font-family:'Fraunces',serif;font-size:21px}
+  .sum-head .s-meta{font-size:13px;color:var(--ink-45);margin-top:3px}
+  .sum-body{padding:16px 22px}
+  .sum-foot{padding:14px 22px 20px;border-top:1px solid var(--ink-08);font-size:12.5px;color:var(--ink-45);display:flex;gap:9px;align-items:flex-start}
+  .promo{display:flex;gap:8px;margin-top:12px}
+  .promo input{flex:1;border:1.5px dashed var(--ink-14);background:transparent;border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px;text-transform:uppercase;letter-spacing:.06em}
+  .promo input:focus{outline:none;border-color:var(--moss);border-style:solid}
+  .promo button{border:0;background:var(--ink);color:var(--paper-2);border-radius:10px;padding:0 16px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .promo-msg{font-size:12.5px;margin-top:7px;color:var(--moss);font-weight:500}
+  .promo-msg.bad{color:var(--clay)}
 
-/* forms */
-.field{margin-bottom:15px}
-.field label{display:block;font-size:12.5px;font-weight:600;letter-spacing:.03em;color:var(--ink-70);margin-bottom:6px}
-.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--ink-14);background:var(--paper-2);border-radius:11px;padding:11px 13px;font:inherit;font-size:14.5px;color:var(--ink);transition:.2s var(--ease)}
-.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 4px rgba(44,85,72,.10)}
-.field input::placeholder,.field textarea::placeholder{color:var(--ink-45)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:520px){.grid2{grid-template-columns:1fr}}
-
-.toggle-row{display:flex;align-items:center;gap:12px;padding:13px 15px;border:1.5px solid var(--ink-14);border-radius:var(--radius);margin-bottom:16px;background:var(--paper)}
-.switch{position:relative;width:44px;height:25px;flex:0 0 auto;border-radius:999px;background:var(--ink-14);border:0;cursor:pointer;transition:.24s var(--ease)}
-.switch::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:var(--paper-2);transition:.24s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.switch.on{background:var(--moss)}
-.switch.on::after{transform:translateX(19px)}
-
-/* payment methods */
-.pays{display:grid;gap:10px;margin-top:4px}
-.pay{display:flex;align-items:center;gap:13px;border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:13px 15px;cursor:pointer;background:transparent;font:inherit;color:inherit;text-align:left;transition:.2s var(--ease);width:100%}
-.pay:hover{border-color:var(--moss)}
-.pay.on{border-color:var(--moss);background:var(--moss-soft)}
-.pay .radio{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--ink-14);flex:0 0 auto;display:grid;place-items:center;transition:.2s var(--ease)}
-.pay.on .radio{border-color:var(--moss)}
-.pay.on .radio::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--moss)}
-.pay .p-t{font-weight:600;font-size:14.5px}
-.pay .p-s{font-size:12.5px;color:var(--ink-45)}
-.cards{margin-left:auto;display:flex;gap:5px;opacity:.8}
-
-/* nav buttons */
-.actions{display:flex;align-items:center;gap:12px;margin-top:26px;padding-top:20px;border-top:1px solid var(--ink-08)}
-.btn{border:0;border-radius:999px;padding:13px 26px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;transition:.22s var(--ease);display:inline-flex;align-items:center;gap:9px}
-.btn-primary{background:var(--ink);color:var(--paper-2);box-shadow:var(--shadow-1)}
-.btn-primary:hover{background:var(--moss);transform:translateY(-1px);box-shadow:var(--shadow-2)}
-.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;background:var(--ink)}
-.btn-ghost{background:transparent;color:var(--ink-70);padding-left:6px}
-.btn-ghost:hover{color:var(--ink)}
-.spacer{margin-left:auto}
-
-/* summary */
-.summary{position:sticky;top:88px}
-.sum-head{padding:20px 22px 16px;border-bottom:1px solid var(--ink-08)}
-.sum-head .s-svc{font-family:'Fraunces',serif;font-size:21px}
-.sum-head .s-meta{font-size:13px;color:var(--ink-45);margin-top:3px}
-.sum-body{padding:16px 22px}
-.li{display:flex;justify-content:space-between;gap:14px;font-size:14px;padding:6px 0;color:var(--ink-70)}
-.li .v{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
-.li.disc{color:var(--moss)}
-.li.disc .v{color:var(--moss)}
-.rule{height:1px;background:var(--ink-08);margin:11px 0}
-.total{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0 2px}
-.total .t-l{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-45)}
-.total .t-v{font-family:'Fraunces',serif;font-size:33px;font-variant-numeric:tabular-nums;transition:.2s var(--ease)}
-.total .t-v.bump{transform:scale(1.06)}
-.sum-foot{padding:14px 22px 20px;border-top:1px solid var(--ink-08);font-size:12.5px;color:var(--ink-45);display:flex;gap:9px;align-items:flex-start}
-.promo{display:flex;gap:8px;margin-top:12px}
-.promo input{flex:1;border:1.5px dashed var(--ink-14);background:transparent;border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px;text-transform:uppercase;letter-spacing:.06em}
-.promo input:focus{outline:none;border-color:var(--moss);border-style:solid}
-.promo button{border:0;background:var(--ink);color:var(--paper-2);border-radius:10px;padding:0 16px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
-.promo-msg{font-size:12.5px;margin-top:7px;color:var(--moss);font-weight:500}
-.promo-msg.bad{color:var(--clay)}
-
-/* matched pro / confirmation */
-.matched{text-align:center;padding:16px 0 6px}
-.pro-card{display:flex;gap:14px;align-items:center;border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:15px;background:var(--paper);text-align:left}
-.avatar{width:52px;height:52px;border-radius:50%;background:var(--moss);color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-size:20px;flex:0 0 auto}
-.stars{color:var(--gold);letter-spacing:1px;font-size:13px}
-.timeline{margin-top:20px;border-left:1.5px solid var(--ink-14);padding-left:20px;display:grid;gap:16px}
-.tl{position:relative;font-size:14px}
-.tl::before{content:"";position:absolute;left:-27px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--paper-2);border:1.5px solid var(--ink-14)}
-.tl.done::before{background:var(--moss);border-color:var(--moss)}
-.tl .tl-t{font-weight:600}
-.tl .tl-s{color:var(--ink-45);font-size:13px}
-.ok-badge{width:62px;height:62px;border-radius:50%;background:var(--moss);display:grid;place-items:center;margin:0 auto 16px;animation:pop .5s var(--ease) both}
-@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
-
-.note{display:flex;gap:10px;background:var(--moss-soft);border-radius:var(--radius);padding:13px 15px;font-size:13.5px;color:#23443a;margin-top:18px}
-/* mobile price bar */
-.mbar{position:fixed;left:0;right:0;bottom:0;z-index:70;display:none;align-items:center;gap:14px;
-  padding:12px 18px calc(12px + env(safe-area-inset-bottom));
-  background:rgba(251,249,245,.94);backdrop-filter:blur(14px);border-top:1px solid var(--ink-14);
-  box-shadow:0 -10px 30px -18px rgba(21,32,25,.5)}
-.mbar .m-l{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-45)}
-.mbar .m-v{font-family:'Fraunces',serif;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
-.mbar .btn{margin-left:auto;padding:12px 22px;font-size:14.5px}
-@media(max-width:940px){.mbar.show{display:flex}body{padding-bottom:82px}.summary{position:static}}
-
-footer{border-top:1px solid var(--ink-08);padding:26px 0 40px;font-size:13px;color:var(--ink-45)}
-footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:70;display:none;align-items:center;gap:14px;
+    padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(251,249,245,.94);backdrop-filter:blur(14px);border-top:1px solid var(--ink-14);
+    box-shadow:0 -10px 30px -18px rgba(21,32,25,.5)}
+  .mbar .m-l{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-45)}
+  .mbar .m-v{font-family:'Fraunces',serif;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .mbar .btn{margin-left:auto;padding:12px 22px;font-size:14.5px}
+  @media(max-width:940px){.mbar.show{display:flex}body{padding-bottom:82px}.summary{position:static}}
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div class="wrap">
-    <a class="brand" href="#">
-      <span class="brand-mark">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F3EFE7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c2.5-3 4-6 4-9a5 5 0 0 1 10 0c0 3 1.5 6 4 9"/><path d="M12 7v14"/></svg>
-      </span>
-      <span class="brand-name">Sparrow<em>.</em></span>
-    </a>
-    <nav class="nav">
-      <a href="#" class="hide-sm">Services</a>
-      <a href="#" class="hide-sm">For professionals</a>
-      <a href="#" class="hide-sm">Help</a>
-      <button class="pill-btn">Sign in</button>
-    </nav>
-  </div>
-</div>
 
 <header class="hero">
   <div class="wrap">
@@ -296,143 +156,125 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
       <!-- 1 SERVICE -->
       <div class="pane on" data-pane="0">
         <h2 class="h-step">What needs doing?</h2>
-        <p class="sub">Indoor and outdoor services, same booking flow.</p>
-        <div class="svc-grid" id="svcGrid"></div>
-        <div class="actions">
-          <span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Continue
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
+        <p class="sub">Indoor and outdoor services, one booking flow.</p>
+        <div id="svcGroups"></div>
+        <div class="actions"><span class="spacer"></span>
+          <button class="btn btn-primary" data-next>Continue</button></div>
       </div>
 
       <!-- 2 DETAILS -->
       <div class="pane" data-pane="1">
         <h2 class="h-step">Tell us about the space</h2>
-        <p class="sub">Your price updates live as you choose &mdash; no surprises at checkout.</p>
+        <p class="sub">Your price updates live as you choose — no surprises at checkout.</p>
         <div id="sizeRows"></div>
         <div style="margin-top:22px">
-          <div class="rl-t" style="font-weight:600;font-size:14.5px;margin-bottom:9px">Add extras</div>
+          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Booking checklist</div>
           <div class="chips" id="extras"></div>
         </div>
         <div style="margin-top:24px">
-          <div class="rl-t" style="font-weight:600;font-size:14.5px;margin-bottom:9px">How often?</div>
+          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">How often?</div>
           <div class="freq" id="freq"></div>
         </div>
         <div class="actions">
-          <button class="btn btn-ghost" data-back>&larr; Back</button>
-          <span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Choose a time
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
+          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
+          <button class="btn btn-primary" data-next>Choose a time</button></div>
       </div>
 
       <!-- 3 SCHEDULE -->
       <div class="pane" data-pane="2">
         <h2 class="h-step">When suits you?</h2>
-        <p class="sub">Live availability &mdash; slots reflect professionals actually free in your area.</p>
+        <p class="sub">Slots reflect professionals actually free in your area.</p>
         <div class="datestrip" id="dates"></div>
         <div style="margin-top:16px">
-          <div class="rl-t" style="font-weight:600;font-size:14.5px;margin-bottom:9px">Start time</div>
+          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Start time</div>
           <div class="slots" id="slots"></div>
         </div>
-        <div class="note">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:0 0 auto;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
-          <span id="durNote">Estimated duration will appear once you pick a service size.</span>
-        </div>
+        <div class="note" id="durNote"></div>
         <div class="actions">
-          <button class="btn btn-ghost" data-back>&larr; Back</button>
-          <span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Add address
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
+          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
+          <button class="btn btn-primary" data-next>Add address</button></div>
       </div>
 
       <!-- 4 ADDRESS -->
       <div class="pane" data-pane="3">
         <h2 class="h-step">Where are we cleaning?</h2>
-        <p class="sub">Guest checkout is on &mdash; an account gets created quietly after you pay.</p>
+        <p class="sub">Guest checkout is on — an account is created quietly after you pay.</p>
         <div class="toggle-row">
-          <button class="switch on" id="guestSwitch" aria-label="Guest checkout"></button>
+          <button class="switch on" id="guestSwitch"></button>
           <div>
             <div style="font-weight:600;font-size:14.5px">Continue as guest</div>
-            <div style="font-size:13px;color:var(--ink-45)">No password needed. We&rsquo;ll text you the tracking link.</div>
+            <div class="t-sub">No password needed. We text you the tracking link.</div>
           </div>
         </div>
         <div class="grid2">
-          <div class="field"><label>Full name</label><input id="fName" placeholder="Thandi Mokoena"></div>
-          <div class="field"><label>Mobile number</label><input id="fPhone" placeholder="+27 82 000 0000"></div>
+          <div class="field"><label>Name</label><input id="fName" placeholder="Thandi"><div class="err">Please enter your name</div></div>
+          <div class="field"><label>Surname</label><input id="fSur" placeholder="Mokoena"><div class="err">Please enter your surname</div></div>
         </div>
-        <div class="field"><label>Street address</label><input id="fAddr" placeholder="Start typing &mdash; autocomplete fills the rest"></div>
         <div class="grid2">
-          <div class="field"><label>Suburb</label><input id="fSub" placeholder="Sea Point"></div>
+          <div class="field"><label>Mobile number</label><input id="fPhone" placeholder="+27 82 000 0000"><div class="err">We need a number to send the tracking link</div></div>
+          <div class="field"><label>Email address</label><input id="fEmail" placeholder="you@example.co.za"><div class="err">Please enter a valid email address</div></div>
+        </div>
+        <div class="field"><label>Street address</label><input id="fAddr" placeholder="Start typing — autocomplete fills the rest"><div class="err">Please enter the address</div></div>
+        <div class="grid2">
+          <div class="field"><label>Suburb</label><input id="fSub" placeholder="Sea Point"><div class="err">Please enter the suburb</div></div>
           <div class="field"><label>Unit / access notes</label><input id="fUnit" placeholder="Flat 4B, buzzer 12"></div>
         </div>
-        <div class="field"><label>Anything the professional should know?</label><textarea id="fNotes" rows="3" placeholder="Two cats, please keep the balcony door shut. Key under the mat."></textarea></div>
+        <div class="field"><label>Anything the professional should know?</label>
+          <textarea id="fNotes" rows="3" placeholder="Two cats, please keep the balcony door shut. Key under the mat."></textarea></div>
         <div class="actions">
-          <button class="btn btn-ghost" data-back>&larr; Back</button>
-          <span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Review &amp; pay
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
+          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
+          <button class="btn btn-primary" data-next>Review &amp; pay</button></div>
       </div>
 
-      <!-- 5 PAY -->
+      <!-- 5 CHECKOUT -->
       <div class="pane" data-pane="4">
-        <h2 class="h-step">Confirm and pay</h2>
-        <p class="sub">Card is authorised now, captured only once the clean is completed.</p>
+        <h2 class="h-step">Checkout</h2>
+        <p class="sub">Card is authorised now and only captured once the clean is done.</p>
+        <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Payment method</div>
         <div class="pays" id="pays"></div>
-        <div style="margin-top:20px">
-          <div class="rl-t" style="font-weight:600;font-size:14.5px;margin-bottom:9px">Your booking</div>
+        <div style="margin-top:22px">
+          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Your booking</div>
           <div id="reviewList"></div>
         </div>
-        <div class="note">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:0 0 auto;margin-top:1px"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-          <span>Funds are held in escrow and released to the professional 2 hours after you confirm the job is done. Free cancellation up to 12 hours before.</span>
+        <div style="margin-top:22px">
+          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Payment summary</div>
+          <div id="checkoutSummary"></div>
         </div>
+        <div class="note" id="escrowNote"></div>
         <div class="actions">
-          <button class="btn btn-ghost" data-back>&larr; Back</button>
-          <span class="spacer"></span>
-          <button class="btn btn-primary" id="payBtn">Pay <span id="payAmt" class="mono"></span> &amp; confirm</button>
-        </div>
+          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
+          <button class="btn btn-primary" id="payBtn">Proceed to payment gateway</button></div>
       </div>
 
-      <!-- 6 DONE -->
+      <!-- 6 CONFIRMED -->
       <div class="pane" data-pane="5">
-        <div class="matched">
-          <div class="ok-badge">
+        <div style="text-align:center;padding:14px 0">
+          <div class="avatar lg" style="margin:0 auto 16px">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
           </div>
-          <h2 class="h-step" style="font-size:29px">You&rsquo;re booked in.</h2>
-          <p class="sub" style="margin-bottom:20px">Reference <strong class="mono" id="refNo"></strong> &mdash; confirmation sent by SMS and push.</p>
+          <h2 class="h-step" style="font-size:29px">Booking confirmed</h2>
+          <p class="sub" style="margin-bottom:20px">Reference <strong class="mono" id="refNo"></strong> — confirmation sent by SMS.</p>
         </div>
-        <div class="pro-card">
-          <div class="avatar">NM</div>
-          <div style="flex:1">
-            <div style="font-weight:600;font-size:15px">Nomsa M. &mdash; matched automatically</div>
-            <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733; <span style="color:var(--ink-45);font-size:12.5px;letter-spacing:0">4.94 &middot; 216 cleans &middot; 1.8 km away</span></div>
-          </div>
-          <button class="pill-btn">Message</button>
-        </div>
-        <div class="timeline">
-          <div class="tl done"><div class="tl-t">Booking confirmed</div><div class="tl-s">Payment authorised, held in escrow</div></div>
-          <div class="tl done"><div class="tl-t">Professional assigned</div><div class="tl-s">Nomsa accepted in 47 seconds</div></div>
-          <div class="tl"><div class="tl-t">On the way</div><div class="tl-s">Live location shared 30 min before arrival</div></div>
-          <div class="tl"><div class="tl-t">Clean in progress</div><div class="tl-s">Checklist ticked off room by room</div></div>
+        <div id="confirmFacts"></div>
+        <div class="timeline" style="margin-top:22px">
+          <div class="tl done"><div class="tl-t">Payment authorised</div><div class="tl-s">Held in escrow, captured after the clean</div></div>
+          <div class="tl now"><div class="tl-t">Awaiting confirmation</div><div class="tl-s">An admin confirms and assigns your professional</div></div>
+          <div class="tl"><div class="tl-t">Professional assigned</div><div class="tl-s">You are notified with their name, photo and rating</div></div>
+          <div class="tl"><div class="tl-t">On the way</div><div class="tl-s">Live location shared 30 minutes before arrival</div></div>
+          <div class="tl"><div class="tl-t">Clean in progress</div><div class="tl-s">Checklist ticked off item by item</div></div>
           <div class="tl"><div class="tl-t">Completed &amp; rated</div><div class="tl-s">Escrow released, loyalty points credited</div></div>
         </div>
         <div class="actions">
-          <button class="btn btn-ghost" id="restart">&larr; Run the flow again</button>
+          <button class="btn btn-outline" onclick="toast('Invoice PDF generated','doc')">Request invoice</button>
+          <a class="btn btn-ghost" href="dashboard.html">Go to my dashboard →</a>
+          <span class="spacer"></span>
+          <button class="btn btn-ghost" id="restart">Run the flow again</button>
         </div>
       </div>
 
     </div>
   </section>
 
-  <!-- SUMMARY -->
   <aside class="card summary">
     <div class="sum-head">
       <div class="s-svc" id="sumSvc">Pick a service</div>
@@ -441,292 +283,304 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
     <div class="sum-body">
       <div id="lines"></div>
       <div class="rule"></div>
-      <div class="total">
-        <span class="t-l">Total</span>
-        <span class="t-v mono" id="grand">&mdash;</span>
-      </div>
+      <div class="total"><span class="t-l">Total</span><span class="t-v mono" id="grand">—</span></div>
       <div class="promo">
         <input id="promo" placeholder="Promo code" maxlength="14">
         <button id="applyPromo">Apply</button>
       </div>
       <div class="promo-msg" id="promoMsg"></div>
     </div>
-    <div class="sum-foot">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:0 0 auto;margin-top:2px"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6l7-3z"/></svg>
-      <span>Every professional is ID-verified and background-checked. R1m public liability cover on every job.</span>
-    </div>
+    <div class="sum-foot" id="sumFoot"></div>
   </aside>
 </main>
 
 <div class="mbar" id="mbar">
-  <div>
-    <div class="m-l">Total</div>
-    <div class="m-v mono" id="mTotal">&mdash;</div>
-  </div>
+  <div><div class="m-l">Total</div><div class="m-v mono" id="mTotal">—</div></div>
   <button class="btn btn-primary" id="mNext">Continue</button>
 </div>
 
 <footer>
   <div class="wrap">
-    <span>Sparrow &mdash; interactive prototype of the customer booking flow.</span>
-    <span>Pricing rules, services and extras are all data-driven &mdash; the admin dashboard edits them without a redeploy.</span>
+    <span>Sparrow — prototype of the customer booking flow.</span>
+    <span>Services, rates, extras and VAT are data, not code — the admin dashboard edits them without a redeploy.</span>
   </div>
 </footer>
 
+<script src="assets/app.js"></script>
 <script>
-/* ============================================================
-   PRICING CONFIG — in production this is served by the API and
-   edited from the admin dashboard. One place, no hard-coding.
-   ============================================================ */
-const CFG = {
-  currency: 'R',
-  services: [
-    { id:'standard', name:'Standard house clean', base:280, perBed:70, perBath:55, mins:120, minsPerBed:35, minsPerBath:25, icon:'home', out:false },
-    { id:'deep',     name:'Deep clean',           base:520, perBed:110,perBath:90, mins:210, minsPerBed:50, minsPerBath:40, icon:'sparkle', out:false },
-    { id:'move',     name:'Move-in / move-out',   base:640, perBed:130,perBath:100,mins:240, minsPerBed:55, minsPerBath:45, icon:'box', out:false },
-    { id:'office',   name:'Office cleaning',      base:450, perBed:0,  perBath:60, mins:150, minsPerBed:0,  minsPerBath:25, icon:'office', out:false },
-    { id:'outdoor',  name:'Outdoor &amp; patio',      base:360, perBed:0,  perBath:0,  mins:120, minsPerBed:0,  minsPerBath:0,  icon:'leaf', out:true },
-    { id:'garden',   name:'Gardening',            base:400, perBed:0,  perBath:0,  mins:150, minsPerBed:0,  minsPerBath:0,  icon:'shovel',out:true },
-    { id:'laundry',  name:'Laundry &amp; ironing',    base:220, perBed:0,  perBath:0,  mins:90,  minsPerBed:0,  minsPerBath:0,  icon:'shirt', out:false },
-    { id:'windows',  name:'Window cleaning',      base:300, perBed:0,  perBath:0,  mins:100, minsPerBed:0,  minsPerBath:0,  icon:'window',out:true },
-    { id:'pool',     name:'Pool service',         base:380, perBed:0,  perBath:0,  mins:90,  minsPerBed:0,  minsPerBath:0,  icon:'wave',  out:true }
-  ],
-  extras: [
-    { id:'fridge', name:'Inside fridge',   price:90,  mins:25 },
-    { id:'oven',   name:'Inside oven',     price:120, mins:35 },
-    { id:'cab',    name:'Inside cabinets', price:110, mins:30 },
-    { id:'iron',   name:'Ironing (1 hr)',  price:100, mins:60 },
-    { id:'wash',   name:'Laundry wash',    price:85,  mins:40 },
-    { id:'balc',   name:'Balcony',         price:70,  mins:20 },
-    { id:'pets',   name:'Pet hair removal',price:95,  mins:25 }
-  ],
-  frequencies: [
-    { id:'once',   title:'One-off',    sub:'Just this time',    mult:1.00, save:0  },
-    { id:'weekly', title:'Weekly',     sub:'Same pro, same slot',mult:0.85, save:15 },
-    { id:'biweek', title:'Bi-weekly',  sub:'Every 2 weeks',     mult:0.90, save:10 }
-  ],
-  serviceFeePct: 0.07,
-  promos: { SPARROW20:{type:'pct',val:.20,label:'20% off first clean'}, WELCOME50:{type:'flat',val:50,label:'R50 off'} },
-  slots: ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00']
-};
+document.body.insertAdjacentHTML('afterbegin', protoBar('index.html') + `
+  <div class="topbar"><div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">${ico('home',17,2).replace('currentColor','#F3EFE7')}</span>
+      <span class="brand-name">Sparrow<em>.</em></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html" class="hide-sm on">Services</a>
+      <a href="cleaner.html" class="hide-sm">For professionals</a>
+      <a href="dashboard.html" class="hide-sm">My bookings</a>
+      <button class="pill-btn" onclick="location.href='dashboard.html'">Sign in</button>
+    </nav>
+  </div></div>`);
 
-/* ---------- icons ---------- */
-const I = {
-  home:'<path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
-  sparkle:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/>',
-  box:'<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>',
-  office:'<rect x="4" y="4" width="10" height="16" rx="1"/><path d="M14 10h6v10h-6M7 8h4M7 12h4M7 16h4"/>',
-  leaf:'<path d="M5 19c0-8 5-13 14-13 0 9-5 14-13 14"/><path d="M5 19c3-3 6-5 10-6"/>',
-  shovel:'<path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7l-6 6v4l3 3h4l6-6"/>',
-  shirt:'<path d="M8 4l4 2 4-2 4 3-2 3-1-1v11H7V9L6 10 4 7z"/>',
-  window:'<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M12 4v16M4 12h16"/>',
-  wave:'<path d="M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>'
-};
-const svg = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>`;
-const TICK = '<svg class="tick" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 7"/></svg>';
+/* the booking under construction — the same shape priceBooking() takes */
+const B = { service:null, unitType:CFG.unitTypes[0], rooms:3, band:'m', units:1,
+            extras:['general'], freq:'once', promo:null, date:0, slot:null, pay:'card' };
+let step = 0;
 
-/* ---------- state ---------- */
-const S = { step:0, svc:null, beds:2, baths:1, extras:new Set(), freq:'once', date:0, slot:null, pay:'card', promo:null };
-const money = n => CFG.currency + n.toLocaleString('en-ZA',{minimumFractionDigits:0,maximumFractionDigits:0});
-const svcOf = () => CFG.services.find(s=>s.id===S.svc);
-const $ = s => document.querySelector(s);
+const STEPS = ['Service','Details','Schedule','Address','Checkout'];
+const service = () => svcOf(B.service);
 
-/* ---------- price engine ---------- */
-function quote(){
-  const s = svcOf();
-  if(!s) return null;
-  const usesRooms = s.perBed>0 || s.perBath>0;
-  let base = s.base + (usesRooms ? s.perBed*Math.max(0,S.beds-1) + s.perBath*Math.max(0,S.baths-1) : 0);
-  let mins = s.mins + (usesRooms ? s.minsPerBed*Math.max(0,S.beds-1) + s.minsPerBath*Math.max(0,S.baths-1) : 0);
-  let extras = 0;
-  S.extras.forEach(id=>{ const e = CFG.extras.find(x=>x.id===id); if(e){ extras += e.price; mins += e.mins; }});
-  const f = CFG.frequencies.find(x=>x.id===S.freq);
-  const sub = base + extras;
-  const freqDisc = Math.round(sub * (1 - f.mult));
-  const afterFreq = sub - freqDisc;
-  let promoDisc = 0;
-  if(S.promo){ const p = CFG.promos[S.promo]; promoDisc = p.type==='pct' ? Math.round(afterFreq*p.val) : Math.min(p.val, afterFreq); }
-  const net = afterFreq - promoDisc;
-  const fee = Math.round(net * CFG.serviceFeePct);
-  return { base, extras, freqDisc, promoDisc, fee, mins, usesRooms, total: net + fee, freqLabel:f.title };
-}
-
-/* ---------- render ---------- */
-const STEPS = ['Service','Details','Schedule','Address','Payment'];
 function renderStepper(){
-  $('#stepper').innerHTML = STEPS.map((t,i)=>{
-    const cls = S.step>i ? 'done' : S.step===i ? 'active' : '';
-    const num = S.step>i ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 7"/></svg>' : (i+1);
-    return `<div class="step ${cls}"><span class="step-num">${num}</span><span class="step-lbl">${t}</span></div>${i<STEPS.length-1?'<span class="step-bar"></span>':''}`;
+  $('#stepper').innerHTML = STEPS.map((t,i) => {
+    const cls = step > i ? 'done' : step === i ? 'active' : '';
+    const n = step > i ? ico('check',12,3.4) : (i+1);
+    return `<div class="step ${cls}"><span class="step-num">${n}</span><span class="step-lbl">${t}</span></div>${i < STEPS.length-1 ? '<span class="step-bar"></span>' : ''}`;
   }).join('');
 }
 
+/* ---------- step 1 ---------- */
+function fromPrice(s){
+  const probe = { service:s.id, rooms:3, band:'m', units:1, extras:[], freq:'once' };
+  return money(priceBooking(probe).total);
+}
 function renderServices(){
-  $('#svcGrid').innerHTML = CFG.services.map(s=>`
-    <button class="svc ${S.svc===s.id?'sel':''}" data-svc="${s.id}">
-      ${TICK}${s.out&&S.svc!==s.id?'<span class="badge-out">Outdoor</span>':''}
-      ${svg(s.icon)}
+  const group = g => CFG.services.filter(s => s.group === g).map(s => `
+    <button class="svc ${B.service === s.id ? 'sel' : ''}" data-svc="${s.id}">
+      <span class="tick">${ico('check',18,2.6)}</span>
+      ${ico(s.icon,24,1.6)}
       <div class="svc-name">${s.name}</div>
-      <div class="svc-from">from ${money(s.base)}</div>
+      <div class="svc-from">from ${fromPrice(s)} incl. VAT</div>
     </button>`).join('');
-  document.querySelectorAll('[data-svc]').forEach(b=>b.onclick=()=>{ S.svc=b.dataset.svc; renderServices(); paint(); });
+  $('#svcGroups').innerHTML =
+    `<div class="grp-t">Indoor</div><div class="svc-grid">${group('indoor')}</div>
+     <div class="grp-t">Outdoor</div><div class="svc-grid">${group('outdoor')}</div>`;
+  $$('[data-svc]').forEach(b => b.onclick = () => { B.service = b.dataset.svc; renderServices(); paint(); });
 }
 
-function renderDetails(){
-  const s = svcOf(); if(!s) return;
-  const usesRooms = s.perBed>0 || s.perBath>0;
-  let rows = '';
-  if(s.perBed>0) rows += counterRow('Bedrooms','Including studies and guest rooms','beds',1,8);
-  if(s.perBath>0) rows += counterRow('Bathrooms', s.id==='office'?'Including staff washrooms':'Ensuites count separately','baths',1,6);
-  if(!usesRooms) rows = `<div class="row-lbl"><div><div class="rl-t">${s.name}</div><div class="rl-s">Flat rate for this service &mdash; add extras below.</div></div><div class="mono" style="font-weight:600;font-size:17px">${money(s.base)}</div></div>`;
-  $('#sizeRows').innerHTML = rows;
-  document.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{ S[b.dataset.key] += (+b.dataset.inc); renderDetails(); paint(); });
-
-  $('#extras').innerHTML = CFG.extras.map(e=>`<button class="chip ${S.extras.has(e.id)?'on':''}" data-ex="${e.id}">${e.name}<span class="c-price">+${money(e.price)}</span></button>`).join('');
-  document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{ const id=b.dataset.ex; S.extras.has(id)?S.extras.delete(id):S.extras.add(id); renderDetails(); paint(); });
-
-  $('#freq').innerHTML = CFG.frequencies.map(f=>`
-    <button class="${S.freq===f.id?'on':''}" data-freq="${f.id}">
-      ${f.save?`<span class="save-tag">Save ${f.save}%</span>`:''}
-      <div class="f-t">${f.title}</div><div class="f-s">${f.sub}</div>
-    </button>`).join('');
-  document.querySelectorAll('[data-freq]').forEach(b=>b.onclick=()=>{ S.freq=b.dataset.freq; renderDetails(); paint(); });
-}
-function counterRow(t,s,key,min,max){
-  const v = S[key];
+/* ---------- step 2 ---------- */
+function counterRow(t, s, key, min, max){
+  const v = B[key];
   return `<div class="row-lbl"><div><div class="rl-t">${t}</div><div class="rl-s">${s}</div></div>
     <div class="counter">
-      <button class="cbtn" data-inc="-1" data-key="${key}" ${v<=min?'disabled':''}>&minus;</button>
+      <button class="cbtn" data-inc="-1" data-key="${key}" ${v <= min ? 'disabled' : ''}>−</button>
       <span class="cval mono">${v}</span>
-      <button class="cbtn" data-inc="1" data-key="${key}" ${v>=max?'disabled':''}>+</button>
+      <button class="cbtn" data-inc="1" data-key="${key}" ${v >= max ? 'disabled' : ''}>+</button>
     </div></div>`;
 }
+function renderDetails(){
+  const s = service(); if(!s) return;
+  const q = priceBooking(B);
+  let rows = '';
 
-const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-function renderSchedule(){
-  const today = new Date();
-  $('#dates').innerHTML = Array.from({length:14},(_,i)=>{
-    const d = new Date(today); d.setDate(d.getDate()+i);
-    return `<button class="dcell ${S.date===i?'on':''}" data-date="${i}">
-      <div class="dw">${i===0?'Today':i===1?'Tmrw':DAYS[d.getDay()]}</div>
-      <div class="dd mono">${d.getDate()}</div>
-      <div class="dm">${MON[d.getMonth()]}</div></button>`;
-  }).join('');
-  document.querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>{ S.date=+b.dataset.date; S.slot=null; renderSchedule(); paint(); });
+  if(s.model === 'rooms'){
+    rows += `<div class="row-lbl"><div><div class="rl-t">Unit type</div><div class="rl-s">Helps us send the right equipment</div></div>
+      <div style="min-width:200px"><select id="unitType">${CFG.unitTypes.map(u => `<option ${u === B.unitType ? 'selected' : ''}>${u}</option>`).join('')}</select></div></div>`;
+    rows += counterRow('Number of rooms', `Each room is ${CFG.minutesPerRoom} minutes`, 'rooms', 1, 12);
+    rows += `<div class="row-lbl"><div><div class="rl-t">Hours</div>
+      <div class="rl-s">${B.rooms} rooms × ${CFG.minutesPerRoom} min${q.hours > B.rooms * CFG.minutesPerRoom / 60 ? ', plus your checklist items' : ''}</div></div>
+      <div class="mono" style="font-weight:600;font-size:17px">${q.hoursLabel}</div></div>`;
+  } else if(s.model === 'office'){
+    rows += `<div class="row-lbl"><div><div class="rl-t">Unit size range</div><div class="rl-s">Floor area per unit</div></div>
+      <div style="min-width:200px"><select id="band">${CFG.officeBands.map(x => `<option value="${x.id}" ${x.id === B.band ? 'selected' : ''}>${x.label}</option>`).join('')}</select></div></div>`;
+    rows += counterRow('Number of units', 'Offices or floors on the same site', 'units', 1, 20);
+    rows += `<div class="row-lbl"><div><div class="rl-t">Hours</div><div class="rl-s">Estimated time on site</div></div>
+      <div class="mono" style="font-weight:600;font-size:17px">${q.hoursLabel}</div></div>`;
+  } else {
+    rows += `<div class="row-lbl"><div><div class="rl-t">${s.name}</div>
+      <div class="rl-s">Flat rate for this service — add checklist items below.</div></div>
+      <div class="mono" style="font-weight:600;font-size:17px">${money(q.base)}</div></div>`;
+  }
+  $('#sizeRows').innerHTML = rows;
 
-  // deterministic pseudo-availability so the demo behaves consistently
-  $('#slots').innerHTML = CFG.slots.map((t,i)=>{
-    const seed = (S.date*7 + i*13) % 11;
-    const pros = seed===0 ? 0 : seed;
-    const dis = pros===0;
-    return `<button class="slot ${S.slot===t?'on':''}" data-slot="${t}" ${dis?'disabled':''}>${t}
-      <span class="pros">${dis?'full':pros+' pros free'}</span></button>`;
-  }).join('');
-  document.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{ S.slot=b.dataset.slot; renderSchedule(); paint(); });
+  const ut = $('#unitType'); if(ut) ut.onchange = e => { B.unitType = e.target.value; };
+  const bd = $('#band');     if(bd) bd.onchange = e => { B.band = e.target.value; renderDetails(); paint(); };
+  $$('[data-inc]').forEach(b => b.onclick = () => { B[b.dataset.key] += (+b.dataset.inc); renderDetails(); paint(); });
 
-  const q = quote();
-  $('#durNote').textContent = q
-    ? `Estimated ${Math.floor(q.mins/60)}h ${q.mins%60 ? (q.mins%60)+'m' : ''} on site. The professional is paid for the full window even if they finish early.`
-    : 'Estimated duration will appear once you pick a service.';
+  $('#extras').innerHTML = CFG.checklist.map(e => `
+    <button class="chip ${B.extras.includes(e.id) ? 'on' : ''}" data-ex="${e.id}">${e.name}
+      <span class="c-price">${e.price ? '+' + money(e.price) : 'included'}</span></button>`).join('');
+  $$('[data-ex]').forEach(b => b.onclick = () => {
+    const id = b.dataset.ex;
+    B.extras = B.extras.includes(id) ? B.extras.filter(x => x !== id) : B.extras.concat(id);
+    renderDetails(); paint();
+  });
+
+  $('#freq').innerHTML = CFG.frequencies.map(f => `
+    <button class="${B.freq === f.id ? 'on' : ''}" data-freq="${f.id}">
+      ${f.save ? `<span class="save-tag">Save ${f.save}%</span>` : ''}
+      <div class="f-t">${f.title}</div><div class="f-s">${f.sub}</div></button>`).join('');
+  $$('[data-freq]').forEach(b => b.onclick = () => { B.freq = b.dataset.freq; renderDetails(); paint(); });
 }
 
+/* ---------- step 3 ---------- */
+function renderSchedule(){
+  const today = new Date(2026, 7, 16);          // fixed so the demo is deterministic
+  $('#dates').innerHTML = Array.from({length:14}, (_,i) => {
+    const d = new Date(today); d.setDate(d.getDate() + i);
+    return `<button class="dcell ${B.date === i ? 'on' : ''}" data-date="${i}">
+      <div class="dw">${i === 0 ? 'Today' : i === 1 ? 'Tmrw' : DAYS[d.getDay()]}</div>
+      <div class="dd mono">${d.getDate()}</div><div class="dm">${MON[d.getMonth()]}</div></button>`;
+  }).join('');
+  $$('[data-date]').forEach(b => b.onclick = () => { B.date = +b.dataset.date; B.slot = null; renderSchedule(); paint(); });
+
+  $('#slots').innerHTML = CFG.slots.map((t,i) => {
+    const pros = (B.date * 7 + i * 13) % 11;    // deterministic pseudo-availability
+    const dis = pros === 0;
+    return `<button class="slot ${B.slot === t ? 'on' : ''}" data-slot="${t}" ${dis ? 'disabled' : ''}>${t}
+      <span class="pros">${dis ? 'full' : pros + ' pros free'}</span></button>`;
+  }).join('');
+  $$('[data-slot]').forEach(b => b.onclick = () => { B.slot = b.dataset.slot; renderSchedule(); paint(); });
+
+  const q = priceBooking(B);
+  $('#durNote').innerHTML = `${ico('clock',17,2)}<span>Estimated ${q.hoursLabel} on site. The professional is paid for the full window even if they finish early.</span>`;
+}
+
+/* ---------- step 5 ---------- */
 function renderPays(){
   const opts = [
-    {id:'card', t:'Card', s:'Visa, Mastercard &mdash; authorised now, captured on completion', cards:true},
-    {id:'wallet',t:'Sparrow wallet', s:'Balance ' + money(0) + ' &mdash; top up or use loyalty points'},
-    {id:'eft',  t:'Instant EFT', s:'Pay directly from your bank account'},
-    {id:'cash', t:'Cash on completion', s:'Available for one-off bookings under ' + money(600)}
+    { id:'card',   t:'Card',                  s:'Visa or Mastercard — authorised now, captured on completion' },
+    { id:'eft',    t:'Instant EFT',           s:'Pay directly from your bank account' },
+    { id:'wallet', t:'Sparrow wallet',        s:'Balance and loyalty points' },
+    { id:'cash',   t:'Cash on completion',    s:'One-off bookings under ' + money(600) }
   ];
-  $('#pays').innerHTML = opts.map(o=>`
-    <button class="pay ${S.pay===o.id?'on':''}" data-pay="${o.id}">
+  $('#pays').innerHTML = opts.map(o => `
+    <button class="pay ${B.pay === o.id ? 'on' : ''}" data-pay="${o.id}">
       <span class="radio"></span>
       <span><span class="p-t">${o.t}</span><br><span class="p-s">${o.s}</span></span>
     </button>`).join('');
-  document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{ S.pay=b.dataset.pay; renderPays(); });
+  $$('[data-pay]').forEach(b => b.onclick = () => { B.pay = b.dataset.pay; renderPays(); });
 }
-
+function whenLabel(){
+  const d = new Date(2026, 7, 16); d.setDate(d.getDate() + B.date);
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}${B.slot ? ' at ' + B.slot : ''}`;
+}
 function renderReview(){
-  const s=svcOf(), q=quote(); if(!q) return;
-  const d=new Date(); d.setDate(d.getDate()+S.date);
-  const ex = [...S.extras].map(id=>CFG.extras.find(e=>e.id===id).name).join(', ') || 'None';
+  const s = service(), q = priceBooking(B);
+  const picked = B.extras.map(id => CFG.checklist.find(c => c.id === id)).filter(Boolean).map(c => c.name);
   const rows = [
     ['Service', s.name],
-    q.usesRooms ? ['Size', `${S.beds} bed &middot; ${S.baths} bath`] : null,
-    ['Extras', ex],
+    s.model === 'rooms'  ? ['Property', `${B.unitType} · ${B.rooms} rooms`] : null,
+    s.model === 'office' ? ['Size', `${CFG.officeBands.find(x => x.id === B.band).label} × ${B.units} unit${B.units > 1 ? 's' : ''}`] : null,
+    ['Checklist', picked.join(', ') || 'None'],
     ['Frequency', q.freqLabel],
-    ['When', `${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} at ${S.slot||'&mdash;'}`],
-    ['Duration', `approx. ${Math.floor(q.mins/60)}h ${q.mins%60?(q.mins%60)+'m':''}`],
-    ['Address', ($('#fAddr').value||'123 Main Road') + ', ' + ($('#fSub').value||'Sea Point')]
+    ['When', whenLabel()],
+    ['Service duration', q.hoursLabel],
+    ['Address', ($('#fAddr').value || '—') + ', ' + ($('#fSub').value || '—')]
   ].filter(Boolean);
-  $('#reviewList').innerHTML = rows.map(([k,v])=>`<div class="li"><span>${k}</span><span class="v" style="text-align:right;max-width:60%">${v}</span></div>`).join('');
+  $('#escrowNote').innerHTML = `${ico('shield',17,2)}<span>Your payment is authorised now and held in escrow. It is captured and released to the professional only after the clean is completed. Free cancellation up to 12 hours before.</span>`;
+  $('#reviewList').innerHTML = rows.map(([k,v]) =>
+    `<div class="li"><span>${k}</span><span class="v" style="text-align:right;max-width:60%">${v}</span></div>`).join('');
+
+  // the checkout breakdown the spec asks for, in its order
+  $('#checkoutSummary').innerHTML = `
+    <div class="li"><span>Service fee</span><span class="v mono">${money(q.base)}</span></div>
+    <div class="li"><span>Extras</span><span class="v mono">${money(q.extras)}</span></div>
+    <div class="li ${q.discount ? 'disc' : ''}"><span>Discount</span><span class="v mono">${q.discount ? '−' + money(q.discount) : money(0)}</span></div>
+    <div class="li"><span>Platform &amp; insurance</span><span class="v mono">${money(q.fee)}</span></div>
+    <div class="li"><span>VAT (${(CFG.vatRate*100).toFixed(0)}%)</span><span class="v mono">${money(q.vat)}</span></div>
+    <div class="rule"></div>
+    <div class="total"><span class="t-l">Total</span><span class="t-v mono">${money(q.total)}</span></div>`;
 }
 
+/* ---------- summary panel ---------- */
 function paint(){
   renderStepper();
-  const q = quote(), s = svcOf();
-  $('#sumSvc').innerHTML = s ? s.name : 'Pick a service';
+  const s = service(), q = s ? priceBooking(B) : null;
+  $('#sumSvc').textContent = s ? s.name : 'Pick a service';
+
   if(q){
-    const d=new Date(); d.setDate(d.getDate()+S.date);
-    const when = S.slot ? `${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}, ${S.slot}` : 'Time not chosen yet';
-    $('#sumMeta').innerHTML = `${q.freqLabel} &middot; ${when}`;
-    const L=[];
-    L.push(li(q.usesRooms?`${s.name} &middot; ${S.beds}b/${S.baths}ba`:s.name, money(q.base)));
-    if(q.extras) L.push(li(`Extras (${S.extras.size})`, money(q.extras)));
-    if(q.freqDisc) L.push(li(`${q.freqLabel} discount`, '&minus;'+money(q.freqDisc), true));
-    if(q.promoDisc) L.push(li(`Promo ${S.promo}`, '&minus;'+money(q.promoDisc), true));
-    L.push(li('Service fee &amp; insurance', money(q.fee)));
+    $('#sumMeta').textContent = `${q.freqLabel} · ${B.slot ? whenLabel() : 'Time not chosen yet'}`;
+    const L = [];
+    L.push(`<div class="li"><span>${s.name}${s.model === 'rooms' ? ` · ${B.rooms} rooms` : ''} (${q.hoursLabel})</span><span class="v mono">${money(q.base)}</span></div>`);
+    if(q.extras) L.push(`<div class="li"><span>Extras (${B.extras.filter(x => x !== 'general').length})</span><span class="v mono">${money(q.extras)}</span></div>`);
+    if(q.freqDisc) L.push(`<div class="li disc"><span>${q.freqLabel} discount</span><span class="v mono">−${money(q.freqDisc)}</span></div>`);
+    if(q.promoDisc) L.push(`<div class="li disc"><span>Promo ${B.promo}</span><span class="v mono">−${money(q.promoDisc)}</span></div>`);
+    L.push(`<div class="li"><span>Platform &amp; insurance</span><span class="v mono">${money(q.fee)}</span></div>`);
+    L.push(`<div class="li"><span>VAT (${(CFG.vatRate*100).toFixed(0)}%)</span><span class="v mono">${money(q.vat)}</span></div>`);
     $('#lines').innerHTML = L.join('');
-    const g=$('#grand'); g.textContent = money(q.total);
-    g.classList.add('bump'); setTimeout(()=>g.classList.remove('bump'),180);
-    $('#payAmt').textContent = money(q.total);
+    const g = $('#grand');
+    g.textContent = money(q.total);
+    g.classList.add('bump'); setTimeout(() => g.classList.remove('bump'), 180);
   } else {
     $('#sumMeta').textContent = 'Pricing appears as you build the booking';
-    $('#lines').innerHTML = '<div class="li"><span>No service selected</span><span class="v">&mdash;</span></div>';
-    $('#grand').innerHTML = '&mdash;';
+    $('#lines').innerHTML = '<div class="li"><span>No service selected</span><span class="v">—</span></div>';
+    $('#grand').textContent = '—';
   }
-  // gate the continue buttons
-  const pane = document.querySelector(`[data-pane="${S.step}"]`);
+
+  $('#sumFoot').innerHTML = `${ico('shield',15,2)}<span>Every professional is ID-verified and background-checked. Public liability cover on every job.</span>`;
+
+  const pane = document.querySelector(`[data-pane="${step}"]`);
   const nx = pane && pane.querySelector('[data-next]');
   if(nx){
-    if(S.step===0) nx.disabled = !S.svc;
-    else if(S.step===2) nx.disabled = !S.slot;
+    if(step === 0) nx.disabled = !B.service;
+    else if(step === 2) nx.disabled = !B.slot;
     else nx.disabled = false;
   }
-  // mobile price bar mirrors the summary + the current pane's primary action
   const mb = $('#mbar');
-  mb.classList.toggle('show', S.step < 5);
-  $('#mTotal').innerHTML = q ? money(q.total) : '&mdash;';
-  $('#mNext').innerHTML = ['Continue','Choose a time','Add address','Review &amp; pay','Pay now'][S.step] || 'Continue';
+  mb.classList.toggle('show', step < 5);
+  $('#mTotal').textContent = q ? money(q.total) : '—';
+  $('#mNext').textContent = ['Continue','Choose a time','Add address','Review & pay','Pay now'][step] || 'Continue';
   $('#mNext').disabled = nx ? nx.disabled : false;
 }
-const li = (k,v,disc)=>`<div class="li ${disc?'disc':''}"><span>${k}</span><span class="v">${v}</span></div>`;
+
+/* ---------- address validation ---------- */
+function badField(el, isBad){ el.closest('.field').classList.toggle('bad', isBad); return isBad; }
+function validateAddress(){
+  let fail = false;
+  fail |= badField($('#fName'),  !$('#fName').value.trim());
+  fail |= badField($('#fSur'),   !$('#fSur').value.trim());
+  fail |= badField($('#fPhone'), $('#fPhone').value.replace(/\D/g,'').length < 9);
+  fail |= badField($('#fEmail'), !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test($('#fEmail').value.trim()));
+  fail |= badField($('#fAddr'),  !$('#fAddr').value.trim());
+  fail |= badField($('#fSub'),   !$('#fSub').value.trim());
+  if(fail) toast('Please complete the highlighted fields','info');
+  return !fail;
+}
 
 /* ---------- navigation ---------- */
 function go(n){
-  S.step = n;
-  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on', +p.dataset.pane===n));
-  if(n===1) renderDetails();
-  if(n===2) renderSchedule();
-  if(n===4){ renderPays(); renderReview(); }
+  if(n === 4 && step === 3 && !validateAddress()) return;
+  step = n;
+  $$('.pane').forEach(p => p.classList.toggle('on', +p.dataset.pane === n));
+  if(n === 1) renderDetails();
+  if(n === 2) renderSchedule();
+  if(n === 4){ renderPays(); renderReview(); }
   paint();
-  window.scrollTo({top: document.querySelector('.booker').offsetTop - 80, behavior:'smooth'});
+  window.scrollTo({ top: document.querySelector('.booker').offsetTop - 80, behavior:'smooth' });
 }
-document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>go(S.step+1));
-document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>go(S.step-1));
-$('#mNext').onclick = () => S.step === 4 ? $('#payBtn').click() : go(S.step + 1);
+$$('[data-next]').forEach(b => b.onclick = () => go(step + 1));
+$$('[data-back]').forEach(b => b.onclick = () => go(step - 1));
+$('#mNext').onclick = () => step === 4 ? $('#payBtn').click() : go(step + 1);
 $('#guestSwitch').onclick = e => e.currentTarget.classList.toggle('on');
+
 $('#payBtn').onclick = () => {
-  $('#refNo').textContent = 'SPW-' + String(Math.floor(100000 + (S.date*9173 + CFG.slots.indexOf(S.slot)*577 + (S.beds*31)) % 899999));
+  const q = priceBooking(B);
+  // deterministic reference — no randomness, so the demo repeats identically
+  const seed = (B.date * 9173 + CFG.slots.indexOf(B.slot) * 577 + B.rooms * 31 + B.extras.length * 7) % 899999;
+  $('#refNo').textContent = 'SPW-' + String(100000 + seed);
+  $('#confirmFacts').innerHTML = `
+    <div class="li"><span>Service</span><span class="v">${q.serviceName}</span></div>
+    <div class="li"><span>Service date</span><span class="v">${whenLabel()}</span></div>
+    <div class="li"><span>Service duration</span><span class="v">${q.hoursLabel}</span></div>
+    <div class="li"><span>Paid</span><span class="v mono">${money(q.total)} incl. VAT</span></div>`;
   go(5);
 };
-$('#restart').onclick = () => { S.svc=null; S.slot=null; S.extras.clear(); S.promo=null; S.freq='once'; $('#promoMsg').textContent=''; $('#promo').value=''; renderServices(); go(0); };
-$('#applyPromo').onclick = () => {
-  const code = $('#promo').value.trim().toUpperCase();
-  const m = $('#promoMsg');
-  if(CFG.promos[code]){ S.promo = code; m.className='promo-msg'; m.textContent = CFG.promos[code].label + ' applied.'; }
-  else { S.promo = null; m.className='promo-msg bad'; m.textContent = code ? 'That code is not valid.' : 'Try SPARROW20 or WELCOME50.'; }
-  paint();
+$('#restart').onclick = () => {
+  B.service = null; B.slot = null; B.extras = ['general']; B.promo = null; B.freq = 'once'; B.rooms = 3;
+  $('#promoMsg').textContent = ''; $('#promo').value = '';
+  renderServices(); go(0);
 };
+$('#applyPromo').onclick = () => {
+  const code = $('#promo').value.trim().toUpperCase(), m = $('#promoMsg');
+  if(CFG.promos[code]){ B.promo = code; m.className = 'promo-msg'; m.textContent = CFG.promos[code].label + ' applied.'; }
+  else { B.promo = null; m.className = 'promo-msg bad'; m.textContent = code ? 'That code is not valid.' : 'Try SPARROW20 or WELCOME50.'; }
+  paint();
+  if(step === 4) renderReview();
+};
+
+/* deep link from the dashboard: index.html?service=deep */
+const wanted = new URLSearchParams(location.search).get('service');
+if(wanted && svcOf(wanted)) B.service = wanted;
 
 renderServices(); paint();
 </script>

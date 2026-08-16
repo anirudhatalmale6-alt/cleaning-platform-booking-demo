@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparrow — Cleaner dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .modeswitch{display:flex;gap:6px;background:var(--ink-08);padding:4px;border-radius:999px;margin:22px auto 0;width:max-content}
+  .modeswitch button{border:0;background:transparent;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink-45);padding:8px 18px;border-radius:999px;cursor:pointer;transition:.2s var(--ease)}
+  .modeswitch button.on{background:var(--paper-2);color:var(--ink);box-shadow:var(--shadow-1)}
+  .apply-wrap{max-width:760px;margin:0 auto;padding:26px 0 70px}
+  .welcome{text-align:center;margin-bottom:26px}
+  .welcome h1{font-size:clamp(30px,5vw,44px)}
+  .welcome h1 .ital{font-style:italic;color:var(--moss)}
+  .welcome p{color:var(--ink-70);max-width:52ch;margin:14px auto 0;font-size:16px}
+  .perks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+  @media(max-width:640px){.perks{grid-template-columns:1fr}}
+  .perk{border:1px solid var(--ink-08);border-radius:var(--radius);padding:14px;background:var(--paper-2);text-align:left}
+  .perk svg{color:var(--moss)}
+  .perk .p-t{font-weight:600;font-size:14px;margin-top:8px}
+  .perk .p-s{font-size:12.5px;color:var(--ink-45)}
+  .steps{display:flex;align-items:center;padding:16px 24px;border-bottom:1px solid var(--ink-08);overflow-x:auto;scrollbar-width:none}
+  .steps::-webkit-scrollbar{display:none}
+  .stp{display:flex;align-items:center;gap:9px;flex:0 0 auto;padding-right:14px;opacity:.42;transition:.3s var(--ease)}
+  .stp.on,.stp.done{opacity:1}
+  .stp-n{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--ink-14);display:grid;place-items:center;font-size:12px;font-weight:600;flex:0 0 auto}
+  .stp.on .stp-n{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
+  .stp.done .stp-n{background:var(--moss);border-color:var(--moss);color:#fff}
+  .stp-l{font-size:13px;font-weight:500;white-space:nowrap}
+  .stp-bar{width:24px;height:1.5px;background:var(--ink-14);margin-right:14px;flex:0 0 auto}
+  @media(max-width:720px){.stp:not(.on) .stp-l{display:none}.stp-bar{width:12px}}
+  .pane{display:none;animation:rise .4s var(--ease) both}
+  .pane.on{display:block}
+  .citybox{border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:13px;max-height:200px;overflow:auto;background:var(--paper-2)}
+  .citybox .cb-empty{color:var(--ink-45);font-size:13.5px}
+  .split{display:grid;grid-template-columns:1fr 330px;gap:20px;align-items:start}
+  @media(max-width:1000px){.split{grid-template-columns:1fr}}
+  .job{border:1px solid var(--ink-08);border-radius:var(--radius);background:var(--paper-2);padding:16px;transition:.2s var(--ease)}
+  .job:hover{box-shadow:var(--shadow-1)}
+  .job .j-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+  .job .j-t{font-family:'Fraunces',serif;font-size:19px}
+  .job .j-pay{margin-left:auto;text-align:right}
+  .job .j-pay .v{font-family:'Fraunces',serif;font-size:23px;font-variant-numeric:tabular-nums}
+  .job .j-pay .l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-45)}
+  .checkitem{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1.5px solid var(--ink-14);border-radius:11px;cursor:pointer;background:transparent;width:100%;font:inherit;text-align:left;color:inherit;transition:.18s var(--ease);margin-bottom:8px}
+  .checkitem:hover{border-color:var(--moss)}
+  .checkitem.on{background:var(--moss-soft);border-color:var(--moss)}
+  .checkitem .cbox{width:21px;height:21px;border-radius:6px;border:1.5px solid var(--ink-14);display:grid;place-items:center;flex:0 0 auto;color:transparent}
+  .checkitem.on .cbox{background:var(--moss);border-color:var(--moss);color:#fff}
+  .checkitem.on .ci-t{text-decoration:line-through;opacity:.6}
+  .avail{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+  .avail button{border:1.5px solid var(--ink-14);background:transparent;border-radius:10px;padding:10px 2px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink-70);transition:.18s var(--ease)}
+  .avail button.on{background:var(--moss);border-color:var(--moss);color:#fff}
+  .bars{display:grid;gap:9px;margin-top:4px}
+  .bar-row{display:grid;grid-template-columns:38px 1fr 62px;gap:10px;align-items:center;font-size:13px}
+  .bar{height:9px;border-radius:999px;background:var(--ink-08);overflow:hidden}
+  .bar span{display:block;height:100%;background:var(--moss);border-radius:999px}
+</style>
+</head>
+<body>
+
+<div class="wrap"><div class="modeswitch" id="modeSwitch">
+  <button data-mode="apply">Application form</button>
+  <button data-mode="dash">Approved cleaner dashboard</button>
+</div></div>
+
+<div id="root"></div>
+
+<script src="assets/app.js"></script>
+<script>
+mountChrome({
+  page:'cleaner.html', role:'Cleaner',
+  links:[['cleaner.html','Apply'],['cleaner.html','My jobs'],['index.html','Website']]
+});
+
+/* ============================================================
+   MODE 1 — APPLICATION FORM
+   Fields are exactly those in "Cleaner dashboard.docx", in order.
+   ============================================================ */
+const A = { step:0, prov:'', cities:new Set(), crim:null, files:{}, group:'' };
+const APPLY_STEPS = ['About you','Where you work','References','Documents'];
+
+function applyView(){
+  return `
+  <div class="wrap apply-wrap">
+    <div class="welcome">
+      <h1>Welcome to Sparrow.<br><span class="ital">Work when you want, get paid weekly.</span></h1>
+      <p>We are hiring vetted indoor and outdoor cleaning professionals. Fill in the form below — it takes about six minutes. If your documents check out, we will call you within two working days.</p>
+      <div class="perks">
+        <div class="perk">${ico('wallet',22)}<div class="p-t">Paid every Friday</div><div class="p-s">Straight into your bank account</div></div>
+        <div class="perk">${ico('cal',22)}<div class="p-t">You set your days</div><div class="p-s">Accept or decline any job</div></div>
+        <div class="perk">${ico('shield',22)}<div class="p-t">Covered on every job</div><div class="p-s">Public liability included</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="steps" id="aSteps"></div>
+      <div class="panel">
+
+        <div class="pane on" data-p="0">
+          <h2 style="font-size:23px;margin-bottom:4px">About you</h2>
+          <p class="t-sub" style="margin:0 0 18px">As they appear on your ID or passport.</p>
+          <div class="grid2">
+            <div class="field"><label>Full names <span class="req">*</span></label><input id="fFull" placeholder="Nomsa Thandeka"><div class="err">Please enter your full names</div></div>
+            <div class="field"><label>Surname <span class="req">*</span></label><input id="fSur" placeholder="Mabaso"><div class="err">Please enter your surname</div></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>Document type <span class="req">*</span></label>
+              <select id="fDocType"><option>South African ID</option><option>Passport</option><option>Valid work permit</option></select></div>
+            <div class="field"><label>ID / passport / permit number <span class="req">*</span></label><input id="fDocNo" placeholder="13-digit ID or permit number"><div class="err">Please enter your document number</div></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>Phone number <span class="req">*</span></label><input id="fPhone" placeholder="+27 82 000 0000"><div class="err">Please enter a contact number</div></div>
+            <div class="field"><label>Email address <span class="req">*</span></label><input id="fEmail" type="email" placeholder="you@example.co.za"><div class="err">Please enter a valid email address</div></div>
+          </div>
+          <div class="field"><label>Home address <span class="req">*</span></label><input id="fHome" placeholder="Street, suburb, city"><div class="err">Please enter your home address</div></div>
+          <div class="grid2">
+            <div class="field"><label>Date of birth <span class="req">*</span></label><input id="fDob" type="date"><div class="err">You must be 18 or older to work with us</div></div>
+            <div class="field"><label>Do you have a criminal record? <span class="req">*</span></label>
+              <div class="radios" id="fCrim">
+                <button data-c="no">No</button><button data-c="yes">Yes</button>
+              </div>
+              <div class="hint">Answering yes does not automatically disqualify you. We ask because we run a police clearance check.</div>
+            </div>
+          </div>
+          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
+            <span class="spacer"></span>
+            <button class="btn btn-primary" onclick="aNext(0)">Continue ${ico('arrow',16,2.2)}</button>
+          </div>
+        </div>
+
+        <div class="pane" data-p="1">
+          <h2 style="font-size:23px;margin-bottom:4px">Where you want to work</h2>
+          <p class="t-sub" style="margin:0 0 18px">Choose your province, then tick every city or area you can reach.</p>
+          <div class="field"><label>Province <span class="req">*</span></label>
+            <select id="fProv"><option value="">Select a province…</option>
+              ${Object.keys(CFG.provinces).map(p => `<option>${p}</option>`).join('')}
+            </select><div class="err">Please choose a province</div>
+          </div>
+          <div class="field"><label>Cities and areas <span class="req">*</span></label>
+            <div class="citybox" id="fCities"><span class="cb-empty">Choose a province first.</span></div>
+            <div class="hint" id="cityCount">No areas selected.</div>
+            <div class="err">Select at least one area</div>
+          </div>
+          <div class="field"><label>Which work do you want? <span class="req">*</span></label>
+            <div class="radios" id="fGroup">
+              <button data-g="indoor">Indoor cleaning</button>
+              <button data-g="outdoor">Outdoor &amp; garden</button>
+              <button data-g="both">Both</button>
+            </div><div class="err">Please choose the work you want</div>
+          </div>
+          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
+            <button class="btn btn-ghost" onclick="aGo(0)">← Back</button><span class="spacer"></span>
+            <button class="btn btn-primary" onclick="aNext(1)">Continue ${ico('arrow',16,2.2)}</button>
+          </div>
+        </div>
+
+        <div class="pane" data-p="2">
+          <h2 style="font-size:23px;margin-bottom:4px">References</h2>
+          <p class="t-sub" style="margin:0 0 18px">Two people who can speak to your work. We call both.</p>
+          ${[1,2].map(n => `
+            <div class="fieldset-t">Reference ${n}</div>
+            <div class="grid2">
+              <div class="field"><label>Name <span class="req">*</span></label><input id="r${n}Name" placeholder="First name"><div class="err">Required</div></div>
+              <div class="field"><label>Surname <span class="req">*</span></label><input id="r${n}Sur" placeholder="Surname"><div class="err">Required</div></div>
+            </div>
+            <div class="grid2">
+              <div class="field"><label>Contact number <span class="req">*</span></label><input id="r${n}Tel" placeholder="+27 ..."><div class="err">Required</div></div>
+              <div class="field"><label>Relationship</label><select><option>Previous employer</option><option>Current employer</option><option>Agency</option><option>Community leader</option></select></div>
+            </div>
+            <div class="field"><label>Address <span class="req">*</span></label><input id="r${n}Addr" placeholder="Suburb, city"><div class="err">Required</div></div>`).join('')}
+          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
+            <button class="btn btn-ghost" onclick="aGo(1)">← Back</button><span class="spacer"></span>
+            <button class="btn btn-primary" onclick="aNext(2)">Continue ${ico('arrow',16,2.2)}</button>
+          </div>
+        </div>
+
+        <div class="pane" data-p="3">
+          <h2 style="font-size:23px;margin-bottom:4px">Upload documents</h2>
+          <p class="t-sub" style="margin:0 0 18px">Clear photos are fine — no scanner needed.</p>
+          <div class="field"><label>ID, passport or valid work permit <span class="req">*</span></label>
+            <div class="drop" id="dropId" onclick="fakeUpload('id','ID document.jpg')">
+              ${ico('upload',24)}
+              <div class="d-t">Tap to upload</div>
+              <div class="d-s">JPG or PNG, under 5 MB</div>
+            </div><div class="err">Please upload your ID document</div>
+          </div>
+          <div class="field"><label>Clear head and shoulders photo <span class="req">*</span></label>
+            <div class="drop" id="dropPic" onclick="fakeUpload('pic','Profile photo.jpg')">
+              ${ico('user',24)}
+              <div class="d-t">Tap to upload</div>
+              <div class="d-s">Plain background, face clearly visible</div>
+            </div><div class="err">Please upload your photo</div>
+          </div>
+          <div class="toggle-row" style="margin-top:18px">
+            <button class="switch" id="consent" onclick="this.classList.toggle('on')"></button>
+            <div><div style="font-weight:600;font-size:14.5px">I agree to a background and police clearance check</div>
+              <div class="t-sub">Required before your first job.</div></div>
+          </div>
+          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
+            <button class="btn btn-ghost" onclick="aGo(2)">← Back</button><span class="spacer"></span>
+            <button class="btn btn-primary" onclick="submitApp()">Submit application</button>
+          </div>
+        </div>
+
+        <div class="pane" data-p="4">
+          <div style="text-align:center;padding:14px 0">
+            <div class="avatar lg" style="margin:0 auto 16px;background:var(--moss)">${ico('check',28,2.6)}</div>
+            <h2 style="font-size:27px;margin-bottom:6px">Application received</h2>
+            <p class="t-sub" style="margin:0 auto 20px;max-width:44ch">Your reference is <strong class="mono" id="appRef"></strong>. We verify documents and call your references within two working days.</p>
+          </div>
+          <div class="timeline">
+            <div class="tl done"><div class="tl-t">Application submitted</div><div class="tl-s">Just now</div></div>
+            <div class="tl now"><div class="tl-t">Documents being verified</div><div class="tl-s">Admin reviews your ID and photo</div></div>
+            <div class="tl"><div class="tl-t">References called</div><div class="tl-s">Both contacts, within 2 working days</div></div>
+            <div class="tl"><div class="tl-t">Police clearance</div><div class="tl-s">Usually 3–5 days</div></div>
+            <div class="tl"><div class="tl-t">Approved — first job assigned</div><div class="tl-s">You get a notification and your dashboard unlocks</div></div>
+          </div>
+          <div class="note">${ico('info',17,2)}<span>Your application appears in the admin dashboard under Candidates, where it can be approved or rejected. Switch to the Admin tab above to see it from that side.</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>`;
+}
+
+function aSteps(){
+  $('#aSteps').innerHTML = APPLY_STEPS.map((t,i) => {
+    const cls = A.step > i ? 'done' : A.step === i ? 'on' : '';
+    const n = A.step > i ? ico('check',12,3.4) : (i+1);
+    return `<div class="stp ${cls}"><span class="stp-n">${n}</span><span class="stp-l">${t}</span></div>${i < APPLY_STEPS.length-1 ? '<span class="stp-bar"></span>' : ''}`;
+  }).join('');
+}
+function aGo(n){
+  A.step = n;
+  $$('.pane').forEach(p => p.classList.toggle('on', +p.dataset.p === n));
+  aSteps();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* validation — every required field named in the spec */
+function bad(el, isBad){ el.closest('.field').classList.toggle('bad', isBad); return isBad; }
+function aNext(step){
+  let fail = false;
+  if(step === 0){
+    fail |= bad($('#fFull'),  !$('#fFull').value.trim());
+    fail |= bad($('#fSur'),   !$('#fSur').value.trim());
+    fail |= bad($('#fDocNo'), !$('#fDocNo').value.trim());
+    fail |= bad($('#fPhone'), $('#fPhone').value.replace(/\D/g,'').length < 9);
+    fail |= bad($('#fEmail'), !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test($('#fEmail').value.trim()));
+    fail |= bad($('#fHome'),  !$('#fHome').value.trim());
+    // 18+ check, computed from the entered date rather than trusted
+    const dob = $('#fDob').value;
+    let under = !dob;
+    if(dob){
+      const [y,m,d] = dob.split('-').map(Number);
+      const now = new Date(2026, 7, 16);            // fixed "today" keeps the demo deterministic
+      let age = now.getFullYear() - y;
+      if(now.getMonth()+1 < m || (now.getMonth()+1 === m && now.getDate() < d)) age--;
+      under = age < 18;
+    }
+    fail |= bad($('#fDob'), under);
+    fail |= bad($('#fCrim'), A.crim === null);
+  }
+  if(step === 1){
+    fail |= bad($('#fProv'), !A.prov);
+    fail |= bad($('#fCities'), A.cities.size === 0);
+    fail |= bad($('#fGroup'), !A.group);
+  }
+  if(step === 2){
+    [1,2].forEach(n => ['Name','Sur','Tel','Addr'].forEach(f => {
+      fail |= bad($(`#r${n}${f}`), !$(`#r${n}${f}`).value.trim());
+    }));
+  }
+  if(fail){ toast('Please complete the highlighted fields','info'); return; }
+  aGo(step + 1);
+}
+
+function fakeUpload(key, name){
+  A.files[key] = name;
+  const el = key === 'id' ? $('#dropId') : $('#dropPic');
+  el.classList.add('filled');
+  el.innerHTML = `${ico('doc',22)}<div><div class="d-t">${name}</div><div class="d-s">Uploaded · tap to replace</div></div>`;
+  el.closest('.field').classList.remove('bad');
+}
+
+function submitApp(){
+  let fail = false;
+  fail |= bad($('#dropId'), !A.files.id);
+  fail |= bad($('#dropPic'), !A.files.pic);
+  if(fail){ toast('Both documents are required','info'); return; }
+  if(!$('#consent').classList.contains('on')){ toast('Please agree to the background check','info'); return; }
+
+  // deterministic reference, no randomness
+  const seed = ($('#fFull').value + $('#fSur').value + $('#fDocNo').value)
+    .split('').reduce((a,c) => (a * 31 + c.charCodeAt(0)) % 899999, 7);
+  aGo(4);
+  $('#appRef').textContent = 'APP-' + String(100000 + seed);
+
+  DB.cleaners.push({
+    id:'cl' + (DB.cleaners.length + 1),
+    name: $('#fFull').value.trim().split(' ')[0] || 'New',
+    surname: $('#fSur').value.trim() || 'Applicant',
+    initials: (($('#fFull').value.trim()[0] || 'N') + ($('#fSur').value.trim()[0] || 'A')).toUpperCase(),
+    rating:0, jobs:0, years:0, langs:['English'],
+    group: A.group === 'both' ? 'indoor' : A.group,
+    city:[...A.cities][0] || '—', prov:A.prov, status:'pending', fav:false, tone:'sky', earnings:0
+  });
+  toast('Application submitted','check');
+}
+
+/* ============================================================
+   MODE 2 — APPROVED CLEANER DASHBOARD
+   NOT in the client's document. Named as an addition, because a
+   cleaner with no dashboard cannot actually work.
+   ============================================================ */
+const ME = DB.cleaners[0];                                  // Nomsa
+const myJobs = () => DB.bookings.filter(b => b.cleaner === ME.id);
+const CDONE = new Set();
+const AVAIL = new Set(['Mon','Tue','Wed','Thu','Fri']);
+let cView = 'today';
+
+const CNAV = [
+  { id:'today',   label:'Today', icon:'clock' },
+  { id:'offers',  label:'Job offers', icon:'bell', badge: DB.bookings.filter(b => b.status === 'pending').length },
+  { id:'schedule',label:'My schedule', icon:'cal' },
+  { id:'earnings',label:'Earnings', icon:'wallet' },
+  { id:'ratings', label:'Ratings', icon:'star' },
+  { id:'cprofile',label:'My profile', icon:'user' }
+];
+
+function dashView(){
+  return `<main class="wrap shell">
+    <aside class="card side"><div class="side-nav" id="sideNav"></div></aside>
+    <section id="cview"></section>
+  </main>`;
+}
+
+const CVIEWS = {
+today(){
+  const today = myJobs().filter(b => b.status === 'confirmed').slice(0,1)[0];
+  const q = today ? priceBooking(today) : null;
+  const ad = today ? address(today.addr) : null;
+  const cust = today ? custOf(today.cust) : null;
+  const items = today ? ['General cleaning', ...(today.extras || []).map(id => CFG.checklist.find(c => c.id === id).name)] : [];
+  const payout = q ? Math.round(q.base * 0.75 + q.extras * 0.7) : 0;   // cleaner take, config in admin
+
+  return `
+  <div class="page-head"><h1>Good morning, ${ME.name}</h1><p>${myJobs().filter(b=>b.status==='confirmed').length} job confirmed · you are ${AVAIL.size} days available this week</p></div>
+
+  <div class="stats" style="margin-bottom:22px">
+    <div class="stat"><div class="s-l">This week</div><div class="s-v mono">${money(2140)}</div><div class="s-d up">4 jobs completed</div></div>
+    <div class="stat"><div class="s-l">Rating</div><div class="s-v mono">${ME.rating.toFixed(2)}</div><div class="s-d">${ME.jobs} cleans</div></div>
+    <div class="stat"><div class="s-l">Acceptance</div><div class="s-v mono">96%</div><div class="s-d up">Top 10% of cleaners</div></div>
+    <div class="stat"><div class="s-l">Next payout</div><div class="s-v mono">${money(2140)}</div><div class="s-d">Friday 21 Aug</div></div>
+  </div>
+
+  ${today ? `<div class="split">
+    <div>
+      <div class="job" style="margin-bottom:16px">
+        <div class="j-top">
+          <div>
+            <div class="t-sub">${today.id} · ${fmtDate(today.date)} at ${today.time}</div>
+            <div class="j-t">${q.serviceName}</div>
+          </div>
+          <div class="j-pay"><div class="v">${money(payout)}</div><div class="l">Your payout</div></div>
+        </div>
+        <dl class="kv" style="display:grid;grid-template-columns:130px 1fr;gap:6px 14px;font-size:14px;margin:0 0 14px">
+          <dt style="color:var(--ink-45);font-size:13px">Customer</dt><dd style="margin:0;font-weight:500">${cust.name}</dd>
+          <dt style="color:var(--ink-45);font-size:13px">Address</dt><dd style="margin:0;font-weight:500">${ad.line}, ${ad.suburb}</dd>
+          <dt style="color:var(--ink-45);font-size:13px">Access</dt><dd style="margin:0;font-weight:500">${ad.notes}</dd>
+          <dt style="color:var(--ink-45);font-size:13px">Expected time</dt><dd style="margin:0;font-weight:500">${q.hoursLabel}</dd>
+        </dl>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary sm" onclick="toast('Customer notified you are on the way','route')">${ico('route',15,2.2)} I'm on my way</button>
+          <button class="btn btn-outline sm" onclick="toast('Opens Google Maps in the real build','pin')">Navigate</button>
+          <button class="btn btn-outline sm" onclick="toast('Chat opens here','chat')">Message customer</button>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="sect-head" style="margin-bottom:12px">
+          <div><h2 style="font-size:20px">Job checklist</h2><div class="sh-sub">Tick each item as you finish it. The customer sees this live.</div></div>
+          <span class="sh-act"><span class="pill ${CDONE.size === items.length ? 'ok' : 'wait'}">${CDONE.size}/${items.length} done</span></span>
+        </div>
+        ${items.map((t,i) => `<button class="checkitem ${CDONE.has(i) ? 'on' : ''}" onclick="tick(${i})">
+            <span class="cbox">${ico('check',13,3.4)}</span><span class="ci-t">${t}</span></button>`).join('')}
+        <button class="btn btn-primary" style="width:100%;margin-top:10px" ${CDONE.size < items.length ? 'disabled' : ''}
+          onclick="finishJob()">${CDONE.size < items.length ? `Finish job (${items.length - CDONE.size} left)` : 'Mark job complete'}</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card panel" style="margin-bottom:16px">
+        <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Payout breakdown</h2></div>
+        <div class="li"><span>Service (${q.hoursLabel})</span><span class="v mono">${money(q.base)}</span></div>
+        <div class="li"><span>Extras</span><span class="v mono">${money(q.extras)}</span></div>
+        <div class="li"><span>Platform share</span><span class="v mono">−${money(q.base + q.extras - payout)}</span></div>
+        <div class="rule"></div>
+        <div class="total"><span class="t-l">You earn</span><span class="t-v mono">${money(payout)}</span></div>
+        <div class="note">${ico('info',17,2)}<span>The cleaner share is a setting, not a hard-coded number. Tell me your split and I change one value.</span></div>
+      </div>
+      <div class="card panel">
+        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Availability this week</h2></div>
+        <div class="avail">${DAYS.slice(1).concat(DAYS[0]).map(d => `<button class="${AVAIL.has(d) ? 'on' : ''}" onclick="toggleDay('${d}')">${d}</button>`).join('')}</div>
+        <div class="t-sub" style="margin-top:10px">You only receive offers on the days you switch on.</div>
+      </div>
+    </div>
+  </div>` : `<div class="card panel"><div class="empty">${ico('clock',34)}<div class="e-t">No job today</div></div></div>`}`;
+},
+
+offers(){
+  const open = DB.bookings.filter(b => b.status === 'pending');
+  return `
+  <div class="page-head"><h1>Job offers</h1><p>Jobs in your areas. Accept and it is yours; decline and it goes to the next cleaner.</p></div>
+  <div class="rows">
+    ${open.map(b => {
+      const q = priceBooking(b), ad = address(b.addr);
+      const payout = Math.round(q.base * 0.75 + q.extras * 0.7);
+      return `<div class="job">
+        <div class="j-top">
+          <div><div class="t-sub">${fmtDate(b.date)} at ${b.time} · ${q.hoursLabel}</div>
+            <div class="j-t">${q.serviceName}</div>
+            <div class="t-sub">${ad.suburb}, ${ad.city} · 3.4 km away</div></div>
+          <div class="j-pay"><div class="v">${money(payout)}</div><div class="l">You earn</div></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary sm" onclick="acceptJob('${b.id}')">Accept job</button>
+          <button class="btn btn-outline sm" onclick="toast('Declined — offered to the next cleaner','x')">Decline</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="note">${ico('info',17,2)}<span>Whether cleaners get offers like this, or an admin simply assigns them, is the open question I raised. This screen exists so you can see both models side by side before deciding.</span></div>`;
+},
+
+schedule(){
+  const jobs = myJobs();
+  return `
+  <div class="page-head"><h1>My schedule</h1><p>Everything assigned to you, and the days you are available.</p></div>
+  <div class="card panel" style="margin-bottom:20px">
+    <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Days I can work</h2></div>
+    <div class="avail">${DAYS.slice(1).concat(DAYS[0]).map(d => `<button class="${AVAIL.has(d) ? 'on' : ''}" onclick="toggleDay('${d}')">${d}</button>`).join('')}</div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Booking</th><th>Date</th><th>Time</th><th>Service</th><th>Area</th><th>Status</th><th class="num">Payout</th></tr></thead>
+      <tbody>${jobs.map(b => {
+        const q = priceBooking(b), ad = address(b.addr);
+        return `<tr><td class="t-strong mono">${b.id}</td><td>${fmtDate(b.date)}</td><td class="mono">${b.time}</td>
+          <td>${q.serviceName}</td><td>${ad.suburb}</td><td>${statusPill(b.status)}</td>
+          <td class="num">${money(Math.round(q.base*0.75 + q.extras*0.7))}</td></tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+},
+
+earnings(){
+  const weeks = [['Week of 10 Aug',2140,4],['Week of 3 Aug',1860,3],['Week of 27 Jul',2480,5],['Week of 20 Jul',1720,3]];
+  const max = Math.max(...weeks.map(w => w[1]));
+  return `
+  <div class="page-head"><h1>Earnings</h1><p>Paid every Friday for the week before.</p></div>
+  <div class="stats" style="margin-bottom:22px">
+    <div class="stat"><div class="s-l">This week</div><div class="s-v mono">${money(2140)}</div><div class="s-d up">+15% on last week</div></div>
+    <div class="stat"><div class="s-l">This month</div><div class="s-v mono">${money(8200)}</div><div class="s-d">15 jobs</div></div>
+    <div class="stat"><div class="s-l">All time</div><div class="s-v mono">${money(ME.earnings)}</div><div class="s-d">${ME.jobs} cleans</div></div>
+    <div class="stat"><div class="s-l">Next payout</div><div class="s-v mono">${money(2140)}</div><div class="s-d">Friday 21 Aug</div></div>
+  </div>
+  <div class="card panel" style="margin-bottom:20px">
+    <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Last four weeks</h2></div>
+    <div class="bars">${weeks.map(([l,v,n]) => `<div class="bar-row">
+      <span class="t-sub">${l.split(' ').slice(-2).join(' ')}</span>
+      <span class="bar"><span style="width:${(v/max*100).toFixed(0)}%"></span></span>
+      <span class="mono" style="text-align:right;font-weight:600">${money(v)}</span></div>`).join('')}</div>
+  </div>
+  <div class="card panel">
+    <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Payout account</h2></div>
+    <div class="li"><span>Bank</span><span class="v">Capitec · •••• 4471</span></div>
+    <div class="li"><span>Payout day</span><span class="v">Every Friday</span></div>
+    <div class="li"><span>Held for review</span><span class="v mono">${money(0)}</span></div>
+    <button class="btn btn-outline sm" style="margin-top:12px" onclick="toast('Bank details form opens here','wallet')">Change bank details</button>
+  </div>`;
+},
+
+ratings(){
+  const revs = [
+    { by:'Thandi M.', n:5, t:'Spotless, and she was early. Booked her again for next week.', when:'11 Aug' },
+    { by:'Aisha P.',  n:5, t:'Very thorough with the oven. Polite and professional.', when:'6 Aug' },
+    { by:'Riaan v.W.',n:4, t:'Good clean, ran a little over the time slot.', when:'29 Jul' },
+    { by:'Thandi M.', n:5, t:'Always excellent. Knows how we like the kitchen done.', when:'21 Jul' }
+  ];
+  const dist = [5,4,3,2,1].map(n => [n, revs.filter(r => r.n === n).length]);
+  const tot = revs.length;
+  return `
+  <div class="page-head"><h1>Ratings &amp; reviews</h1><p>What customers said after their clean.</p></div>
+  <div class="split">
+    <div class="rows">
+      ${revs.map(r => `<div class="row-card">
+        <div class="avatar sm ${r.n === 5 ? '' : 'gold'}">${r.by.split(' ').map(x=>x[0]).join('')}</div>
+        <div class="rc-main">
+          <div class="stars">${starRow(r.n)}</div>
+          <div class="rc-t" style="font-weight:400;margin-top:3px">${r.t}</div>
+          <div class="rc-s">${r.by} · ${r.when}</div>
+        </div></div>`).join('')}
+    </div>
+    <div class="card panel">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-family:'Fraunces',serif;font-size:46px;line-height:1">${ME.rating.toFixed(2)}</div>
+        <div class="stars" style="font-size:16px">${starRow(ME.rating)}</div>
+        <div class="t-sub">${ME.jobs} cleans rated</div>
+      </div>
+      <div class="bars">${dist.map(([n,c]) => `<div class="bar-row">
+        <span class="t-sub">${n} ★</span>
+        <span class="bar"><span style="width:${tot ? (c/tot*100).toFixed(0) : 0}%"></span></span>
+        <span class="mono" style="text-align:right">${c}</span></div>`).join('')}</div>
+    </div>
+  </div>`;
+},
+
+cprofile(){
+  return `
+  <div class="page-head"><h1>My profile</h1><p>What customers see when you are assigned to their booking.</p></div>
+  <div class="split">
+    <div class="card panel">
+      <div class="grid2">
+        <div class="field"><label>Full names</label><input value="${ME.name} Thandeka"></div>
+        <div class="field"><label>Surname</label><input value="${ME.surname}"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Phone number</label><input value="+27 83 114 9928"></div>
+        <div class="field"><label>Email address</label><input value="nomsa.m@example.co.za"></div>
+      </div>
+      <div class="field"><label>Home address</label><input value="24 Sixth Avenue, Kensington, Cape Town"></div>
+      <div class="fieldset-t">Work areas</div>
+      <div class="field"><label>Province</label><select><option>Western Cape</option></select></div>
+      <div class="field"><label>Cities</label>
+        <div class="chips">${['Cape Town','Stellenbosch','Somerset West'].map(c => `<span class="chip on">${c}</span>`).join('')}</div>
+      </div>
+      <div class="fieldset-t">Languages</div>
+      <div class="chips">${ME.langs.map(l => `<span class="chip on">${l}</span>`).join('')}</div>
+      <button class="btn btn-primary" style="margin-top:20px" onclick="toast('Profile saved','check')">Save changes</button>
+    </div>
+    <div>
+      <div class="card panel" style="text-align:center;margin-bottom:16px">
+        <div class="avatar lg" style="margin:0 auto 12px">${ME.initials}</div>
+        <div style="font-family:'Fraunces',serif;font-size:20px">${ME.name} ${ME.surname}</div>
+        <div class="stars">${starRow(ME.rating)}</div>
+        <div class="t-sub" style="margin-bottom:12px">${ME.years} years · ${ME.jobs} cleans</div>
+        <button class="btn btn-outline sm" onclick="toast('Photo picker opens here','user')">Change photo</button>
+      </div>
+      <div class="card panel">
+        <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Documents</h2></div>
+        <div class="li"><span>ID document</span><span class="pill ok">Verified</span></div>
+        <div class="li"><span>Profile photo</span><span class="pill ok">Verified</span></div>
+        <div class="li"><span>Police clearance</span><span class="pill ok">Valid to Mar 2027</span></div>
+        <div class="li"><span>References</span><span class="pill ok">2 of 2 called</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+};
+
+function cRender(){ $('#cview').innerHTML = CVIEWS[cView](); }
+function cGo(v){ cView = v; sideNav(CNAV, v, cGo); cRender(); window.scrollTo({top:0,behavior:'smooth'}); }
+function tick(i){ CDONE.has(i) ? CDONE.delete(i) : CDONE.add(i); cRender(); }
+function toggleDay(d){ AVAIL.has(d) ? AVAIL.delete(d) : AVAIL.add(d); cRender(); }
+function finishJob(){
+  modal({
+    title:'Mark this job complete?',
+    sub:'The customer is asked to confirm and rate',
+    body:`<p style="margin:0 0 12px;color:var(--ink-70)">Payment is captured and released to you two hours after the customer confirms. Add a photo if anything needs flagging.</p>
+          <div class="drop">${ico('upload',22)}<div class="d-t">Add completion photos</div><div class="d-s">Optional</div></div>`,
+    actions:[
+      { label:'Not yet', cls:'btn-outline' },
+      { label:'Complete job', cls:'btn-primary', fn(){ toast('Job completed — payout queued for Friday','check'); } }
+    ]
+  });
+}
+function acceptJob(id){
+  const b = DB.bookings.find(x => x.id === id);
+  b.status = 'confirmed'; b.cleaner = ME.id; b.eta = b.time;
+  toast('Job accepted — added to your schedule','check');
+  CNAV.find(n => n.id === 'offers').badge = DB.bookings.filter(x => x.status === 'pending').length;
+  cGo('offers');
+}
+
+/* ---------- mode switching ---------- */
+function setMode(m){
+  $$('#modeSwitch button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  if(m === 'apply'){
+    $('#root').innerHTML = applyView();
+    A.step = 0; aSteps();
+    $('#fProv').onchange = e => {
+      A.prov = e.target.value; A.cities.clear();
+      const box = $('#fCities');
+      box.innerHTML = A.prov
+        ? `<div class="chips">${CFG.provinces[A.prov].map(c => `<button class="chip" data-city="${c}">${c}</button>`).join('')}</div>`
+        : '<span class="cb-empty">Choose a province first.</span>';
+      box.querySelectorAll('[data-city]').forEach(btn => btn.onclick = () => {
+        const c = btn.dataset.city;
+        A.cities.has(c) ? A.cities.delete(c) : A.cities.add(c);
+        btn.classList.toggle('on');
+        $('#cityCount').textContent = A.cities.size ? `${A.cities.size} area${A.cities.size > 1 ? 's' : ''} selected.` : 'No areas selected.';
+        if(A.cities.size) box.closest('.field').classList.remove('bad');
+      });
+      e.target.closest('.field').classList.remove('bad');
+    };
+    $$('#fCrim button').forEach(b => b.onclick = () => {
+      A.crim = b.dataset.c;
+      $$('#fCrim button').forEach(x => x.classList.toggle('on', x === b));
+      $('#fCrim').closest('.field').classList.remove('bad');
+    });
+    $$('#fGroup button').forEach(b => b.onclick = () => {
+      A.group = b.dataset.g;
+      $$('#fGroup button').forEach(x => x.classList.toggle('on', x === b));
+      $('#fGroup').closest('.field').classList.remove('bad');
+    });
+  } else {
+    $('#root').innerHTML = dashView();
+    cGo('today');
+  }
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+$$('#modeSwitch button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+setMode('apply');
+</script>
+</body>
+</html>
