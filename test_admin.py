@@ -1,126 +1,197 @@
-"""Drives the admin dashboard: confirm-and-assign, approvals, search, worker upload.
+"""Admin dashboard — approvals, declines, employees by role, customers.
 
-The assertions are about behaviour that would break the business if wrong —
-that an assignment actually moves the booking out of the queue, that the
-cleaner shortlist is filtered by work type and city, and that an under-age
-worker cannot be added.
+The approve/decline pair is the one that matters: approving must open the
+account AND send the congratulations message; declining must refuse to go
+through without a written reason, and that reason must be what the
+applicant is later shown.
+
+    python3 test_admin.py
 """
 import pathlib, sys
 from playwright.sync_api import sync_playwright
 
-URL = "file://" + str(pathlib.Path(__file__).parent / "admin.html")
-OUT = pathlib.Path(__file__).parent / "shots"
-OUT.mkdir(exist_ok=True)
-errs, fails = [], []
+HERE  = pathlib.Path(__file__).parent
+URL   = (HERE / "admin.html").as_uri()
+SHOTS = HERE / "shots"; SHOTS.mkdir(exist_ok=True)
+
+fails = []
+def check(label, got, want):
+    ok = got == want
+    print(f"  {'ok  ' if ok else 'FAIL'} {label}: {got}" + ("" if ok else f"  (expected {want})"))
+    if not ok:
+        fails.append(f"{label}: got {got}, expected {want}")
 
 
-def check(cond, msg):
-    if not cond:
-        fails.append(msg)
-    print(("  ok  " if cond else "  FAIL") + "  " + msg)
+def nav(pg, section):
+    pg.click(f"[data-nav='{section}']")
+    pg.wait_for_timeout(150)
 
 
-with sync_playwright() as p:
-    b = p.chromium.launch()
+def run(pw):
+    b = pw.chromium.launch()
     pg = b.new_page(viewport={"width": 1280, "height": 900})
+    errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    pg.on("console", lambda m: errs.append("console: " + m.text) if m.type == "error" else None)
     pg.goto(URL)
-    pg.wait_for_timeout(1200)
-    pg.screenshot(path=OUT / "a1-overview.png")
+    pg.wait_for_selector("#sideNav")
 
-    print("\n-- overview --")
-    pending_badge = pg.inner_text('[data-nav="confirm"] .badge')
-    check(pending_badge == "3", f"pending queue badge shows 3, got {pending_badge}")
-    check(pg.locator('[data-nav="candidates"] .badge').inner_text() == "2",
-          "candidate badge shows 2 new applications")
+    print("\n1. The overview counts what is actually there")
+    check("greeted", pg.locator(".page-head h1").inner_text(), "Welcome back, Lebo")
+    queue_badge = int(pg.locator("[data-nav='apps'] .badge").inner_text())
+    real_pending = pg.evaluate("() => DB.cleaners.filter(c => c.account === 'pending').length")
+    check("the queue badge matches the data", queue_badge, real_pending)
+    check("the tile agrees with the badge",
+          pg.locator(".stat", has_text="Waiting on you").locator(".s-v").inner_text(), str(queue_badge))
 
-    # Done BEFORE the assign step below, which consumes the only pending
-    # outdoor booking. Ordered this way so the check can never silently skip.
-    print("\n-- shortlist is filtered by work type, not everyone --")
-    pg.click('[data-nav="services"]'); pg.wait_for_timeout(300)
-    pg.click("text=Outdoor cleaning >> nth=0"); pg.wait_for_timeout(400)
-    n_out = pg.locator("text=Confirm & assign").count()
-    check(n_out >= 1, f"there is a pending outdoor booking to test with ({n_out})")
-    pg.click("text=Confirm & assign >> nth=0"); pg.wait_for_timeout(400)
-    names = pg.locator("[data-cl] .w-n").all_inner_texts()
-    check(len(names) >= 1, f"outdoor shortlist is not empty: {names}")
-    check(all("Nomsa" not in n and "Grace" not in n for n in names),
-          f"outdoor job offers only outdoor cleaners: {names}")
-    pg.click(".modal-head [data-close]"); pg.wait_for_timeout(300)
+    print("\n2. The submitted form opens, with downloadable documents")
+    nav(pg, "apps")
+    check("both applicants listed", pg.locator(".row-card").count(), real_pending)
+    pg.locator("[data-form]").first.click()
+    pg.wait_for_selector(".modal")
+    check("references are on the form", "References" in pg.locator(".modal-body").inner_text(), True)
+    check("all four documents offered", pg.locator(".doc-row").count(), 4)
+    check("each has a download button", pg.locator("[data-dl]").count(), 4)
+    check("the head-and-shoulders photo is one of them",
+          "Head & shoulders photo" in pg.locator(".docs").inner_text(), True)
+    pg.screenshot(path=str(SHOTS / "admin-application.png"))
+    pg.locator(".modal [data-close]").click()
 
-    print("\n-- confirm & assign --")
-    pg.click('[data-nav="confirm"]')
-    pg.wait_for_timeout(400)
-    before = pg.locator("table.tbl").first.locator("tbody tr").count()
-    pg.screenshot(path=OUT / "a2-confirm-queue.png")
-    pg.click("text=Confirm & assign >> nth=0")
-    pg.wait_for_timeout(500)
-    check(pg.locator(".veil.on").count() == 1, "assign modal opens")
-    shortlist = pg.locator("[data-cl]").count()
-    check(shortlist > 0, f"a shortlist of cleaners is offered ({shortlist})")
-    check(pg.locator(".best").count() >= 1, "a best match / favourite is flagged")
-    pg.screenshot(path=OUT / "a3-assign-modal.png")
-    pg.click(".modal-foot .btn-primary")
-    pg.wait_for_timeout(600)
-    after = pg.locator("table.tbl").first.locator("tbody tr").count()
-    check(after == before - 1, f"assigned booking leaves the queue ({before} -> {after})")
-    check(pg.inner_text('[data-nav="confirm"] .badge') == "2", "queue badge drops to 2")
+    print("\n3. Declining refuses to go through without a reason")
+    target = pg.locator("[data-decline]").first.get_attribute("data-decline")
+    before = pg.evaluate(f"() => cleaner('{target}').account")
+    check("that applicant starts pending", before, "pending")
+    pg.locator("[data-decline]").first.click()
+    pg.wait_for_selector("#dcReason")
+    pg.locator(".modal-foot .btn-danger").click()          # submit with an empty reason
+    pg.wait_for_timeout(200)
+    check("the dialog stayed open", pg.locator("#dcReason").count(), 1)
+    check("and said why", pg.locator("#dcErr").is_visible(), True)
+    check("nothing was changed", pg.evaluate(f"() => cleaner('{target}').account"), "pending")
 
-    print("\n-- candidates --")
-    pg.click('[data-nav="candidates"]'); pg.wait_for_timeout(400)
-    pg.screenshot(path=OUT / "a4-candidates.png")
-    n_pending = pg.locator("text=New application").count()
-    check(n_pending >= 1, f"indoor tab shows pending applications ({n_pending})")
-    pg.click("text=Approve >> nth=0"); pg.wait_for_timeout(500)
-    check(pg.locator("text=New application").count() == n_pending - 1,
-          "approved candidate leaves the pending list")
-    check(pg.inner_text('[data-nav="candidates"] .badge') == "1", "candidate badge drops to 1")
+    print("\n4. With a reason, it declines and sends that exact wording")
+    REASON = "References could not be reached on the numbers given."
+    pg.fill("#dcReason", REASON)
+    pg.locator(".modal-foot .btn-danger").click()
+    pg.wait_for_selector(".mailer")
+    check("the account is declined", pg.evaluate(f"() => cleaner('{target}').account"), "declined")
+    check("the reason is stored on the account",
+          pg.evaluate(f"() => cleaner('{target}').declineReason"), REASON)
+    check("and the message carries it word for word",
+          REASON in pg.locator(".mail-bd").inner_text(), True)
+    check("it is addressed to them, not to the admin",
+          "admin" in pg.locator(".mail-hd").inner_text().lower(), False)
+    pg.locator(".modal [data-close]").click()
+    pg.wait_for_timeout(200)
+    check("they left the queue", pg.evaluate(f"() => DB.applications.some(a => a.id === '{target}')"), False)
 
-    print("\n-- customers --")
-    pg.click('[data-nav="customers"]'); pg.wait_for_timeout(400)
-    check(pg.locator("#custBody tr").count() == 4, "all 4 customers listed")
-    pg.fill("#custQ", "aisha"); pg.wait_for_timeout(350)
-    check(pg.locator("#custBody tr").count() == 1, "search narrows to 1 result")
-    pg.fill("#custQ", "zzzz"); pg.wait_for_timeout(350)
-    check(pg.locator("#custBody .empty").count() == 1, "no-match shows an empty state, not a blank table")
-    pg.fill("#custQ", ""); pg.wait_for_timeout(350)
-    check(pg.locator("#custBody tr").count() == 4, "clearing search restores the list")
-    pg.locator("#custBody .btn").first.click(); pg.wait_for_timeout(400)
-    check(pg.locator(".veil.on").count() == 1, "customer profile modal opens")
-    pg.screenshot(path=OUT / "a5-customer.png")
-    pg.click(".modal-head [data-close]"); pg.wait_for_timeout(300)
+    print("\n5. Approving opens the account and congratulates them")
+    nav(pg, "apps")
+    target2 = pg.locator("[data-approve]").first.get_attribute("data-approve")
+    pg.locator("[data-approve]").first.click()
+    pg.wait_for_selector(".mailer")
+    check("account approved", pg.evaluate(f"() => cleaner('{target2}').account"), "approved")
+    body = pg.locator(".mail-bd").inner_text()
+    check("the message congratulates them", "Welcome aboard" in body, True)
+    check("and tells them to open their calendar", "calendar" in body, True)
+    pg.locator(".modal [data-close]").click()
+    pg.wait_for_timeout(200)
+    check("queue is now empty", pg.locator("[data-nav='apps'] .badge").count(), 0)
+    check("empty state shown", "Nothing waiting" in pg.locator("#body").inner_text(), True)
 
-    print("\n-- upload new worker --")
-    pg.click('[data-nav="upload"]'); pg.wait_for_timeout(400)
-    n_city = pg.locator("#wCity option").count()
-    check(n_city > 0, f"city dropdown is populated on first render ({n_city} options)")
-    pg.click("text=Add indoor cleaner"); pg.wait_for_timeout(300)
-    check(pg.locator(".field.bad").count() >= 4, "empty worker form is blocked")
-    pg.fill("#wName", "Precious"); pg.fill("#wSur", "Sithole")
-    pg.fill("#wAge", "15"); pg.fill("#wTel", "+27 82 771 3320")
-    pg.click("#wDrop")
-    pg.click("text=Add indoor cleaner"); pg.wait_for_timeout(300)
-    check(pg.locator("#wAge").locator("xpath=ancestor::div[contains(@class,'field')]")
-            .first.get_attribute("class").find("bad") >= 0, "a 15-year-old worker is rejected")
-    pg.fill("#wAge", "34")
-    pg.click("text=Add indoor cleaner"); pg.wait_for_timeout(600)
-    check(pg.locator("text=Precious Sithole").count() >= 1, "valid worker is added and listed")
-    pg.screenshot(path=OUT / "a6-upload.png")
+    print("\n6. Employees are listed by role, and the filter really filters")
+    nav(pg, "staff")
+    heads = pg.locator(".sect-head h2").all_inner_texts()
+    check("both roles have their own block", heads, ["Indoor cleaners", "Outdoor cleaners"])
+    everyone = pg.locator("tbody tr").count()
+    pg.click("[data-role='indoor']")
+    pg.wait_for_timeout(150)
+    indoor = pg.locator("tbody tr").count()
+    check("indoor only shows the indoor block", pg.locator(".sect-head h2").all_inner_texts(), ["Indoor cleaners"])
+    pg.click("[data-role='outdoor']")
+    pg.wait_for_timeout(150)
+    outdoor = pg.locator("tbody tr").count()
+    check("outdoor only shows the outdoor block", pg.locator(".sect-head h2").all_inner_texts(), ["Outdoor cleaners"])
+    check("the two halves add up to everyone", indoor + outdoor, everyone)
+    check("the filter is not just showing the same list twice", indoor == everyone, False)
+    pg.click("[data-role='all']")
+    pg.wait_for_timeout(150)
+    pg.screenshot(path=str(SHOTS / "admin-staff.png"))
 
-    print("\n-- notifications --")
-    pg.click('[data-nav="notifs"]'); pg.wait_for_timeout(350)
-    check(pg.locator(".row-card").count() == 5, "notification list renders")
+    print("\n7. Opening an employee shows their jobs and their ratings")
+    pg.locator("[data-staff]").first.click()
+    pg.wait_for_selector(".modal")
+    check("their bookings are listed", pg.locator(".modal .tbl tbody tr").count() >= 1, True)
+    pg.locator(".modal [data-close]").click()
 
-    # mobile
+    print("\n8. Customer search actually narrows the list")
+    nav(pg, "custs")
+    all_rows = pg.locator("#custBody tr").count()
+    check("every customer is listed", all_rows,
+          pg.evaluate("() => DB.customers.length"))
+    pg.fill("#custSearch", "aisha")
+    pg.wait_for_timeout(200)
+    check("one match", pg.locator("#custBody tr").count(), 1)
+    check("and it is the right one", "Aisha" in pg.locator("#custBody").inner_text(), True)
+    pg.fill("#custSearch", "zzzz")
+    pg.wait_for_timeout(200)
+    check("no match says so", "Nobody matches" in pg.locator("#body").inner_text(), True)
+    pg.fill("#custSearch", "")
+    pg.wait_for_timeout(200)
+    check("clearing it brings everyone back", pg.locator("#custBody tr").count(), all_rows)
+
+    print("\n9. A customer's order history opens, and the money adds up")
+    pg.locator("[data-cust]").first.click()
+    pg.wait_for_selector(".modal")
+    rows = pg.locator(".modal .tbl tbody tr").count()
+    shown = pg.evaluate("() => DB.bookings.filter(b => b.cust === 'cu1').length")
+    check("every order for that customer", rows, shown)
+    spent = pg.evaluate("""() => DB.bookings
+        .filter(b => b.cust === 'cu1' && b.status !== 'cancelled')
+        .reduce((n, b) => n + priceBooking(b).total, 0)""")
+    shown_spent = pg.locator(".modal .stat", has_text="Spent").locator(".s-v").inner_text()
+    digits = "".join(c for c in shown_spent if c.isdigit() or c == ".")
+    check("the spend tile matches the orders", round(float(digits), 2), round(spent, 2))
+    pg.screenshot(path=str(SHOTS / "admin-customer.png"))
+    pg.locator(".modal [data-close]").click()
+
+    print("\n10. The outbox holds everything that was sent this session")
+    nav(pg, "outbox")
+    check("both the decline and the approval are there",
+          pg.locator(".row-card").count(), 2)
+    pg.locator("[data-sent]").first.click()
+    pg.wait_for_selector(".mailer")
+    check("it re-opens with its body intact", pg.locator(".mail-bd").inner_text() != "", True)
+    pg.locator(".modal [data-close]").click()
+
+    print("\n11. An order opens with the full price breakdown")
+    nav(pg, "orders")
+    pg.locator("[data-order]").first.click()
+    pg.wait_for_selector(".modal")
+    text = pg.locator(".modal-body").text_content()   # inner_text() returns CSS-uppercased labels
+    for line in ("Flat rate", "Service fee", "Total"):
+        check(f"'{line}' on the breakdown", line in text, True)
+    pg.locator(".modal [data-close]").click()
+
+    print("\n12. Mobile")
     m = b.new_page(viewport={"width": 412, "height": 860})
     m.on("pageerror", lambda e: errs.append("mobile: " + str(e)))
-    m.goto(URL); m.wait_for_timeout(1100)
-    m.screenshot(path=OUT / "a7-mobile.png")
-    m.click('[data-nav="confirm"]'); m.wait_for_timeout(400)
-    m.screenshot(path=OUT / "a8-mobile-confirm.png")
+    m.goto(URL)
+    m.wait_for_selector("#sideNav")
+    check("side nav collapses to a scroller", m.locator("#sideNav .snav").count(), 6)
+    m.screenshot(path=str(SHOTS / "admin-mobile.png"))
+
+    print("\n13. No JavaScript errors")
+    check("errors", errs, [])
     b.close()
 
-print("\nJS errors:", errs or "none")
-print("failures :", fails or "none")
-sys.exit(1 if (errs or fails) else 0)
+
+with sync_playwright() as pw:
+    run(pw)
+
+print("\n" + "=" * 60)
+if fails:
+    print(f"{len(fails)} FAILED")
+    for f in fails:
+        print("  -", f)
+    sys.exit(1)
+print("all admin checks passed")

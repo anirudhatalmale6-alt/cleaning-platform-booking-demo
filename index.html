@@ -1,588 +1,886 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sparrow — Book a cleaning professional</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sparrow — home and office cleaning, booked in minutes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/app.css">
 <style>
-  .hero{padding:56px 0 26px}
-  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--moss);background:var(--moss-soft);border-radius:999px;padding:6px 13px}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--moss);animation:pulse 2.4s infinite}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
-  .hero h1{font-size:clamp(38px,6.2vw,66px);margin:20px 0 0;max-width:14ch}
-  .hero h1 .ital{font-style:italic;color:var(--moss)}
-  .hero p.lede{max-width:46ch;color:var(--ink-70);font-size:17px;margin:18px 0 0}
-  .hero-row{display:flex;gap:44px;align-items:flex-end;flex-wrap:wrap}
-  .trust{display:flex;gap:30px;margin-top:30px;flex-wrap:wrap}
-  .trust .t-num{font-family:'Fraunces',serif;font-size:27px;line-height:1}
-  .trust .t-lbl{font-size:12px;color:var(--ink-45);letter-spacing:.04em;text-transform:uppercase;margin-top:5px}
+  /* ---------- landing ---------- */
+  .hero{padding:56px 0 34px}
+  .hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
+  @media(max-width:940px){.hero .wrap{grid-template-columns:1fr;gap:28px}.hero{padding:34px 0 22px}}
+  .eyebrow{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--moss);font-weight:700;margin-bottom:14px}
+  .hero h1{font-size:clamp(38px,5.6vw,62px);line-height:1.02}
+  .hero h1 em{font-style:italic;color:var(--moss)}
+  .hero p.lede{font-size:17px;color:var(--ink-70);max-width:46ch;margin:18px 0 26px}
+  .hero-cta{display:flex;gap:11px;flex-wrap:wrap}
+  .trust{display:flex;gap:26px;margin-top:28px;flex-wrap:wrap}
+  .trust .t-v{font-family:'Fraunces',serif;font-size:25px}
+  .trust .t-l{font-size:12.5px;color:var(--ink-45)}
+  .hero-card{padding:24px 26px}
+  .hero-card h3{font-size:20px;margin-bottom:4px}
+  .hero-card .hc-s{font-size:13.5px;color:var(--ink-45);margin-bottom:16px}
 
-  .booker{display:grid;grid-template-columns:1fr 344px;gap:26px;align-items:start;padding:30px 0 90px}
-  @media(max-width:940px){.booker{grid-template-columns:1fr}}
-  .booker>*{min-width:0}
-
-  .stepper{display:flex;align-items:center;padding:18px 30px;border-bottom:1px solid var(--ink-08);overflow-x:auto;scrollbar-width:none}
-  .stepper::-webkit-scrollbar{display:none}
-  .step{display:flex;align-items:center;gap:9px;flex:0 0 auto;padding-right:14px;opacity:.42;transition:.35s var(--ease)}
-  .step.done,.step.active{opacity:1}
-  .step-num{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--ink-14);display:grid;place-items:center;font-size:12px;font-weight:600;transition:.35s var(--ease);flex:0 0 auto}
-  .step.active .step-num{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
-  .step.done .step-num{background:var(--moss);border-color:var(--moss);color:#fff}
-  .step-lbl{font-size:13px;font-weight:500;white-space:nowrap}
-  .step-bar{width:26px;height:1.5px;background:var(--ink-14);margin-right:14px;flex:0 0 auto}
-  @media(max-width:700px){.step:not(.active) .step-lbl{display:none}.step-bar{width:14px}}
-
-  .h-step{font-size:27px;margin-bottom:5px}
-  .sub{color:var(--ink-45);font-size:14px;margin:0 0 22px}
-  .pane{display:none;animation:rise .45s var(--ease) both}
-  .pane.on{display:block}
-
-  .grp-t{font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-45);font-weight:600;margin:20px 0 10px}
-  .grp-t:first-child{margin-top:0}
-  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media(max-width:760px){.svc-grid{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:400px){.svc-grid{grid-template-columns:1fr}}
-  .svc{position:relative;text-align:left;background:transparent;border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:16px 14px 14px;cursor:pointer;font:inherit;color:inherit;transition:.24s var(--ease)}
+  .band{padding:36px 0}
+  .band-t{font-size:28px;margin-bottom:6px}
+  .band-s{color:var(--ink-45);font-size:14.5px;margin-bottom:20px}
+  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+  @media(max-width:820px){.svc-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:480px){.svc-grid{grid-template-columns:1fr}}
+  .svc{border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:18px 16px;background:var(--paper-2);cursor:pointer;font:inherit;color:inherit;text-align:left;transition:.22s var(--ease);display:flex;flex-direction:column;gap:7px;align-items:flex-start}
   .svc:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:var(--shadow-1)}
-  .svc.sel{border-color:var(--moss);background:var(--moss-soft);box-shadow:inset 0 0 0 1px var(--moss)}
   .svc svg{color:var(--moss)}
-  .svc-name{font-weight:600;font-size:14.5px;margin-top:11px}
-  .svc-from{font-size:12.5px;color:var(--ink-45);margin-top:2px}
-  .svc .tick{position:absolute;top:11px;right:11px;opacity:0;transform:scale(.6);transition:.24s var(--ease);color:var(--moss)}
-  .svc.sel .tick{opacity:1;transform:none}
+  .svc .s-t{font-weight:600;font-size:15px}
+  .svc .s-d{font-size:12.5px;color:var(--ink-45)}
+  .svc .s-p{font-size:12.5px;color:var(--moss);font-weight:600;margin-top:auto}
 
-  .row-lbl{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 0;border-bottom:1px solid var(--ink-08);flex-wrap:wrap}
-  .row-lbl:last-of-type{border-bottom:0}
-  .row-lbl .rl-t{font-weight:600;font-size:14.5px}
-  .row-lbl .rl-s{font-size:13px;color:var(--ink-45)}
-  .row-lbl select{border:1.5px solid var(--ink-14);background:var(--paper-2);border-radius:11px;padding:9px 34px 9px 12px;font:inherit;font-size:14px;color:var(--ink);width:100%;appearance:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23152019' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 12px center}
-  .row-lbl select:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 4px rgba(44,85,72,.10)}
-  .counter{display:flex;align-items:center;gap:6px}
-  .cbtn{width:32px;height:32px;border-radius:9px;border:1.5px solid var(--ink-14);background:transparent;cursor:pointer;font-size:17px;line-height:1;color:var(--ink);display:grid;place-items:center;transition:.18s var(--ease)}
-  .cbtn:hover:not(:disabled){border-color:var(--ink);background:var(--ink);color:var(--paper-2)}
-  .cbtn:disabled{opacity:.3;cursor:not-allowed}
-  .cval{width:32px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+  .steps3{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:820px){.steps3{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:440px){.steps3{grid-template-columns:1fr}}
+  .st3 .n{width:31px;height:31px;border-radius:50%;background:var(--ink);color:var(--paper-2);display:grid;place-items:center;font-family:'Fraunces',serif;font-size:15px;margin-bottom:10px}
+  .st3 .t{font-weight:600;margin-bottom:3px}
+  .st3 .s{font-size:13px;color:var(--ink-45)}
 
-  .freq{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  @media(max-width:520px){.freq{grid-template-columns:1fr}}
-  .freq button{position:relative;text-align:left;border:1.5px solid var(--ink-14);background:transparent;border-radius:var(--radius);padding:13px 14px;cursor:pointer;font:inherit;color:inherit;transition:.2s var(--ease)}
-  .freq button:hover{border-color:var(--moss)}
-  .freq button.on{border-color:var(--moss);background:var(--moss-soft)}
-  .freq .f-t{font-weight:600;font-size:14px}
-  .freq .f-s{font-size:12.5px;color:var(--ink-45);margin-top:2px}
-  .save-tag{position:absolute;top:-9px;right:11px;background:var(--gold);color:#2b2200;font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:999px}
+  /* ---------- booker ---------- */
+  .booker{display:grid;grid-template-columns:1fr 344px;gap:24px;align-items:start;padding:22px 0 100px}
+  @media(max-width:960px){.booker{grid-template-columns:1fr;padding-bottom:96px}}
+  .booker>*{min-width:0}
+  .aside{position:sticky;top:88px}
+  @media(max-width:960px){.aside{display:none}}
+  .progline{display:flex;align-items:center;gap:7px;margin-bottom:18px;flex-wrap:wrap}
+  .pg{height:4px;border-radius:3px;background:var(--ink-08);flex:1;min-width:22px;transition:.35s var(--ease)}
+  .pg.on{background:var(--moss)}
+  .step-t{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-45);margin-bottom:7px}
+  .pane{animation:rise .34s var(--ease) both}
+  .navrow{display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:wrap}
 
-  .datestrip{display:flex;gap:9px;overflow-x:auto;padding:4px 2px 10px}
-  .dcell{flex:0 0 auto;width:66px;border:1.5px solid var(--ink-14);border-radius:var(--radius);background:transparent;padding:11px 0;cursor:pointer;font:inherit;color:inherit;text-align:center;transition:.2s var(--ease)}
-  .dcell:hover{border-color:var(--moss)}
-  .dcell.on{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
-  .dcell .dw{font-size:11px;letter-spacing:.09em;text-transform:uppercase;opacity:.55}
-  .dcell .dd{font-family:'Fraunces',serif;font-size:22px;line-height:1.25}
-  .dcell .dm{font-size:11px;opacity:.55}
-  .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-  @media(max-width:620px){.slots{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:420px){.slots{grid-template-columns:repeat(2,1fr)}}
-  .slot{border:1.5px solid var(--ink-14);background:transparent;border-radius:10px;padding:10px 6px;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);transition:.2s var(--ease)}
-  .slot:hover:not(:disabled){border-color:var(--moss)}
-  .slot.on{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
-  .slot:disabled{opacity:.32;cursor:not-allowed;text-decoration:line-through}
-  .slot .pros{display:block;font-size:11px;font-weight:400;opacity:.55;margin-top:1px}
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:70;background:rgba(243,239,231,.96);backdrop-filter:blur(12px);border-top:1px solid var(--ink-14);padding:11px 18px;display:none;align-items:center;gap:14px}
+  @media(max-width:960px){.mbar.on{display:flex}}
+  .mbar .m-l{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-45)}
+  .mbar .m-v{font-family:'Fraunces',serif;font-size:23px;font-variant-numeric:tabular-nums}
+  .mbar .btn{margin-left:auto}
 
-  .pays{display:grid;gap:10px}
-  .pay{display:flex;align-items:center;gap:13px;border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:13px 15px;cursor:pointer;background:transparent;font:inherit;color:inherit;text-align:left;transition:.2s var(--ease);width:100%}
-  .pay:hover{border-color:var(--moss)}
-  .pay.on{border-color:var(--moss);background:var(--moss-soft)}
-  .pay .radio{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--ink-14);flex:0 0 auto;display:grid;place-items:center}
-  .pay.on .radio{border-color:var(--moss)}
-  .pay.on .radio::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--moss)}
-  .pay .p-t{font-weight:600;font-size:14.5px}
-  .pay .p-s{font-size:12.5px;color:var(--ink-45)}
-
-  .actions{display:flex;align-items:center;gap:12px;margin-top:26px;padding-top:20px;border-top:1px solid var(--ink-08)}
-
-  .summary{position:sticky;top:88px}
-  .sum-head{padding:20px 22px 16px;border-bottom:1px solid var(--ink-08)}
-  .sum-head .s-svc{font-family:'Fraunces',serif;font-size:21px}
-  .sum-head .s-meta{font-size:13px;color:var(--ink-45);margin-top:3px}
-  .sum-body{padding:16px 22px}
-  .sum-foot{padding:14px 22px 20px;border-top:1px solid var(--ink-08);font-size:12.5px;color:var(--ink-45);display:flex;gap:9px;align-items:flex-start}
-  .promo{display:flex;gap:8px;margin-top:12px}
-  .promo input{flex:1;border:1.5px dashed var(--ink-14);background:transparent;border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px;text-transform:uppercase;letter-spacing:.06em}
-  .promo input:focus{outline:none;border-color:var(--moss);border-style:solid}
-  .promo button{border:0;background:var(--ink);color:var(--paper-2);border-radius:10px;padding:0 16px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
-  .promo-msg{font-size:12.5px;margin-top:7px;color:var(--moss);font-weight:500}
-  .promo-msg.bad{color:var(--clay)}
-
-  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:70;display:none;align-items:center;gap:14px;
-    padding:12px 18px calc(12px + env(safe-area-inset-bottom));
-    background:rgba(251,249,245,.94);backdrop-filter:blur(14px);border-top:1px solid var(--ink-14);
-    box-shadow:0 -10px 30px -18px rgba(21,32,25,.5)}
-  .mbar .m-l{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-45)}
-  .mbar .m-v{font-family:'Fraunces',serif;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
-  .mbar .btn{margin-left:auto;padding:12px 22px;font-size:14.5px}
-  @media(max-width:940px){.mbar.show{display:flex}body{padding-bottom:82px}.summary{position:static}}
+  .conf{text-align:center;padding:14px 0 6px}
+  .conf .tick{width:66px;height:66px;border-radius:50%;background:var(--moss);color:#fff;display:grid;place-items:center;margin:0 auto 16px;animation:pop .5s var(--ease) both}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+  .conf h2{font-size:30px;margin-bottom:6px}
+  .ref{font-family:'Fraunces',serif;font-size:21px;letter-spacing:.05em}
 </style>
 </head>
 <body>
-
-<header class="hero">
-  <div class="wrap">
-    <span class="eyebrow"><span class="dot"></span> 412 professionals available near you</span>
-    <div class="hero-row">
-      <div>
-        <h1>A spotless home,<br><span class="ital">booked in ninety seconds.</span></h1>
-        <p class="lede">Vetted, background-checked cleaners. Transparent pricing before you pay. Track your professional from door to done.</p>
-      </div>
-      <div class="trust">
-        <div><div class="t-num mono">4.91</div><div class="t-lbl">Avg rating</div></div>
-        <div><div class="t-num mono">38k</div><div class="t-lbl">Cleans done</div></div>
-        <div><div class="t-num mono">&lt;3 min</div><div class="t-lbl">Match time</div></div>
-      </div>
-    </div>
-  </div>
-</header>
-
-<main class="wrap booker">
-  <section class="card">
-    <div class="stepper" id="stepper"></div>
-    <div class="panel">
-
-      <!-- 1 SERVICE -->
-      <div class="pane on" data-pane="0">
-        <h2 class="h-step">What needs doing?</h2>
-        <p class="sub">Indoor and outdoor services, one booking flow.</p>
-        <div id="svcGroups"></div>
-        <div class="actions"><span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Continue</button></div>
-      </div>
-
-      <!-- 2 DETAILS -->
-      <div class="pane" data-pane="1">
-        <h2 class="h-step">Tell us about the space</h2>
-        <p class="sub">Your price updates live as you choose — no surprises at checkout.</p>
-        <div id="sizeRows"></div>
-        <div style="margin-top:22px">
-          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Booking checklist</div>
-          <div class="chips" id="extras"></div>
-        </div>
-        <div style="margin-top:24px">
-          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">How often?</div>
-          <div class="freq" id="freq"></div>
-        </div>
-        <div class="actions">
-          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Choose a time</button></div>
-      </div>
-
-      <!-- 3 SCHEDULE -->
-      <div class="pane" data-pane="2">
-        <h2 class="h-step">When suits you?</h2>
-        <p class="sub">Slots reflect professionals actually free in your area.</p>
-        <div class="datestrip" id="dates"></div>
-        <div style="margin-top:16px">
-          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Start time</div>
-          <div class="slots" id="slots"></div>
-        </div>
-        <div class="note" id="durNote"></div>
-        <div class="actions">
-          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Add address</button></div>
-      </div>
-
-      <!-- 4 ADDRESS -->
-      <div class="pane" data-pane="3">
-        <h2 class="h-step">Where are we cleaning?</h2>
-        <p class="sub">Guest checkout is on — an account is created quietly after you pay.</p>
-        <div class="toggle-row">
-          <button class="switch on" id="guestSwitch"></button>
-          <div>
-            <div style="font-weight:600;font-size:14.5px">Continue as guest</div>
-            <div class="t-sub">No password needed. We text you the tracking link.</div>
-          </div>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Name</label><input id="fName" placeholder="Thandi"><div class="err">Please enter your name</div></div>
-          <div class="field"><label>Surname</label><input id="fSur" placeholder="Mokoena"><div class="err">Please enter your surname</div></div>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Mobile number</label><input id="fPhone" placeholder="+27 82 000 0000"><div class="err">We need a number to send the tracking link</div></div>
-          <div class="field"><label>Email address</label><input id="fEmail" placeholder="you@example.co.za"><div class="err">Please enter a valid email address</div></div>
-        </div>
-        <div class="field"><label>Street address</label><input id="fAddr" placeholder="Start typing — autocomplete fills the rest"><div class="err">Please enter the address</div></div>
-        <div class="grid2">
-          <div class="field"><label>Suburb</label><input id="fSub" placeholder="Sea Point"><div class="err">Please enter the suburb</div></div>
-          <div class="field"><label>Unit / access notes</label><input id="fUnit" placeholder="Flat 4B, buzzer 12"></div>
-        </div>
-        <div class="field"><label>Anything the professional should know?</label>
-          <textarea id="fNotes" rows="3" placeholder="Two cats, please keep the balcony door shut. Key under the mat."></textarea></div>
-        <div class="actions">
-          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
-          <button class="btn btn-primary" data-next>Review &amp; pay</button></div>
-      </div>
-
-      <!-- 5 CHECKOUT -->
-      <div class="pane" data-pane="4">
-        <h2 class="h-step">Checkout</h2>
-        <p class="sub">Card is authorised now and only captured once the clean is done.</p>
-        <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Payment method</div>
-        <div class="pays" id="pays"></div>
-        <div style="margin-top:22px">
-          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Your booking</div>
-          <div id="reviewList"></div>
-        </div>
-        <div style="margin-top:22px">
-          <div style="font-weight:600;font-size:14.5px;margin-bottom:9px">Payment summary</div>
-          <div id="checkoutSummary"></div>
-        </div>
-        <div class="note" id="escrowNote"></div>
-        <div class="actions">
-          <button class="btn btn-ghost" data-back>← Back</button><span class="spacer"></span>
-          <button class="btn btn-primary" id="payBtn">Proceed to payment gateway</button></div>
-      </div>
-
-      <!-- 6 CONFIRMED -->
-      <div class="pane" data-pane="5">
-        <div style="text-align:center;padding:14px 0">
-          <div class="avatar lg" style="margin:0 auto 16px">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
-          </div>
-          <h2 class="h-step" style="font-size:29px">Booking confirmed</h2>
-          <p class="sub" style="margin-bottom:20px">Reference <strong class="mono" id="refNo"></strong> — confirmation sent by SMS.</p>
-        </div>
-        <div id="confirmFacts"></div>
-        <div class="timeline" style="margin-top:22px">
-          <div class="tl done"><div class="tl-t">Payment authorised</div><div class="tl-s">Held in escrow, captured after the clean</div></div>
-          <div class="tl now"><div class="tl-t">Awaiting confirmation</div><div class="tl-s">An admin confirms and assigns your professional</div></div>
-          <div class="tl"><div class="tl-t">Professional assigned</div><div class="tl-s">You are notified with their name, photo and rating</div></div>
-          <div class="tl"><div class="tl-t">On the way</div><div class="tl-s">Live location shared 30 minutes before arrival</div></div>
-          <div class="tl"><div class="tl-t">Clean in progress</div><div class="tl-s">Checklist ticked off item by item</div></div>
-          <div class="tl"><div class="tl-t">Completed &amp; rated</div><div class="tl-s">Escrow released, loyalty points credited</div></div>
-        </div>
-        <div class="actions">
-          <button class="btn btn-outline" onclick="toast('Invoice PDF generated','doc')">Request invoice</button>
-          <a class="btn btn-ghost" href="dashboard.html">Go to my dashboard →</a>
-          <span class="spacer"></span>
-          <button class="btn btn-ghost" id="restart">Run the flow again</button>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <aside class="card summary">
-    <div class="sum-head">
-      <div class="s-svc" id="sumSvc">Pick a service</div>
-      <div class="s-meta" id="sumMeta">Pricing appears as you build the booking</div>
-    </div>
-    <div class="sum-body">
-      <div id="lines"></div>
-      <div class="rule"></div>
-      <div class="total"><span class="t-l">Total</span><span class="t-v mono" id="grand">—</span></div>
-      <div class="promo">
-        <input id="promo" placeholder="Promo code" maxlength="14">
-        <button id="applyPromo">Apply</button>
-      </div>
-      <div class="promo-msg" id="promoMsg"></div>
-    </div>
-    <div class="sum-foot" id="sumFoot"></div>
-  </aside>
-</main>
-
+<div id="app"></div>
 <div class="mbar" id="mbar">
-  <div><div class="m-l">Total</div><div class="m-v mono" id="mTotal">—</div></div>
-  <button class="btn btn-primary" id="mNext">Continue</button>
+  <div><div class="m-l">Total</div><div class="m-v" id="mbarV">R0</div></div>
+  <button class="btn btn-primary" id="mbarB" onclick="next()">Continue</button>
 </div>
-
-<footer>
-  <div class="wrap">
-    <span>Sparrow — prototype of the customer booking flow.</span>
-    <span>Services, rates, extras and VAT are data, not code — the admin dashboard edits them without a redeploy.</span>
-  </div>
-</footer>
 
 <script src="assets/app.js"></script>
 <script>
-document.body.insertAdjacentHTML('afterbegin', protoBar('index.html') + `
+/* ============================================================
+   Booking state. One object; every screen reads and writes it.
+   The step order is the client's, from his message of 19 Aug:
+   service -> extras -> address -> pick a worker -> checkout.
+   ============================================================ */
+const B = {
+  service:null, band:'b12', hours:null, extras:[],
+  wash:null, finish:null,
+  addr:{ type:'', line:'', unit:'', suburb:'', city:'Cape Town', prov:'Western Cape', notes:'' },
+  geo:false, date:null, time:null, cleaner:null, note:'', ref:'',
+  signedIn:false, guest:false
+};
+let route = 'home';        // home | signin | signup | book
+let step  = 0;             // 0 service · 1 the job · 2 where & when · 3 worker · 4 checkout · 5 done
+const STEPS = ['Service','Your job','Where & when','Choose your cleaner','Checkout'];
+
+const app = () => document.getElementById('app');
+
+/* ============================================================
+   LANDING
+   ============================================================ */
+function viewHome(){
+  const cheapest = priceBooking({ service:'standard', band:'b12', extras:[] }).total;
+  return `
+  ${protoBar('index.html')}
   <div class="topbar"><div class="wrap">
     <a class="brand" href="index.html">
       <span class="brand-mark">${ico('home',17,2).replace('currentColor','#F3EFE7')}</span>
       <span class="brand-name">Sparrow<em>.</em></span>
     </a>
     <nav class="nav">
-      <a href="index.html" class="hide-sm on">Services</a>
-      <a href="cleaner.html" class="hide-sm">For professionals</a>
-      <a href="dashboard.html" class="hide-sm">My bookings</a>
-      <button class="pill-btn" onclick="location.href='dashboard.html'">Sign in</button>
+      <a href="#services" class="hide-sm">Services</a>
+      <a href="#how" class="hide-sm">How it works</a>
+      <a href="cleaner.html" class="hide-sm">Work with us</a>
+      <button class="pill-btn" id="navSignin">${ico('user',15,2)} Sign in</button>
     </nav>
-  </div></div>`);
+  </div></div>
 
-/* the booking under construction — the same shape priceBooking() takes */
-const B = { service:null, unitType:CFG.unitTypes[0], rooms:3, band:'m', units:1,
-            extras:['general'], freq:'once', promo:null, date:0, slot:null, pay:'card' };
-let step = 0;
+  <section class="hero"><div class="wrap">
+    <div>
+      <div class="eyebrow">Cape Town · Johannesburg · Durban</div>
+      <h1>A clean home,<br>booked in <em>minutes</em>.</h1>
+      <p class="lede">Pick your service, pick your extras, then pick the cleaner you want. Vetted, background-checked professionals — you choose the person, not a queue.</p>
+      <div class="hero-cta">
+        <button class="btn btn-primary" id="ctaBook">Book a clean ${ico('arrow',17,2.2)}</button>
+        <button class="btn btn-outline" id="ctaGuest">Continue as guest</button>
+      </div>
+      <div class="trust">
+        <div><div class="t-v">4.9</div><div class="t-l">Average rating</div></div>
+        <div><div class="t-v">${money(cheapest)}</div><div class="t-l">From, all in</div></div>
+        <div><div class="t-v">${CFG.maxHours}h</div><div class="t-l">Max cleaner day</div></div>
+      </div>
+    </div>
+    <div class="card hero-card">
+      <h3>Already with us?</h3>
+      <div class="hc-s">Signed-in customers keep their addresses, see past orders and can rate the cleaners they have had.</div>
+      <div style="display:grid;gap:9px">
+        <button class="btn btn-primary" id="hcIn">${ico('lock',16,2)} Sign in</button>
+        <button class="btn btn-outline" id="hcUp">${ico('user',16,2)} Create an account</button>
+        <button class="btn btn-ghost" id="hcGuest" style="justify-content:center">Continue as guest ${ico('arrow',15,2.2)}</button>
+      </div>
+      <div class="note" style="margin-top:16px">${ico('info',16,2)}
+        <span>Guests can book and pay. You just do not get order history, saved addresses or ratings until you make an account.</span>
+      </div>
+    </div>
+  </div></section>
 
-const STEPS = ['Service','Details','Schedule','Address','Checkout'];
-const service = () => svcOf(B.service);
+  <section class="band" id="services"><div class="wrap">
+    <h2 class="band-t">What we clean</h2>
+    <div class="band-s">Prices below are the full amount you pay — flat rate, hours, extras and the service fee together.</div>
+    <div class="svc-grid">
+      ${CFG.services.map(s => {
+        const seed = s.model === 'bedrooms' ? { service:s.id, band:'b12', extras:[] }
+                   : s.model === 'laundry'  ? { service:s.id, wash:'machine', finish:'dryfold', extras:[] }
+                   : { service:s.id, extras:[] };
+        const p = priceBooking(seed);
+        return `<button class="svc" data-jump="${s.id}">
+          ${ico(s.icon, 24, 1.6)}
+          <div class="s-t">${s.name}</div>
+          <div class="s-d">${s.desc}</div>
+          <div class="s-p">From ${money(p.total)} · est ${p.hoursLabel}</div>
+        </button>`;
+      }).join('')}
+    </div>
+  </div></section>
 
-function renderStepper(){
-  $('#stepper').innerHTML = STEPS.map((t,i) => {
-    const cls = step > i ? 'done' : step === i ? 'active' : '';
-    const n = step > i ? ico('check',12,3.4) : (i+1);
-    return `<div class="step ${cls}"><span class="step-num">${n}</span><span class="step-lbl">${t}</span></div>${i < STEPS.length-1 ? '<span class="step-bar"></span>' : ''}`;
-  }).join('');
+  <section class="band" id="how"><div class="wrap">
+    <h2 class="band-t">How it works</h2>
+    <div class="band-s">Four screens, then you are done.</div>
+    <div class="steps3">
+      <div class="st3"><div class="n">1</div><div class="t">Pick the service</div><div class="s">Indoor, laundry or outdoor. We estimate the hours from your unit size.</div></div>
+      <div class="st3"><div class="n">2</div><div class="t">Add your extras</div><div class="s">Oven, fridge, cupboards, laundry. Each one adds its own time.</div></div>
+      <div class="st3"><div class="n">3</div><div class="t">Confirm the address</div><div class="s">We pin it on the map so your cleaner finds the door.</div></div>
+      <div class="st3"><div class="n">4</div><div class="t">Choose your cleaner</div><div class="s">Everyone free in your area that day. Pick a face, leave a note, pay.</div></div>
+    </div>
+  </div></section>
+
+  <footer><div class="wrap">
+    <span>Sparrow — prototype build for review</span>
+    <span>Pricing per the brief of 19 Aug 2026</span>
+  </div></footer>`;
 }
 
-/* ---------- step 1 ---------- */
-function fromPrice(s){
-  const probe = { service:s.id, rooms:3, band:'m', units:1, extras:[], freq:'once' };
-  return money(priceBooking(probe).total);
+/* ============================================================
+   AUTH — sign in / sign up / guest
+   ============================================================ */
+function viewSignin(){
+  return `${protoBar('index.html')}${topBar('', [], '')}
+  <div class="wrap"><div class="auth-wrap">
+    <div class="auth-head"><h1>Welcome back</h1><p>Sign in to keep your addresses and order history.</p></div>
+    <div class="card panel">
+      <div class="field"><label for="siEmail">Email address</label>
+        <input id="siEmail" type="email" value="thandi.m@example.co.za" autocomplete="email">
+        <div class="err">Enter your email address</div></div>
+      <div class="field"><label for="siPass">Password</label>
+        <input id="siPass" type="password" value="demo1234" autocomplete="current-password">
+        <div class="err">Enter your password</div></div>
+      <button class="btn btn-primary" style="width:100%" id="siGo">Sign in</button>
+      <div class="auth-alt">No account yet? <button id="toSignup">Create one</button></div>
+      <div class="auth-or">or</div>
+      <button class="btn btn-outline" style="width:100%" id="siGuest">Continue as guest</button>
+    </div>
+    <div class="note">${ico('info',16,2)}<span>Prototype — any email and password signs you in as Thandi, so you can see what a returning customer gets.</span></div>
+  </div></div>`;
 }
-function renderServices(){
-  const group = g => CFG.services.filter(s => s.group === g).map(s => `
-    <button class="svc ${B.service === s.id ? 'sel' : ''}" data-svc="${s.id}">
-      <span class="tick">${ico('check',18,2.6)}</span>
-      ${ico(s.icon,24,1.6)}
-      <div class="svc-name">${s.name}</div>
-      <div class="svc-from">from ${fromPrice(s)} incl. VAT</div>
-    </button>`).join('');
-  $('#svcGroups').innerHTML =
-    `<div class="grp-t">Indoor</div><div class="svc-grid">${group('indoor')}</div>
-     <div class="grp-t">Outdoor</div><div class="svc-grid">${group('outdoor')}</div>`;
-  $$('[data-svc]').forEach(b => b.onclick = () => { B.service = b.dataset.svc; renderServices(); paint(); });
+
+function viewSignup(){
+  return `${protoBar('index.html')}${topBar('', [], '')}
+  <div class="wrap"><div class="auth-wrap wide">
+    <div class="auth-head"><h1>Create your account</h1><p>Takes a minute. Then your details are saved for next time.</p></div>
+    <div class="card panel">
+      <div class="grid2">
+        <div class="field"><label>First name <span class="req">*</span></label><input id="suFirst" placeholder="Thandi"><div class="err">Required</div></div>
+        <div class="field"><label>Surname <span class="req">*</span></label><input id="suLast" placeholder="Mokoena"><div class="err">Required</div></div>
+      </div>
+      <div class="field"><label>Email address <span class="req">*</span></label><input id="suEmail" type="email" placeholder="you@example.co.za"><div class="err">Enter a valid email address</div></div>
+      <div class="field"><label>Mobile number <span class="req">*</span></label><input id="suPhone" placeholder="082 000 0000"><div class="err">Enter a valid South African mobile number</div></div>
+      <div class="grid2">
+        <div class="field"><label>Password <span class="req">*</span></label><input id="suPass" type="password" placeholder="At least 8 characters"><div class="err">At least 8 characters</div></div>
+        <div class="field"><label>Confirm password <span class="req">*</span></label><input id="suPass2" type="password"><div class="err">Passwords do not match</div></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" id="suGo">Create account</button>
+      <div class="auth-alt">Already have an account? <button id="toSignin">Sign in</button></div>
+    </div>
+  </div></div>`;
 }
 
-/* ---------- step 2 ---------- */
-function counterRow(t, s, key, min, max){
-  const v = B[key];
-  return `<div class="row-lbl"><div><div class="rl-t">${t}</div><div class="rl-s">${s}</div></div>
-    <div class="counter">
-      <button class="cbtn" data-inc="-1" data-key="${key}" ${v <= min ? 'disabled' : ''}>−</button>
-      <span class="cval mono">${v}</span>
-      <button class="cbtn" data-inc="1" data-key="${key}" ${v >= max ? 'disabled' : ''}>+</button>
-    </div></div>`;
+/* ============================================================
+   BOOKING SHELL
+   ============================================================ */
+function viewBook(){
+  return `${protoBar('index.html')}${topBar('', [], '')}
+  <div class="wrap"><div class="booker">
+    <div>
+      <div class="progline" id="prog"></div>
+      <div class="step-t" id="stepT"></div>
+      <div id="panes"></div>
+    </div>
+    <aside class="aside"><div class="card panel" id="sum"></div></aside>
+  </div></div>`;
 }
-function renderDetails(){
-  const s = service(); if(!s) return;
-  const q = priceBooking(B);
-  let rows = '';
 
-  if(s.model === 'rooms'){
-    rows += `<div class="row-lbl"><div><div class="rl-t">Unit type</div><div class="rl-s">Helps us send the right equipment</div></div>
-      <div style="min-width:200px"><select id="unitType">${CFG.unitTypes.map(u => `<option ${u === B.unitType ? 'selected' : ''}>${u}</option>`).join('')}</select></div></div>`;
-    rows += counterRow('Number of rooms', `Each room is ${CFG.minutesPerRoom} minutes`, 'rooms', 1, 12);
-    rows += `<div class="row-lbl"><div><div class="rl-t">Hours</div>
-      <div class="rl-s">${B.rooms} rooms × ${CFG.minutesPerRoom} min${q.hours > B.rooms * CFG.minutesPerRoom / 60 ? ', plus your checklist items' : ''}</div></div>
-      <div class="mono" style="font-weight:600;font-size:17px">${q.hoursLabel}</div></div>`;
-  } else if(s.model === 'office'){
-    rows += `<div class="row-lbl"><div><div class="rl-t">Unit size range</div><div class="rl-s">Floor area per unit</div></div>
-      <div style="min-width:200px"><select id="band">${CFG.officeBands.map(x => `<option value="${x.id}" ${x.id === B.band ? 'selected' : ''}>${x.label}</option>`).join('')}</select></div></div>`;
-    rows += counterRow('Number of units', 'Offices or floors on the same site', 'units', 1, 20);
-    rows += `<div class="row-lbl"><div><div class="rl-t">Hours</div><div class="rl-s">Estimated time on site</div></div>
-      <div class="mono" style="font-weight:600;font-size:17px">${q.hoursLabel}</div></div>`;
-  } else {
-    rows += `<div class="row-lbl"><div><div class="rl-t">${s.name}</div>
-      <div class="rl-s">Flat rate for this service — add checklist items below.</div></div>
-      <div class="mono" style="font-weight:600;font-size:17px">${money(q.base)}</div></div>`;
-  }
-  $('#sizeRows').innerHTML = rows;
+/* ---------- router ---------- */
+function go(r){
+  route = r;
+  app().innerHTML = r === 'home' ? viewHome() : r === 'signin' ? viewSignin() : r === 'signup' ? viewSignup() : viewBook();
+  document.getElementById('mbar').classList.toggle('on', r === 'book');
+  window.scrollTo(0, 0);
+  if(r === 'home') wireHome();
+  if(r === 'signin') wireSignin();
+  if(r === 'signup') wireSignup();
+  if(r === 'book') render();
+}
 
-  const ut = $('#unitType'); if(ut) ut.onchange = e => { B.unitType = e.target.value; };
-  const bd = $('#band');     if(bd) bd.onchange = e => { B.band = e.target.value; renderDetails(); paint(); };
-  $$('[data-inc]').forEach(b => b.onclick = () => { B[b.dataset.key] += (+b.dataset.inc); renderDetails(); paint(); });
-
-  $('#extras').innerHTML = CFG.checklist.map(e => `
-    <button class="chip ${B.extras.includes(e.id) ? 'on' : ''}" data-ex="${e.id}">${e.name}
-      <span class="c-price">${e.price ? '+' + money(e.price) : 'included'}</span></button>`).join('');
-  $$('[data-ex]').forEach(b => b.onclick = () => {
-    const id = b.dataset.ex;
-    B.extras = B.extras.includes(id) ? B.extras.filter(x => x !== id) : B.extras.concat(id);
-    renderDetails(); paint();
+function wireHome(){
+  document.getElementById('navSignin').onclick = () => go('signin');
+  document.getElementById('hcIn').onclick = () => go('signin');
+  document.getElementById('hcUp').onclick = () => go('signup');
+  document.getElementById('ctaBook').onclick = () => go('signin');
+  document.getElementById('ctaGuest').onclick = startGuest;
+  document.getElementById('hcGuest').onclick = startGuest;
+  document.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => {
+    B.service = b.dataset.jump; B.guest = true; seedForService(); step = 1; go('book');
   });
+}
+function startGuest(){ B.guest = true; B.signedIn = false; step = 0; go('book'); }
 
-  $('#freq').innerHTML = CFG.frequencies.map(f => `
-    <button class="${B.freq === f.id ? 'on' : ''}" data-freq="${f.id}">
-      ${f.save ? `<span class="save-tag">Save ${f.save}%</span>` : ''}
-      <div class="f-t">${f.title}</div><div class="f-s">${f.sub}</div></button>`).join('');
-  $$('[data-freq]').forEach(b => b.onclick = () => { B.freq = b.dataset.freq; renderDetails(); paint(); });
+function wireSignin(){
+  document.getElementById('toSignup').onclick = () => go('signup');
+  document.getElementById('siGuest').onclick = startGuest;
+  document.getElementById('siGo').onclick = () => {
+    const em = document.getElementById('siEmail'), pw = document.getElementById('siPass');
+    let bad = false;
+    [[em, /\S+@\S+\.\S+/.test(em.value)], [pw, pw.value.length > 0]].forEach(([el, ok]) => {
+      el.closest('.field').classList.toggle('bad', !ok); if(!ok) bad = true;
+    });
+    if(bad) return;
+    B.signedIn = true; B.guest = false;
+    B.addr = { ...DB.addresses[0] };
+    B.geo = true;
+    toast('Signed in as ' + DB.customer.name);
+    if(!B.service) step = 0;
+    go('book');
+  };
 }
 
-/* ---------- step 3 ---------- */
-function renderSchedule(){
-  const today = new Date(2026, 7, 16);          // fixed so the demo is deterministic
-  $('#dates').innerHTML = Array.from({length:14}, (_,i) => {
-    const d = new Date(today); d.setDate(d.getDate() + i);
-    return `<button class="dcell ${B.date === i ? 'on' : ''}" data-date="${i}">
-      <div class="dw">${i === 0 ? 'Today' : i === 1 ? 'Tmrw' : DAYS[d.getDay()]}</div>
-      <div class="dd mono">${d.getDate()}</div><div class="dm">${MON[d.getMonth()]}</div></button>`;
-  }).join('');
-  $$('[data-date]').forEach(b => b.onclick = () => { B.date = +b.dataset.date; B.slot = null; renderSchedule(); paint(); });
-
-  $('#slots').innerHTML = CFG.slots.map((t,i) => {
-    const pros = (B.date * 7 + i * 13) % 11;    // deterministic pseudo-availability
-    const dis = pros === 0;
-    return `<button class="slot ${B.slot === t ? 'on' : ''}" data-slot="${t}" ${dis ? 'disabled' : ''}>${t}
-      <span class="pros">${dis ? 'full' : pros + ' pros free'}</span></button>`;
-  }).join('');
-  $$('[data-slot]').forEach(b => b.onclick = () => { B.slot = b.dataset.slot; renderSchedule(); paint(); });
-
-  const q = priceBooking(B);
-  $('#durNote').innerHTML = `${ico('clock',17,2)}<span>Estimated ${q.hoursLabel} on site. The professional is paid for the full window even if they finish early.</span>`;
+function wireSignup(){
+  document.getElementById('toSignin').onclick = () => go('signin');
+  document.getElementById('suGo').onclick = () => {
+    const g = id => document.getElementById(id);
+    const checks = [
+      [g('suFirst'), g('suFirst').value.trim().length > 1],
+      [g('suLast'),  g('suLast').value.trim().length > 1],
+      [g('suEmail'), /\S+@\S+\.\S+/.test(g('suEmail').value)],
+      [g('suPhone'), /^(\+27|0)[6-8][0-9]{8}$/.test(g('suPhone').value.replace(/\s/g,''))],
+      [g('suPass'),  g('suPass').value.length >= 8],
+      [g('suPass2'), g('suPass2').value === g('suPass').value && g('suPass2').value.length >= 8]
+    ];
+    let bad = false;
+    checks.forEach(([el, ok]) => { el.closest('.field').classList.toggle('bad', !ok); if(!ok) bad = true; });
+    if(bad) return;
+    B.signedIn = true; B.guest = false;
+    toast('Account created — welcome to Sparrow');
+    step = 0; go('book');
+  };
 }
 
-/* ---------- step 5 ---------- */
-function renderPays(){
-  const opts = [
-    { id:'card',   t:'Card',                  s:'Visa or Mastercard — authorised now, captured on completion' },
-    { id:'eft',    t:'Instant EFT',           s:'Pay directly from your bank account' },
-    { id:'wallet', t:'Sparrow wallet',        s:'Balance and loyalty points' },
-    { id:'cash',   t:'Cash on completion',    s:'One-off bookings under ' + money(600) }
-  ];
-  $('#pays').innerHTML = opts.map(o => `
-    <button class="pay ${B.pay === o.id ? 'on' : ''}" data-pay="${o.id}">
-      <span class="radio"></span>
-      <span><span class="p-t">${o.t}</span><br><span class="p-s">${o.s}</span></span>
-    </button>`).join('');
-  $$('[data-pay]').forEach(b => b.onclick = () => { B.pay = b.dataset.pay; renderPays(); });
+/* ============================================================
+   BOOKING RENDER
+   ============================================================ */
+function seedForService(){
+  const svc = svcOf(B.service);
+  if(!svc) return;
+  B.extras = [];
+  B.cleaner = null;
+  if(svc.model === 'bedrooms'){ B.band = B.band || 'b12'; B.hours = baseHoursFor(B); }
+  else if(svc.model === 'laundry'){ B.wash = null; B.finish = null; B.hours = null; }
+  else { B.hours = svc.estHours; }
 }
-function whenLabel(){
-  const d = new Date(2026, 7, 16); d.setDate(d.getDate() + B.date);
-  return `${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}${B.slot ? ' at ' + B.slot : ''}`;
-}
-function renderReview(){
-  const s = service(), q = priceBooking(B);
-  const picked = B.extras.map(id => CFG.checklist.find(c => c.id === id)).filter(Boolean).map(c => c.name);
-  const rows = [
-    ['Service', s.name],
-    s.model === 'rooms'  ? ['Property', `${B.unitType} · ${B.rooms} rooms`] : null,
-    s.model === 'office' ? ['Size', `${CFG.officeBands.find(x => x.id === B.band).label} × ${B.units} unit${B.units > 1 ? 's' : ''}`] : null,
-    ['Checklist', picked.join(', ') || 'None'],
-    ['Frequency', q.freqLabel],
-    ['When', whenLabel()],
-    ['Service duration', q.hoursLabel],
-    ['Address', ($('#fAddr').value || '—') + ', ' + ($('#fSub').value || '—')]
-  ].filter(Boolean);
-  $('#escrowNote').innerHTML = `${ico('shield',17,2)}<span>Your payment is authorised now and held in escrow. It is captured and released to the professional only after the clean is completed. Free cancellation up to 12 hours before.</span>`;
-  $('#reviewList').innerHTML = rows.map(([k,v]) =>
-    `<div class="li"><span>${k}</span><span class="v" style="text-align:right;max-width:60%">${v}</span></div>`).join('');
 
-  // the checkout breakdown the spec asks for, in its order
-  $('#checkoutSummary').innerHTML = `
-    <div class="li"><span>Service fee</span><span class="v mono">${money(q.base)}</span></div>
-    <div class="li"><span>Extras</span><span class="v mono">${money(q.extras)}</span></div>
-    <div class="li ${q.discount ? 'disc' : ''}"><span>Discount</span><span class="v mono">${q.discount ? '−' + money(q.discount) : money(0)}</span></div>
-    <div class="li"><span>Platform &amp; insurance</span><span class="v mono">${money(q.fee)}</span></div>
-    <div class="li"><span>VAT (${(CFG.vatRate*100).toFixed(0)}%)</span><span class="v mono">${money(q.vat)}</span></div>
+function render(){
+  const prog = document.getElementById('prog');
+  if(!prog) return;
+  prog.innerHTML = STEPS.map((_, i) => `<span class="pg ${i <= step ? 'on' : ''}"></span>`).join('');
+  document.getElementById('stepT').textContent =
+    step < STEPS.length ? `Step ${step + 1} of ${STEPS.length} — ${STEPS[step]}` : 'Booked';
+  document.getElementById('panes').innerHTML =
+    [paneService, paneDetails, paneAddress, paneWorker, paneCheckout, paneDone][step]();
+  renderSummary();
+  wirePane();
+}
+
+function renderSummary(){
+  const box = document.getElementById('sum');
+  const bar = document.getElementById('mbarV');
+  const btn = document.getElementById('mbarB');
+  if(!B.service){
+    box.innerHTML = `<h3 style="font-size:19px">Your booking</h3>
+      <div class="mini" style="margin-top:8px">Pick a service to see the price.</div>`;
+    bar.textContent = 'R0'; btn.disabled = true;
+    return;
+  }
+  const p = priceBooking(B);
+  const svc = svcOf(B.service);
+  const cl = B.cleaner ? cleaner(B.cleaner) : null;
+  box.innerHTML = `
+    <h3 style="font-size:19px">${svc.name}</h3>
+    <div class="mini" style="margin-bottom:12px">${detailLine()}</div>
     <div class="rule"></div>
-    <div class="total"><span class="t-l">Total</span><span class="t-v mono">${money(q.total)}</span></div>`;
+    ${moneyLines(p)}
+    <div class="rule"></div>
+    <div class="total"><span class="t-l">Total</span><span class="t-v" id="sumTot">${money(p.total)}</span></div>
+    <div class="mini" style="margin-top:4px">Estimated ${p.hoursLabel} on site</div>
+    ${cl ? `<div class="rule"></div><div class="pro-line">${portrait(cl,42)}
+        <div><div class="t-strong">${cl.name} ${cl.surname}</div><div class="mini">Your cleaner</div></div></div>` : ''}
+    ${p.placeholder ? `<div class="note warn" style="margin-top:14px">${ico('info',16,2)}
+      <span>Hours for ${svc.name.toLowerCase()} are my estimate — this service is not in your price list yet.</span></div>` : ''}`;
+  bar.textContent = money(p.total);
+  btn.disabled = !canAdvance();
+  btn.textContent = step === 4 ? 'Pay ' + money(p.total) : 'Continue';
+  btn.style.display = step === 5 ? 'none' : '';
 }
 
-/* ---------- summary panel ---------- */
-function paint(){
-  renderStepper();
-  const s = service(), q = s ? priceBooking(B) : null;
-  $('#sumSvc').textContent = s ? s.name : 'Pick a service';
-
-  if(q){
-    $('#sumMeta').textContent = `${q.freqLabel} · ${B.slot ? whenLabel() : 'Time not chosen yet'}`;
-    const L = [];
-    L.push(`<div class="li"><span>${s.name}${s.model === 'rooms' ? ` · ${B.rooms} rooms` : ''} (${q.hoursLabel})</span><span class="v mono">${money(q.base)}</span></div>`);
-    if(q.extras) L.push(`<div class="li"><span>Extras (${B.extras.filter(x => x !== 'general').length})</span><span class="v mono">${money(q.extras)}</span></div>`);
-    if(q.freqDisc) L.push(`<div class="li disc"><span>${q.freqLabel} discount</span><span class="v mono">−${money(q.freqDisc)}</span></div>`);
-    if(q.promoDisc) L.push(`<div class="li disc"><span>Promo ${B.promo}</span><span class="v mono">−${money(q.promoDisc)}</span></div>`);
-    L.push(`<div class="li"><span>Platform &amp; insurance</span><span class="v mono">${money(q.fee)}</span></div>`);
-    L.push(`<div class="li"><span>VAT (${(CFG.vatRate*100).toFixed(0)}%)</span><span class="v mono">${money(q.vat)}</span></div>`);
-    $('#lines').innerHTML = L.join('');
-    const g = $('#grand');
-    g.textContent = money(q.total);
-    g.classList.add('bump'); setTimeout(() => g.classList.remove('bump'), 180);
-  } else {
-    $('#sumMeta').textContent = 'Pricing appears as you build the booking';
-    $('#lines').innerHTML = '<div class="li"><span>No service selected</span><span class="v">—</span></div>';
-    $('#grand').textContent = '—';
-  }
-
-  $('#sumFoot').innerHTML = `${ico('shield',15,2)}<span>Every professional is ID-verified and background-checked. Public liability cover on every job.</span>`;
-
-  const pane = document.querySelector(`[data-pane="${step}"]`);
-  const nx = pane && pane.querySelector('[data-next]');
-  if(nx){
-    if(step === 0) nx.disabled = !B.service;
-    else if(step === 2) nx.disabled = !B.slot;
-    else nx.disabled = false;
-  }
-  const mb = $('#mbar');
-  mb.classList.toggle('show', step < 5);
-  $('#mTotal').textContent = q ? money(q.total) : '—';
-  $('#mNext').textContent = ['Continue','Choose a time','Add address','Review & pay','Pay now'][step] || 'Continue';
-  $('#mNext').disabled = nx ? nx.disabled : false;
+function moneyLines(p){
+  return `
+    <div class="li"><span>Flat rate</span><span class="v">${money(p.flat)}</span></div>
+    <div class="li"><span>${p.serviceHoursLabel} @ ${money(CFG.hourlyRate)}/hr</span><span class="v">${money(p.labour)}</span></div>
+    ${p.extras ? `<div class="li"><span>Extra tasks</span><span class="v">${money(p.extras)}</span></div>` : ''}
+    <div class="li"><span>Service fee</span><span class="v">${money(p.fee)}</span></div>`;
 }
 
-/* ---------- address validation ---------- */
-function badField(el, isBad){ el.closest('.field').classList.toggle('bad', isBad); return isBad; }
+function detailLine(){
+  const svc = svcOf(B.service);
+  if(svc.model === 'bedrooms'){
+    const band = CFG.bedroomBands.find(x => x.id === B.band);
+    const ex = B.extras.length ? ` · ${B.extras.length} extra${B.extras.length > 1 ? 's' : ''}` : '';
+    return `${band.label}${ex}`;
+  }
+  if(svc.model === 'laundry'){
+    const w = CFG.laundryWash.find(x => x.id === B.wash);
+    const f = CFG.laundryFinish.find(x => x.id === B.finish);
+    return [w && w.name, f && f.name].filter(Boolean).join(' · ') || 'Choose a wash';
+  }
+  return svc.desc;
+}
+
+/* ---------- pane 0: service ---------- */
+function paneService(){
+  const grp = g => CFG.services.filter(s => s.group === g).map(s => `
+    <button class="svc" data-svc="${s.id}" style="${B.service === s.id ? 'border-color:var(--ink);border-width:2px;background:var(--moss-soft)' : ''}">
+      ${ico(s.icon, 24, 1.6)}
+      <div class="s-t">${s.name}</div>
+      <div class="s-d">${s.desc}</div>
+    </button>`).join('');
+  return `
+    <div class="pane">
+      <h2 style="font-size:27px;margin-bottom:4px">What do you need done?</h2>
+      <div class="mini" style="margin-bottom:18px">Indoor jobs are estimated from your unit size. Outdoor jobs are estimated by the job.</div>
+      <div class="fieldset-t">Indoor</div>
+      <div class="svc-grid">${grp('indoor')}</div>
+      <div class="fieldset-t">Outdoor</div>
+      <div class="svc-grid">${grp('outdoor')}</div>
+      <div class="navrow"><button class="btn btn-ghost" id="toHome">${ico('back',16,2.2)} Back</button>
+        <button class="btn btn-primary spacer" id="nextBtn" ${B.service ? '' : 'disabled'}>Continue ${ico('arrow',16,2.2)}</button></div>
+    </div>`;
+}
+
+/* ---------- pane 1: the job ---------- */
+function paneDetails(){
+  const svc = svcOf(B.service);
+  return `<div class="pane">
+    <h2 style="font-size:27px;margin-bottom:4px">${svc.name}</h2>
+    <div class="mini" style="margin-bottom:18px">${svc.desc}</div>
+    ${svc.model === 'bedrooms' ? bedroomBlock() : svc.model === 'laundry' ? laundryBlock() : hoursOnlyBlock()}
+    <div class="navrow"><button class="btn btn-ghost" data-back>${ico('back',16,2.2)} Back</button>
+      <button class="btn btn-primary spacer" id="nextBtn" ${canAdvance() ? '' : 'disabled'}>Continue ${ico('arrow',16,2.2)}</button></div>
+  </div>`;
+}
+
+function bedroomBlock(){
+  const p = priceBooking(B);
+  return `
+    <div class="fieldset-t">Unit size</div>
+    <div class="chips">${CFG.bedroomBands.map(b => `
+      <button class="chip ${B.band === b.id ? 'on' : ''}" data-band="${b.id}">${b.label}
+        <span class="c-price">est ${b.hours}h</span></button>`).join('')}
+    </div>
+    <div class="note" style="margin-top:12px">${ico('info',16,2)}
+      <span>These are just estimates for the unit size and could add more hours. Adjust below if your place needs longer.</span></div>
+
+    <div class="fieldset-t">Hours</div>
+    ${stepperBlock(p)}
+
+    <div class="fieldset-t">Extra tasks</div>
+    ${tasksBlock()}`;
+}
+
+function stepperBlock(p){
+  const canDown = p.serviceHours - CFG.stepMins / 60 >= p.minHours - 1e-9;
+  const canUp   = p.serviceHours + CFG.stepMins / 60 <= p.maxHours + 1e-9;
+  const delta   = p.overEstimate;
+  return `
+    <div class="stepper">
+      <button class="st-btn" id="hMinus" ${canDown ? '' : 'disabled'} aria-label="Less time">${ico('minus',18,2.4)}</button>
+      <div class="st-mid">
+        <div class="st-v" id="hVal">${hoursLabel(p.serviceHours)}</div>
+        <div class="st-s" id="hSub">${delta === 0 ? 'estimate for this unit size'
+          : delta > 0 ? `${hoursLabel(delta/60)} more than the estimate`
+          : `${hoursLabel(-delta/60)} less than the estimate`}</div>
+      </div>
+      <button class="st-btn" id="hPlus" ${canUp ? '' : 'disabled'} aria-label="More time">${ico('plus',18,2.4)}</button>
+    </div>
+    <div class="mini" style="margin-top:8px">Moves in ${CFG.stepMins}-minute steps. You can take up to ${CFG.reduceMins} minutes off the estimate, and add as much as you like up to the ${CFG.maxHours}-hour cap.</div>
+    ${p.hours >= CFG.maxHours - 1e-9 ? `<div class="cap-note">${ico('info',15,2)}
+      <span>This job is at the ${CFG.maxHours}-hour cap. A cleaner may not be booked for longer than one ${CFG.maxHours}-hour day, so nothing further can be added.</span></div>` : ''}`;
+}
+
+function tasksBlock(){
+  const rows = CFG.extras.map(e => {
+    const on = B.extras.includes(e.id);
+    const ok = extraAllowed(B, e.id);
+    return `<button class="task ${on ? 'on' : ''}" data-task="${e.id}" ${ok ? '' : 'disabled'}>
+      <span class="tk-box">${ico('check',14,3)}</span>
+      <span class="tk-main">
+        <span class="tk-t">${e.name}</span>
+        <span class="tk-s">${ok ? `adds ${hoursLabel(e.mins/60)}` : `no room — would take the job past ${CFG.maxHours} hours`}</span>
+      </span>
+      <span class="tk-p">${money(e.price)}</span>
+    </button>`;
+  }).join('');
+  const blocked = CFG.extras.filter(e => !extraAllowed(B, e.id)).length;
+  return `<div class="tasks">${rows}</div>
+    ${blocked ? `<div class="cap-note">${ico('info',15,2)}
+      <span>${blocked} task${blocked > 1 ? 's are' : ' is'} greyed out because this job would run a cleaner past ${CFG.maxHours} hours. Take time off the clean, or book a second visit.</span></div>` : ''}`;
+}
+
+function laundryBlock(){
+  const finishOK = !!B.wash;
+  return `
+    <div class="fieldset-t">Type of washing</div>
+    <div class="tasks">${CFG.laundryWash.map(w => `
+      <button class="task ${B.wash === w.id ? 'on' : ''}" data-wash="${w.id}">
+        <span class="tk-box">${ico('check',14,3)}</span>
+        <span class="tk-main"><span class="tk-t">${w.name}</span><span class="tk-s">${w.sub}</span></span>
+        <span class="tk-p">est ${w.hours}h</span>
+      </button>`).join('')}</div>
+
+    <div class="fieldset-t">Then what?</div>
+    <div class="tasks">${CFG.laundryFinish.map(f => `
+      <button class="task ${B.finish === f.id ? 'on' : ''}" data-finish="${f.id}" ${finishOK ? '' : 'disabled'}>
+        <span class="tk-box">${ico('check',14,3)}</span>
+        <span class="tk-main"><span class="tk-t">${f.name}</span><span class="tk-s">${f.sub}</span></span>
+        <span class="tk-p">+${f.hours}h</span>
+      </button>`).join('')}</div>
+    ${finishOK ? '' : `<div class="cap-note">${ico('info',15,2)}<span>Pick the type of washing first.</span></div>`}
+    ${B.wash && B.finish ? `<div class="note" style="margin-top:14px">${ico('clock',16,2)}
+      <span>Estimated ${hoursLabel(baseHoursFor(B))} in total, charged at the same ${money(CFG.hourlyRate)} an hour.</span></div>` : ''}`;
+}
+
+function hoursOnlyBlock(){
+  const p = priceBooking(B);
+  const svc = svcOf(B.service);
+  return `
+    <div class="fieldset-t">Hours</div>
+    ${stepperBlock(p)}
+    <div class="note warn" style="margin-top:14px">${ico('info',16,2)}
+      <span>The ${svc.estHours}-hour estimate for ${svc.name.toLowerCase()} is mine, not yours — your price list covers indoor cleaning and laundry. Send me the numbers and this changes in one line.</span></div>`;
+}
+
+/* ---------- pane 2: address + when ---------- */
+function paneAddress(){
+  const a = B.addr;
+  const saved = B.signedIn ? DB.addresses : [];
+  return `<div class="pane">
+    <h2 style="font-size:27px;margin-bottom:4px">Where and when?</h2>
+    <div class="mini" style="margin-bottom:18px">We confirm the address on the map so your cleaner finds the right door, then show you who is free that day.</div>
+
+    ${saved.length ? `<div class="fieldset-t">Saved addresses</div>
+      <div class="chips" style="margin-bottom:6px">${saved.map(s =>
+        `<button class="chip ${a.id === s.id ? 'on' : ''}" data-saved="${s.id}">${ico('pin',14,2)} ${s.label}</button>`).join('')}
+      </div>` : ''}
+
+    <div class="fieldset-t">The property</div>
+    <div class="field"><label>Type of property <span class="req">*</span></label>
+      <select id="aType"><option value="">Choose…</option>
+        ${CFG.propertyTypes.map(t => `<option ${a.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <div class="err">Tell us what kind of property it is</div></div>
+    <div class="field"><label>Street address <span class="req">*</span></label>
+      <input id="aLine" placeholder="18 Ocean View Drive" value="${esc(a.line)}">
+      <div class="err">Enter the street address</div></div>
+    <div class="grid2">
+      <div class="field"><label>Unit / flat number</label><input id="aUnit" placeholder="Flat 4B" value="${esc(a.unit)}"></div>
+      <div class="field"><label>Suburb <span class="req">*</span></label><input id="aSub" placeholder="Sea Point" value="${esc(a.suburb)}"><div class="err">Enter the suburb</div></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Province</label><select id="aProv">${Object.keys(CFG.provinces).map(p =>
+        `<option ${a.prov === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
+      <div class="field"><label>City</label><select id="aCity"></select></div>
+    </div>
+
+    <div class="fieldset-t">Confirm it on the map</div>
+    <div class="geo" id="geoBox">${geoInner()}</div>
+    <button class="btn btn-outline sm" id="geoBtn" style="margin-top:10px">${ico('pin',15,2)} ${B.geo ? 'Search again' : 'Find this address'}</button>
+    <div class="mini" style="margin-top:8px">Wired to a stand-in geocoder for now. It swaps to Google Places the moment there is an API key on your billing account.</div>
+
+    <div id="afterGeo" style="${B.geo ? '' : 'display:none'}">
+      <div class="fieldset-t">Anything the cleaner should know?</div>
+      <div class="field"><textarea id="aNotes" rows="3" placeholder="Buzzer number, where the key is, pets, parking…">${esc(a.notes)}</textarea>
+        <div class="hint">Optional, but it saves your cleaner a phone call.</div></div>
+
+      <div class="fieldset-t">When?</div>
+      <div class="field"><label>Date <span class="req">*</span></label>
+        <input id="aDate" type="date" min="${TODAY}" value="${B.date || ''}"><div class="err">Choose a date</div></div>
+      <div class="field"><label>Start time <span class="req">*</span></label>
+        <div class="chips">${CFG.slots.map(s =>
+          `<button class="chip ${B.time === s ? 'on' : ''}" data-slot="${s}">${s}</button>`).join('')}</div></div>
+    </div>
+
+    <div class="navrow"><button class="btn btn-ghost" data-back>${ico('back',16,2.2)} Back</button>
+      <button class="btn btn-primary spacer" id="nextBtn" ${canAdvance() ? '' : 'disabled'}>See who is free ${ico('arrow',16,2.2)}</button></div>
+  </div>`;
+}
+
+function geoInner(){
+  if(!B.geo) return `<div class="geo-idle">${ico('pin',26,1.6)}<div style="margin-top:8px">Fill in the street address, then tap <b>Find this address</b>.<br>Cleaners only show once the location is confirmed.</div></div>`;
+  const a = B.addr;
+  return `<div class="geo-map"><span class="geo-pin">${ico('pin',34,2)}</span></div>
+    <div class="geo-bar">${ico('check',18,2.6)}
+      <div><div class="gb-t">${esc([a.unit, a.line].filter(Boolean).join(', '))}</div>
+        <div class="gb-s">${esc(a.suburb)}, ${esc(a.city)}, ${esc(a.prov)} · pinned</div></div></div>`;
+}
+
+/* ---------- pane 3: choose your cleaner ---------- */
+function paneWorker(){
+  const list = availableCleaners(B);
+  const p = priceBooking(B);
+  return `<div class="pane">
+    <h2 style="font-size:27px;margin-bottom:4px">Choose your cleaner</h2>
+    <div class="mini" style="margin-bottom:18px" id="whoLine">Everyone free in ${esc(B.addr.city)} on ${fmtDateLong(B.date)} who can fit a ${p.hoursLabel} job.</div>
+    ${list.length ? `<div class="pros">${list.map(c => `
+      <button class="pro ${B.cleaner === c.id ? 'on' : ''}" data-pro="${c.id}">
+        ${portrait(c, 84)}
+        <div>
+          <div class="p-n">${c.name} ${c.surname}</div>
+          <div class="p-r">${starRow(ratingOf(c.id) || c.rating)} <span class="mini">${(ratingOf(c.id) || c.rating).toFixed(2)}</span></div>
+          <div class="p-s">${c.years} years · ${c.langs.slice(0,2).join(', ')}</div>
+        </div>
+        ${c.fav && B.signedIn ? '<span class="p-tag">Your favourite</span>' : ''}
+      </button>`).join('')}</div>
+      <div class="note" style="margin-top:14px">${ico('info',16,2)}
+        <span>Photos are drawn placeholders. The real card shows the head-and-shoulders photo the cleaner uploaded with their application.</span></div>`
+    : `<div class="empty">${ico('users',40,1.4)}
+        <div class="e-t">Nobody free that day</div>
+        <div>No approved cleaner covers ${esc(B.addr.city)} on ${fmtDate(B.date)} with ${p.hoursLabel} still open. Try another date.</div>
+      </div>`}
+    <div class="navrow"><button class="btn btn-ghost" data-back>${ico('back',16,2.2)} Back</button>
+      <button class="btn btn-primary spacer" id="nextBtn" ${canAdvance() ? '' : 'disabled'}>Continue ${ico('arrow',16,2.2)}</button></div>
+  </div>`;
+}
+
+/* ---------- pane 4: checkout ---------- */
+function paneCheckout(){
+  const p = priceBooking(B);
+  const cl = cleaner(B.cleaner);
+  const a = B.addr;
+  return `<div class="pane">
+    <h2 style="font-size:27px;margin-bottom:4px">Check and pay</h2>
+    <div class="mini" style="margin-bottom:18px">Nothing is charged until you tap pay.</div>
+
+    <div class="card panel" style="margin-bottom:14px">
+      <div class="pro-line" style="margin-bottom:14px">${portrait(cl, 54)}
+        <div><div class="t-strong">${cl.name} ${cl.surname}</div>
+          <div class="mini">${starRow(ratingOf(cl.id) || cl.rating)} · ${cl.years} years with us</div></div>
+        <button class="btn btn-ghost sm spacer" id="changePro">Change</button></div>
+      <dl class="kv">
+        <dt>Service</dt><dd>${svcOf(B.service).name} · ${detailLine()}</dd>
+        <dt>When</dt><dd>${fmtDateLong(B.date)} at ${B.time} · est ${p.hoursLabel}</dd>
+        <dt>Where</dt><dd>${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)}, ${esc(a.city)}</dd>
+        ${a.notes ? `<dt>Access</dt><dd>${esc(a.notes)}</dd>` : ''}
+      </dl>
+    </div>
+
+    <div class="fieldset-t">A note for ${cl.name}</div>
+    <div class="field"><textarea id="cNote" rows="3" placeholder="Anything you want done first, or left alone.">${esc(B.note)}</textarea></div>
+
+    <div class="fieldset-t">Payment</div>
+    ${B.signedIn ? `<div class="tasks">${DB.cards.map((c,i) => `
+        <button class="task ${i === 0 ? 'on' : ''}" data-card="${c.id}">
+          <span class="tk-box">${ico('check',14,3)}</span>
+          <span class="tk-main"><span class="tk-t">${c.brand} ···· ${c.last4}</span><span class="tk-s">Expires ${c.exp}</span></span>
+        </button>`).join('')}</div>`
+      : `<div class="grid2">
+          <div class="field"><label>Card number</label><input value="4242 4242 4242 4242" readonly></div>
+          <div class="field"><label>Expiry</label><input value="09 / 29" readonly></div>
+        </div>
+        <div class="mini">Demo card. The live site takes a real gateway — Paystack or Peach both work in South Africa.</div>`}
+
+    <div class="card panel" style="margin-top:16px">
+      ${moneyLines(p)}
+      <div class="rule"></div>
+      <div class="total"><span class="t-l">Total</span><span class="t-v">${money(p.total)}</span></div>
+    </div>
+
+    <div class="navrow"><button class="btn btn-ghost" data-back>${ico('back',16,2.2)} Back</button>
+      <button class="btn btn-primary spacer" id="payBtn">${ico('lock',16,2)} Pay ${money(p.total)}</button></div>
+  </div>`;
+}
+
+/* ---------- pane 5: done ---------- */
+function paneDone(){
+  const p = priceBooking(B);
+  const cl = cleaner(B.cleaner);
+  return `<div class="pane">
+    <div class="card panel conf">
+      <div class="tick">${ico('check',30,3)}</div>
+      <h2>Paid. ${cl.name} is booked.</h2>
+      <div class="mini" style="margin-bottom:12px">${fmtDateLong(B.date)} at ${B.time} · ${p.hoursLabel} · ${money(p.total)}</div>
+      <div class="ref">${B.ref}</div>
+    </div>
+
+    <div class="fieldset-t">What just went out automatically</div>
+    <div class="rows">
+      <div class="row-card">${ico('mail',20,1.8)}
+        <div class="rc-main"><div class="rc-t">Order confirmation to you</div>
+          <div class="rc-s">${esc(B.signedIn ? DB.customer.email : 'guest@example.co.za')}</div></div>
+        <div class="rc-act"><button class="btn btn-outline sm" id="mailC">Read it</button></div></div>
+      <div class="row-card">${ico('chat',20,1.8)}
+        <div class="rc-main"><div class="rc-t">Job details to ${cl.name}</div>
+          <div class="rc-s">SMS now, WhatsApp once the Business API is approved</div></div>
+        <div class="rc-act"><button class="btn btn-outline sm" id="mailW">Read it</button></div></div>
+      <div class="row-card">${ico('shield',20,1.8)}
+        <div class="rc-main"><div class="rc-t">New order alert to the admins</div>
+          <div class="rc-s">Also lands on the admin dashboard</div></div>
+        <div class="rc-act"><button class="btn btn-outline sm" id="mailA">Read it</button></div></div>
+    </div>
+
+    <div class="navrow">
+      <a class="btn btn-primary" href="dashboard.html">See it in my orders ${ico('arrow',16,2.2)}</a>
+      <button class="btn btn-outline" id="again">Book another</button>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   Automatic messages — the exact wording, for sign-off.
+   ============================================================ */
+function orderTable(){
+  const p = priceBooking(B);
+  return `<table>
+    <tr><td>${svcOf(B.service).name} — ${detailLine()}</td><td>${p.serviceHoursLabel}</td></tr>
+    <tr><td>Flat rate</td><td>${money(p.flat)}</td></tr>
+    <tr><td>${p.serviceHoursLabel} at ${money(CFG.hourlyRate)}/hr</td><td>${money(p.labour)}</td></tr>
+    ${p.extras ? `<tr><td>Extra tasks (${B.extras.map(id => CFG.extras.find(e => e.id === id).name).join(', ')})</td><td>${money(p.extras)}</td></tr>` : ''}
+    <tr><td>Service fee</td><td>${money(p.fee)}</td></tr>
+    <tr><td><b>Total paid</b></td><td>${money(p.total)}</td></tr>
+  </table>`;
+}
+function mailCustomer(){
+  const cl = cleaner(B.cleaner), p = priceBooking(B), a = B.addr;
+  sendNotice({ channel:'email', to: B.signedIn ? DB.customer.email : 'guest@example.co.za',
+    subject:`Your Sparrow booking ${B.ref} is confirmed`,
+    body:`<h4>You are booked, ${B.signedIn ? DB.customer.name : 'there'}.</h4>
+      <p>${cl.name} ${cl.surname} will be at ${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)} on <b>${fmtDateLong(B.date)} at ${B.time}</b>, for about ${p.hoursLabel}.</p>
+      ${orderTable()}
+      ${B.note ? `<p><b>Your note to ${cl.name}:</b> “${esc(B.note)}”</p>` : ''}
+      <p><a class="m-btn" href="#">View or change this booking</a></p>
+      <p style="color:#6b7a70;font-size:12.5px">Reference ${B.ref}. Need to cancel? Do it from your dashboard up to 12 hours before.</p>` });
+}
+function mailWorker(){
+  const cl = cleaner(B.cleaner), p = priceBooking(B), a = B.addr;
+  sendNotice({ channel:'sms', to:`${cl.name} ${cl.surname} · +27 82 000 0000`,
+    body:`<p>Sparrow job ${B.ref}<br>
+      ${fmtDateLong(B.date)}, ${B.time} — ${p.hoursLabel}<br>
+      ${svcOf(B.service).name}, ${detailLine()}<br>
+      ${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)}, ${esc(a.city)}<br>
+      ${a.notes ? `Access: ${esc(a.notes)}<br>` : ''}
+      ${B.note ? `Customer note: ${esc(B.note)}<br>` : ''}
+      Open your dashboard for the map and the full job card.</p>` });
+}
+function mailAdmin(){
+  const cl = cleaner(B.cleaner), p = priceBooking(B);
+  sendNotice({ channel:'email', to:'admin@sparrow.co.za',
+    subject:`New order ${B.ref} — ${money(p.total)}`,
+    body:`<h4>New order</h4>
+      <p><b>${B.ref}</b> · ${B.signedIn ? DB.customer.name + ' ' + DB.customer.surname : 'Guest checkout'} · ${fmtDateLong(B.date)} at ${B.time}</p>
+      <p>Cleaner chosen by the customer: <b>${cl.name} ${cl.surname}</b> (${cl.city})</p>
+      ${orderTable()}
+      <p><a class="m-btn" href="#">Open in the admin dashboard</a></p>` });
+}
+
+/* ============================================================
+   Step gating and wiring
+   ============================================================ */
+function canAdvance(){
+  const svc = svcOf(B.service);
+  if(step === 0) return !!B.service;
+  if(step === 1){
+    if(!svc) return false;
+    if(svc.model === 'laundry') return !!(B.wash && B.finish);
+    return true;
+  }
+  if(step === 2) return !!(B.geo && B.date && B.time);
+  if(step === 3) return !!B.cleaner;
+  return true;
+}
+
+function next(){
+  if(step === 2 && !validateAddress()) return;
+  if(!canAdvance()) return;
+  if(step === 4) return pay();
+  step = Math.min(step + 1, 5);
+  render();
+}
+function back(){ step = Math.max(step - 1, 0); render(); }
+
 function validateAddress(){
-  let fail = false;
-  fail |= badField($('#fName'),  !$('#fName').value.trim());
-  fail |= badField($('#fSur'),   !$('#fSur').value.trim());
-  fail |= badField($('#fPhone'), $('#fPhone').value.replace(/\D/g,'').length < 9);
-  fail |= badField($('#fEmail'), !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test($('#fEmail').value.trim()));
-  fail |= badField($('#fAddr'),  !$('#fAddr').value.trim());
-  fail |= badField($('#fSub'),   !$('#fSub').value.trim());
-  if(fail) toast('Please complete the highlighted fields','info');
-  return !fail;
+  const need = [['aType', v => !!v], ['aLine', v => v.trim().length > 3], ['aSub', v => v.trim().length > 1]];
+  let ok = true;
+  need.forEach(([id, test]) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const good = test(el.value);
+    el.closest('.field').classList.toggle('bad', !good);
+    if(!good) ok = false;
+  });
+  const d = document.getElementById('aDate');
+  if(d && d.closest('#afterGeo').style.display !== 'none'){
+    const good = !!d.value;
+    d.closest('.field').classList.toggle('bad', !good);
+    if(!good) ok = false;
+  }
+  return ok;
 }
 
-/* ---------- navigation ---------- */
-function go(n){
-  if(n === 4 && step === 3 && !validateAddress()) return;
-  step = n;
-  $$('.pane').forEach(p => p.classList.toggle('on', +p.dataset.pane === n));
-  if(n === 1) renderDetails();
-  if(n === 2) renderSchedule();
-  if(n === 4){ renderPays(); renderReview(); }
-  paint();
-  window.scrollTo({ top: document.querySelector('.booker').offsetTop - 80, behavior:'smooth' });
+function fillCities(){
+  const sel = document.getElementById('aCity');
+  if(!sel) return;
+  const list = CFG.provinces[B.addr.prov] || [];
+  sel.innerHTML = list.map(c => `<option ${B.addr.city === c ? 'selected' : ''}>${c}</option>`).join('');
+  if(!list.includes(B.addr.city)){ B.addr.city = list[0]; sel.value = list[0]; }
 }
-$$('[data-next]').forEach(b => b.onclick = () => go(step + 1));
-$$('[data-back]').forEach(b => b.onclick = () => go(step - 1));
-$('#mNext').onclick = () => step === 4 ? $('#payBtn').click() : go(step + 1);
-$('#guestSwitch').onclick = e => e.currentTarget.classList.toggle('on');
 
-$('#payBtn').onclick = () => {
-  const q = priceBooking(B);
-  // deterministic reference — no randomness, so the demo repeats identically
-  const seed = (B.date * 9173 + CFG.slots.indexOf(B.slot) * 577 + B.rooms * 31 + B.extras.length * 7) % 899999;
-  $('#refNo').textContent = 'SPW-' + String(100000 + seed);
-  $('#confirmFacts').innerHTML = `
-    <div class="li"><span>Service</span><span class="v">${q.serviceName}</span></div>
-    <div class="li"><span>Service date</span><span class="v">${whenLabel()}</span></div>
-    <div class="li"><span>Service duration</span><span class="v">${q.hoursLabel}</span></div>
-    <div class="li"><span>Paid</span><span class="v mono">${money(q.total)} incl. VAT</span></div>`;
-  go(5);
-};
-$('#restart').onclick = () => {
-  B.service = null; B.slot = null; B.extras = ['general']; B.promo = null; B.freq = 'once'; B.rooms = 3;
-  $('#promoMsg').textContent = ''; $('#promo').value = '';
-  renderServices(); go(0);
-};
-$('#applyPromo').onclick = () => {
-  const code = $('#promo').value.trim().toUpperCase(), m = $('#promoMsg');
-  if(CFG.promos[code]){ B.promo = code; m.className = 'promo-msg'; m.textContent = CFG.promos[code].label + ' applied.'; }
-  else { B.promo = null; m.className = 'promo-msg bad'; m.textContent = code ? 'That code is not valid.' : 'Try SPARROW20 or WELCOME50.'; }
-  paint();
-  if(step === 4) renderReview();
-};
+function wirePane(){
+  const nb = document.getElementById('nextBtn');
+  if(nb) nb.onclick = next;
+  document.querySelectorAll('[data-back]').forEach(b => b.onclick = back);
+  const th = document.getElementById('toHome'); if(th) th.onclick = () => go('home');
 
-/* deep link from the dashboard: index.html?service=deep */
-const wanted = new URLSearchParams(location.search).get('service');
-if(wanted && svcOf(wanted)) B.service = wanted;
+  /* service */
+  document.querySelectorAll('[data-svc]').forEach(b => b.onclick = () => {
+    B.service = b.dataset.svc; seedForService(); render();
+  });
+  /* unit size */
+  document.querySelectorAll('[data-band]').forEach(b => b.onclick = () => {
+    B.band = b.dataset.band;
+    B.hours = baseHoursFor(B);
+    B.extras = B.extras.filter(id => extraAllowed(B, id));
+    B.cleaner = null;
+    render();
+  });
+  /* hours stepper */
+  const hm = document.getElementById('hMinus'), hp = document.getElementById('hPlus');
+  if(hm) hm.onclick = () => adjustHours(-CFG.stepMins / 60);
+  if(hp) hp.onclick = () => adjustHours(+CFG.stepMins / 60);
+  /* extras */
+  document.querySelectorAll('[data-task]').forEach(b => b.onclick = () => {
+    const id = b.dataset.task;
+    B.extras = B.extras.includes(id) ? B.extras.filter(x => x !== id) : [...B.extras, id];
+    B.cleaner = null;
+    render();
+  });
+  /* laundry */
+  document.querySelectorAll('[data-wash]').forEach(b => b.onclick = () => { B.wash = b.dataset.wash; B.hours = null; B.cleaner = null; render(); });
+  document.querySelectorAll('[data-finish]').forEach(b => b.onclick = () => { B.finish = b.dataset.finish; B.hours = null; B.cleaner = null; render(); });
 
-renderServices(); paint();
+  /* address */
+  if(document.getElementById('aCity')){
+    fillCities();
+    const bind = (id, key) => { const el = document.getElementById(id); if(el) el.oninput = () => { B.addr[key] = el.value; }; };
+    bind('aLine','line'); bind('aUnit','unit'); bind('aSub','suburb');
+    const t = document.getElementById('aType'); t.onchange = () => { B.addr.type = t.value; };
+    const pv = document.getElementById('aProv'); pv.onchange = () => { B.addr.prov = pv.value; B.geo = false; B.cleaner = null; render(); };
+    const ct = document.getElementById('aCity'); ct.onchange = () => { B.addr.city = ct.value; B.geo = false; B.cleaner = null; render(); };
+    const nt = document.getElementById('aNotes'); if(nt) nt.oninput = () => { B.addr.notes = nt.value; };
+    const dt = document.getElementById('aDate'); if(dt) dt.onchange = () => { B.date = dt.value; B.cleaner = null; render(); };
+    document.querySelectorAll('[data-slot]').forEach(b => b.onclick = () => { B.time = b.dataset.slot; render(); });
+    document.querySelectorAll('[data-saved]').forEach(b => b.onclick = () => {
+      B.addr = { ...address(b.dataset.saved) }; B.geo = true; B.cleaner = null; render();
+    });
+    document.getElementById('geoBtn').onclick = () => {
+      if(!validateAddress()) return toast('Fill in the address first', 'info');
+      const box = document.getElementById('geoBox');
+      box.innerHTML = `<div class="geo-idle">${ico('search',24,1.8)}<div style="margin-top:8px">Looking up the address…</div></div>`;
+      setTimeout(() => { B.geo = true; B.cleaner = null; render(); toast('Address found and pinned'); }, 450);
+    };
+  }
+  /* workers */
+  document.querySelectorAll('[data-pro]').forEach(b => b.onclick = () => { B.cleaner = b.dataset.pro; render(); });
+  /* checkout */
+  const cn = document.getElementById('cNote'); if(cn) cn.oninput = () => { B.note = cn.value; };
+  const cp = document.getElementById('changePro'); if(cp) cp.onclick = () => { step = 3; render(); };
+  document.querySelectorAll('[data-card]').forEach(b => b.onclick = () => {
+    document.querySelectorAll('[data-card]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  });
+  const pb = document.getElementById('payBtn'); if(pb) pb.onclick = pay;
+  /* done */
+  const mc = document.getElementById('mailC'); if(mc) mc.onclick = mailCustomer;
+  const mw = document.getElementById('mailW'); if(mw) mw.onclick = mailWorker;
+  const ma = document.getElementById('mailA'); if(ma) ma.onclick = mailAdmin;
+  const ag = document.getElementById('again'); if(ag) ag.onclick = () => location.reload();
+}
+
+function adjustHours(d){
+  const p = priceBooking(B);
+  const want = Math.round((p.serviceHours + d) * 2) / 2;
+  B.hours = Math.min(Math.max(want, p.minHours), p.maxHours);
+  B.extras = B.extras.filter(id => extraAllowed(B, id));
+  B.cleaner = null;               // a longer job may no longer fit the cleaner you picked
+  render();
+}
+
+/* ---------- pay ---------- */
+let refSeq = 104400;
+function pay(){
+  const btn = document.getElementById('payBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Authorising…'; }
+  setTimeout(() => {
+    B.ref = 'SPW-' + (++refSeq);
+    const p = priceBooking(B);
+    DB.bookings.unshift({
+      id:B.ref, cust:'cu1', service:B.service, band:B.band, hours:p.serviceHours,
+      wash:B.wash, finish:B.finish, extras:[...B.extras], addr:B.addr.id || { ...B.addr, label:'This booking' },
+      cleaner:B.cleaner, date:B.date, time:B.time, status:'upcoming', note:B.note, rating:null
+    });
+    step = 5; render();
+    toast('Payment approved — ' + money(p.total));
+  }, 600);
+}
+
+go('home');
 </script>
 </body>
 </html>

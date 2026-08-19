@@ -5,7 +5,7 @@
 import subprocess, sys, pathlib
 
 HERE = pathlib.Path(__file__).parent
-SUITES = ["test_booking.py", "test_cleaner.py", "test_admin.py"]
+SUITES = ["test_booking.py", "test_customer.py", "test_cleaner.py", "test_admin.py"]
 
 results = []
 for s in SUITES:

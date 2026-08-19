@@ -1,632 +1,644 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sparrow — Cleaner dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sparrow — cleaner portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/app.css">
 <style>
-  .modeswitch{display:flex;gap:6px;background:var(--ink-08);padding:4px;border-radius:999px;margin:22px auto 0;width:max-content}
-  .modeswitch button{border:0;background:transparent;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink-45);padding:8px 18px;border-radius:999px;cursor:pointer;transition:.2s var(--ease)}
-  .modeswitch button.on{background:var(--paper-2);color:var(--ink);box-shadow:var(--shadow-1)}
-  .apply-wrap{max-width:760px;margin:0 auto;padding:26px 0 70px}
-  .welcome{text-align:center;margin-bottom:26px}
-  .welcome h1{font-size:clamp(30px,5vw,44px)}
-  .welcome h1 .ital{font-style:italic;color:var(--moss)}
-  .welcome p{color:var(--ink-70);max-width:52ch;margin:14px auto 0;font-size:16px}
-  .perks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
-  @media(max-width:640px){.perks{grid-template-columns:1fr}}
-  .perk{border:1px solid var(--ink-08);border-radius:var(--radius);padding:14px;background:var(--paper-2);text-align:left}
-  .perk svg{color:var(--moss)}
-  .perk .p-t{font-weight:600;font-size:14px;margin-top:8px}
-  .perk .p-s{font-size:12.5px;color:var(--ink-45)}
-  .steps{display:flex;align-items:center;padding:16px 24px;border-bottom:1px solid var(--ink-08);overflow-x:auto;scrollbar-width:none}
-  .steps::-webkit-scrollbar{display:none}
-  .stp{display:flex;align-items:center;gap:9px;flex:0 0 auto;padding-right:14px;opacity:.42;transition:.3s var(--ease)}
-  .stp.on,.stp.done{opacity:1}
-  .stp-n{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--ink-14);display:grid;place-items:center;font-size:12px;font-weight:600;flex:0 0 auto}
-  .stp.on .stp-n{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
-  .stp.done .stp-n{background:var(--moss);border-color:var(--moss);color:#fff}
-  .stp-l{font-size:13px;font-weight:500;white-space:nowrap}
-  .stp-bar{width:24px;height:1.5px;background:var(--ink-14);margin-right:14px;flex:0 0 auto}
-  @media(max-width:720px){.stp:not(.on) .stp-l{display:none}.stp-bar{width:12px}}
-  .pane{display:none;animation:rise .4s var(--ease) both}
-  .pane.on{display:block}
-  .citybox{border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:13px;max-height:200px;overflow:auto;background:var(--paper-2)}
-  .citybox .cb-empty{color:var(--ink-45);font-size:13.5px}
-  .split{display:grid;grid-template-columns:1fr 330px;gap:20px;align-items:start}
-  @media(max-width:1000px){.split{grid-template-columns:1fr}}
-  .job{border:1px solid var(--ink-08);border-radius:var(--radius);background:var(--paper-2);padding:16px;transition:.2s var(--ease)}
-  .job:hover{box-shadow:var(--shadow-1)}
-  .job .j-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
-  .job .j-t{font-family:'Fraunces',serif;font-size:19px}
-  .job .j-pay{margin-left:auto;text-align:right}
-  .job .j-pay .v{font-family:'Fraunces',serif;font-size:23px;font-variant-numeric:tabular-nums}
-  .job .j-pay .l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-45)}
-  .checkitem{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1.5px solid var(--ink-14);border-radius:11px;cursor:pointer;background:transparent;width:100%;font:inherit;text-align:left;color:inherit;transition:.18s var(--ease);margin-bottom:8px}
-  .checkitem:hover{border-color:var(--moss)}
-  .checkitem.on{background:var(--moss-soft);border-color:var(--moss)}
-  .checkitem .cbox{width:21px;height:21px;border-radius:6px;border:1.5px solid var(--ink-14);display:grid;place-items:center;flex:0 0 auto;color:transparent}
-  .checkitem.on .cbox{background:var(--moss);border-color:var(--moss);color:#fff}
-  .checkitem.on .ci-t{text-decoration:line-through;opacity:.6}
-  .avail{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
-  .avail button{border:1.5px solid var(--ink-14);background:transparent;border-radius:10px;padding:10px 2px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink-70);transition:.18s var(--ease)}
-  .avail button.on{background:var(--moss);border-color:var(--moss);color:#fff}
-  .bars{display:grid;gap:9px;margin-top:4px}
-  .bar-row{display:grid;grid-template-columns:38px 1fr 62px;gap:10px;align-items:center;font-size:13px}
-  .bar{height:9px;border-radius:999px;background:var(--ink-08);overflow:hidden}
-  .bar span{display:block;height:100%;background:var(--moss);border-radius:999px}
+  .land{max-width:760px;margin:0 auto;padding:40px 0 70px}
+  .land h1{font-size:clamp(30px,5vw,44px);margin-bottom:8px}
+  .land .lede{color:var(--ink-70);font-size:16px;margin:0 0 26px;max-width:56ch}
+  .choice{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  @media(max-width:620px){.choice{grid-template-columns:1fr}}
+  .ch{border:1.5px solid var(--ink-14);border-radius:var(--radius-lg);padding:20px;background:var(--paper-2);text-align:left;font:inherit;color:inherit;cursor:pointer;transition:.22s var(--ease);display:flex;flex-direction:column;gap:7px;align-items:flex-start}
+  .ch:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:var(--shadow-1)}
+  .ch svg{color:var(--moss)}
+  .ch .c-t{font-family:'Fraunces',serif;font-size:21px}
+  .ch .c-s{font-size:13.5px;color:var(--ink-45)}
+  .form-wrap{max-width:700px;margin:0 auto;padding:26px 0 80px}
+  .stepdots{display:flex;gap:7px;margin-bottom:16px}
+  .sd{flex:1;height:4px;border-radius:3px;background:var(--ink-08);transition:.3s var(--ease)}
+  .sd.on{background:var(--moss)}
+  .jobcard{border:1px solid var(--ink-08);border-radius:var(--radius);background:var(--paper-2);padding:16px 17px;margin-bottom:11px}
+  .jc-h{display:flex;align-items:flex-start;gap:12px;margin-bottom:11px}
+  .jc-h .jc-t{font-family:'Fraunces',serif;font-size:20px;flex:1}
 </style>
 </head>
 <body>
-
-<div class="wrap"><div class="modeswitch" id="modeSwitch">
-  <button data-mode="apply">Application form</button>
-  <button data-mode="dash">Approved cleaner dashboard</button>
-</div></div>
-
-<div id="root"></div>
-
+<div id="app"></div>
 <script src="assets/app.js"></script>
 <script>
-mountChrome({
-  page:'cleaner.html', role:'Cleaner',
-  links:[['cleaner.html','Apply'],['cleaner.html','My jobs'],['index.html','Website']]
-});
+/* ============================================================
+   Cleaner portal.
+
+   The client's rule, verbatim: "ONLY accepted users by the admin
+   can sign in and see their dashboard. If the cleaner's account is
+   still pending or not yet accepted, it should restrict them from
+   signing in."  That gate is enforced in signIn() below and there
+   is no way around it in the UI.
+   ============================================================ */
+let view = 'land';          // land | apply | signin | gate | dash
+let me   = null;            // the signed-in cleaner
+let gate = null;            // the account that was refused
+let tab  = 'today';
+let fstep = 0;
+
+const F = { blocked:[] };   // application form answers
+
+const app = () => document.getElementById('app');
+const NAV = [['index.html','Website'],['cleaner.html','Cleaner portal']];
+
+function render(){
+  app().innerHTML =
+    view === 'land'   ? viewLand()
+  : view === 'apply'  ? viewApply()
+  : view === 'signin' ? viewSignin()
+  : view === 'gate'   ? viewGate()
+  :                     viewDash();
+  wire();
+  window.scrollTo(0,0);
+}
 
 /* ============================================================
-   MODE 1 — APPLICATION FORM
-   Fields are exactly those in "Cleaner dashboard.docx", in order.
+   LANDING — register, or sign in
    ============================================================ */
-const A = { step:0, prov:'', cities:new Set(), crim:null, files:{}, group:'' };
-const APPLY_STEPS = ['About you','Where you work','References','Documents'];
+function viewLand(){
+  return `${protoBar('cleaner.html')}${topBar('Cleaner', NAV, 'cleaner.html')}
+  <div class="wrap"><div class="land">
+    <div class="eyebrow" style="font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--moss);font-weight:700;margin-bottom:12px">Work with Sparrow</div>
+    <h1>Choose your own days.<br>Get paid for every hour.</h1>
+    <p class="lede">Apply once. Once an admin has approved you, you sign in, block off the days you cannot work, and the jobs customers book you for appear here.</p>
+    <div class="choice">
+      <button class="ch" id="goApply">${ico('doc',24,1.6)}
+        <div class="c-t">Register</div>
+        <div class="c-s">New here? Fill in the application form. An admin reviews it and you hear back by email or SMS.</div></button>
+      <button class="ch" id="goSignin">${ico('lock',24,1.6)}
+        <div class="c-t">Sign in</div>
+        <div class="c-s">Already approved? Straight to your calendar and your bookings.</div></button>
+    </div>
+    <div class="note" style="margin-top:20px">${ico('info',16,2)}
+      <span>Applications are not accounts. You cannot sign in until an admin approves you — the sign-in screen will tell you where your application stands.</span></div>
+  </div></div>`;
+}
 
-function applyView(){
-  return `
-  <div class="wrap apply-wrap">
-    <div class="welcome">
-      <h1>Welcome to Sparrow.<br><span class="ital">Work when you want, get paid weekly.</span></h1>
-      <p>We are hiring vetted indoor and outdoor cleaning professionals. Fill in the form below — it takes about six minutes. If your documents check out, we will call you within two working days.</p>
-      <div class="perks">
-        <div class="perk">${ico('wallet',22)}<div class="p-t">Paid every Friday</div><div class="p-s">Straight into your bank account</div></div>
-        <div class="perk">${ico('cal',22)}<div class="p-t">You set your days</div><div class="p-s">Accept or decline any job</div></div>
-        <div class="perk">${ico('shield',22)}<div class="p-t">Covered on every job</div><div class="p-s">Public liability included</div></div>
-      </div>
+/* ============================================================
+   SIGN IN — and the gate
+   ============================================================ */
+function viewSignin(){
+  const demos = ['cl1','cl6','cl9'].map(id => cleaner(id));
+  return `${protoBar('cleaner.html')}${topBar('Cleaner', NAV, 'cleaner.html')}
+  <div class="wrap"><div class="auth-wrap">
+    <div class="auth-head"><h1>Sign in</h1><p>Approved cleaners only.</p></div>
+    <div class="card panel">
+      <div class="field"><label>Email address</label><input id="ciEmail" value="nomsa.m@example.co.za"><div class="err">Enter your email address</div></div>
+      <div class="field"><label>Password</label><input id="ciPass" type="password" value="demo1234"><div class="err">Enter your password</div></div>
+      <button class="btn btn-primary" style="width:100%" id="ciGo">Sign in</button>
+      <div class="auth-alt">Not registered yet? <button id="toApply">Apply to work with us</button></div>
     </div>
 
-    <div class="card">
-      <div class="steps" id="aSteps"></div>
-      <div class="panel">
+    <div class="fieldset-t">Try each account state</div>
+    <div class="mini" style="margin-bottom:10px">So you can see the gate working rather than take my word for it.</div>
+    <div class="tasks">${demos.map(c => `
+      <button class="task" data-as="${c.id}">
+        <span class="tk-main"><span class="tk-t">${c.name} ${c.surname}</span>
+          <span class="tk-s">Account is ${ACCOUNT[c.account].label.toLowerCase()}</span></span>
+        <span class="pill ${ACCOUNT[c.account].cls}">${ACCOUNT[c.account].label}</span>
+      </button>`).join('')}</div>
+  </div></div>`;
+}
 
-        <div class="pane on" data-p="0">
-          <h2 style="font-size:23px;margin-bottom:4px">About you</h2>
-          <p class="t-sub" style="margin:0 0 18px">As they appear on your ID or passport.</p>
-          <div class="grid2">
-            <div class="field"><label>Full names <span class="req">*</span></label><input id="fFull" placeholder="Nomsa Thandeka"><div class="err">Please enter your full names</div></div>
-            <div class="field"><label>Surname <span class="req">*</span></label><input id="fSur" placeholder="Mabaso"><div class="err">Please enter your surname</div></div>
-          </div>
-          <div class="grid2">
-            <div class="field"><label>Document type <span class="req">*</span></label>
-              <select id="fDocType"><option>South African ID</option><option>Passport</option><option>Valid work permit</option></select></div>
-            <div class="field"><label>ID / passport / permit number <span class="req">*</span></label><input id="fDocNo" placeholder="13-digit ID or permit number"><div class="err">Please enter your document number</div></div>
-          </div>
-          <div class="grid2">
-            <div class="field"><label>Phone number <span class="req">*</span></label><input id="fPhone" placeholder="+27 82 000 0000"><div class="err">Please enter a contact number</div></div>
-            <div class="field"><label>Email address <span class="req">*</span></label><input id="fEmail" type="email" placeholder="you@example.co.za"><div class="err">Please enter a valid email address</div></div>
-          </div>
-          <div class="field"><label>Home address <span class="req">*</span></label><input id="fHome" placeholder="Street, suburb, city"><div class="err">Please enter your home address</div></div>
-          <div class="grid2">
-            <div class="field"><label>Date of birth <span class="req">*</span></label><input id="fDob" type="date"><div class="err">You must be 18 or older to work with us</div></div>
-            <div class="field"><label>Do you have a criminal record? <span class="req">*</span></label>
-              <div class="radios" id="fCrim">
-                <button data-c="no">No</button><button data-c="yes">Yes</button>
-              </div>
-              <div class="hint">Answering yes does not automatically disqualify you. We ask because we run a police clearance check.</div>
-            </div>
-          </div>
-          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
-            <span class="spacer"></span>
-            <button class="btn btn-primary" onclick="aNext(0)">Continue ${ico('arrow',16,2.2)}</button>
-          </div>
+function viewGate(){
+  const c = gate;
+  const pending = c.account === 'pending';
+  return `${protoBar('cleaner.html')}${topBar('Cleaner', NAV, 'cleaner.html')}
+  <div class="wrap"><div class="auth-wrap">
+    <div class="auth-head"><h1>Not yet</h1><p>${c.name}, your account is not open.</p></div>
+    <div class="card panel">
+      <div class="gate ${pending ? 'wait' : 'bad'}">${ico(pending ? 'clock' : 'x', 20, 2)}
+        <div>
+          <div class="g-t">${pending ? 'Your application is still with the admins' : 'Your application was declined'}</div>
+          ${pending
+            ? 'Nothing more for you to do. We review applications within two working days and you will get an email and an SMS the moment there is a decision.'
+            : esc(c.declineReason || 'No reason was recorded.')}
         </div>
-
-        <div class="pane" data-p="1">
-          <h2 style="font-size:23px;margin-bottom:4px">Where you want to work</h2>
-          <p class="t-sub" style="margin:0 0 18px">Choose your province, then tick every city or area you can reach.</p>
-          <div class="field"><label>Province <span class="req">*</span></label>
-            <select id="fProv"><option value="">Select a province…</option>
-              ${Object.keys(CFG.provinces).map(p => `<option>${p}</option>`).join('')}
-            </select><div class="err">Please choose a province</div>
-          </div>
-          <div class="field"><label>Cities and areas <span class="req">*</span></label>
-            <div class="citybox" id="fCities"><span class="cb-empty">Choose a province first.</span></div>
-            <div class="hint" id="cityCount">No areas selected.</div>
-            <div class="err">Select at least one area</div>
-          </div>
-          <div class="field"><label>Which work do you want? <span class="req">*</span></label>
-            <div class="radios" id="fGroup">
-              <button data-g="indoor">Indoor cleaning</button>
-              <button data-g="outdoor">Outdoor &amp; garden</button>
-              <button data-g="both">Both</button>
-            </div><div class="err">Please choose the work you want</div>
-          </div>
-          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
-            <button class="btn btn-ghost" onclick="aGo(0)">← Back</button><span class="spacer"></span>
-            <button class="btn btn-primary" onclick="aNext(1)">Continue ${ico('arrow',16,2.2)}</button>
-          </div>
-        </div>
-
-        <div class="pane" data-p="2">
-          <h2 style="font-size:23px;margin-bottom:4px">References</h2>
-          <p class="t-sub" style="margin:0 0 18px">Two people who can speak to your work. We call both.</p>
-          ${[1,2].map(n => `
-            <div class="fieldset-t">Reference ${n}</div>
-            <div class="grid2">
-              <div class="field"><label>Name <span class="req">*</span></label><input id="r${n}Name" placeholder="First name"><div class="err">Required</div></div>
-              <div class="field"><label>Surname <span class="req">*</span></label><input id="r${n}Sur" placeholder="Surname"><div class="err">Required</div></div>
-            </div>
-            <div class="grid2">
-              <div class="field"><label>Contact number <span class="req">*</span></label><input id="r${n}Tel" placeholder="+27 ..."><div class="err">Required</div></div>
-              <div class="field"><label>Relationship</label><select><option>Previous employer</option><option>Current employer</option><option>Agency</option><option>Community leader</option></select></div>
-            </div>
-            <div class="field"><label>Address <span class="req">*</span></label><input id="r${n}Addr" placeholder="Suburb, city"><div class="err">Required</div></div>`).join('')}
-          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
-            <button class="btn btn-ghost" onclick="aGo(1)">← Back</button><span class="spacer"></span>
-            <button class="btn btn-primary" onclick="aNext(2)">Continue ${ico('arrow',16,2.2)}</button>
-          </div>
-        </div>
-
-        <div class="pane" data-p="3">
-          <h2 style="font-size:23px;margin-bottom:4px">Upload documents</h2>
-          <p class="t-sub" style="margin:0 0 18px">Clear photos are fine — no scanner needed.</p>
-          <div class="field"><label>ID, passport or valid work permit <span class="req">*</span></label>
-            <div class="drop" id="dropId" onclick="fakeUpload('id','ID document.jpg')">
-              ${ico('upload',24)}
-              <div class="d-t">Tap to upload</div>
-              <div class="d-s">JPG or PNG, under 5 MB</div>
-            </div><div class="err">Please upload your ID document</div>
-          </div>
-          <div class="field"><label>Clear head and shoulders photo <span class="req">*</span></label>
-            <div class="drop" id="dropPic" onclick="fakeUpload('pic','Profile photo.jpg')">
-              ${ico('user',24)}
-              <div class="d-t">Tap to upload</div>
-              <div class="d-s">Plain background, face clearly visible</div>
-            </div><div class="err">Please upload your photo</div>
-          </div>
-          <div class="toggle-row" style="margin-top:18px">
-            <button class="switch" id="consent" onclick="this.classList.toggle('on')"></button>
-            <div><div style="font-weight:600;font-size:14.5px">I agree to a background and police clearance check</div>
-              <div class="t-sub">Required before your first job.</div></div>
-          </div>
-          <div class="actions" style="display:flex;margin-top:22px;padding-top:18px;border-top:1px solid var(--ink-08)">
-            <button class="btn btn-ghost" onclick="aGo(2)">← Back</button><span class="spacer"></span>
-            <button class="btn btn-primary" onclick="submitApp()">Submit application</button>
-          </div>
-        </div>
-
-        <div class="pane" data-p="4">
-          <div style="text-align:center;padding:14px 0">
-            <div class="avatar lg" style="margin:0 auto 16px;background:var(--moss)">${ico('check',28,2.6)}</div>
-            <h2 style="font-size:27px;margin-bottom:6px">Application received</h2>
-            <p class="t-sub" style="margin:0 auto 20px;max-width:44ch">Your reference is <strong class="mono" id="appRef"></strong>. We verify documents and call your references within two working days.</p>
-          </div>
-          <div class="timeline">
-            <div class="tl done"><div class="tl-t">Application submitted</div><div class="tl-s">Just now</div></div>
-            <div class="tl now"><div class="tl-t">Documents being verified</div><div class="tl-s">Admin reviews your ID and photo</div></div>
-            <div class="tl"><div class="tl-t">References called</div><div class="tl-s">Both contacts, within 2 working days</div></div>
-            <div class="tl"><div class="tl-t">Police clearance</div><div class="tl-s">Usually 3–5 days</div></div>
-            <div class="tl"><div class="tl-t">Approved — first job assigned</div><div class="tl-s">You get a notification and your dashboard unlocks</div></div>
-          </div>
-          <div class="note">${ico('info',17,2)}<span>Your application appears in the admin dashboard under Candidates, where it can be approved or rejected. Switch to the Admin tab above to see it from that side.</span></div>
-        </div>
-
+      </div>
+      <div class="rule"></div>
+      <div class="mini">Signed in as ${esc(c.name)} ${esc(c.surname)} · account ${ACCOUNT[c.account].label.toLowerCase()}</div>
+      <div class="navrow" style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-outline" id="gBack">Back to sign in</button>
+        ${pending ? '' : '<button class="btn btn-primary" id="gReapply">Apply again</button>'}
       </div>
     </div>
+  </div></div>`;
+}
+
+/* ============================================================
+   APPLICATION FORM — the client's cleaner document, field for field
+   ============================================================ */
+const FSTEPS = ['About you','Where you work','Documents','References'];
+
+function viewApply(){
+  return `${protoBar('cleaner.html')}${topBar('Cleaner', NAV, 'cleaner.html')}
+  <div class="wrap"><div class="form-wrap">
+    <div class="stepdots">${FSTEPS.map((_,i) => `<span class="sd ${i <= fstep ? 'on' : ''}"></span>`).join('')}</div>
+    <div class="step-t" style="font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-45);margin-bottom:8px">Step ${fstep+1} of ${FSTEPS.length} — ${FSTEPS[fstep]}</div>
+    <div class="card panel">${[fs0, fs1, fs2, fs3, fs4][fstep]()}</div>
+  </div></div>`;
+}
+
+function fs0(){
+  return `<h2 style="font-size:25px;margin-bottom:4px">Tell us about you</h2>
+    <div class="mini" style="margin-bottom:18px">Exactly as it appears on your ID or passport.</div>
+    <div class="grid2">
+      <div class="field"><label>First name <span class="req">*</span></label><input id="fFirst" value="${esc(F.first||'')}"><div class="err">Required</div></div>
+      <div class="field"><label>Surname <span class="req">*</span></label><input id="fLast" value="${esc(F.last||'')}"><div class="err">Required</div></div>
+    </div>
+    <div class="field"><label>Date of birth <span class="req">*</span></label><input id="fDob" type="date" value="${esc(F.dob||'')}">
+      <div class="hint">You must be 18 or older to work with us.</div>
+      <div class="err" id="fDobErr">Enter a valid date of birth</div></div>
+    <div class="grid2">
+      <div class="field"><label>Mobile number <span class="req">*</span></label><input id="fPhone" placeholder="082 000 0000" value="${esc(F.phone||'')}"><div class="err">Enter a valid South African mobile number</div></div>
+      <div class="field"><label>Email address <span class="req">*</span></label><input id="fEmail" type="email" value="${esc(F.email||'')}"><div class="err">Enter a valid email address</div></div>
+    </div>
+    <div class="field"><label>Which work do you want? <span class="req">*</span></label>
+      <div class="radios" id="fGroup">
+        <button data-g="indoor" class="${F.group==='indoor'?'on':''}">Indoor cleaner</button>
+        <button data-g="outdoor" class="${F.group==='outdoor'?'on':''}">Outdoor cleaner</button>
+      </div>
+      <div class="err" id="fGroupErr">Pick one</div></div>
+    <div class="field"><label>Years of cleaning experience <span class="req">*</span></label>
+      <input id="fYears" type="number" min="0" max="50" value="${esc(F.years||'')}"><div class="err">Required</div></div>
+    ${navBtns()}`;
+}
+
+function fs1(){
+  const prov = F.prov || 'Western Cape';
+  return `<h2 style="font-size:25px;margin-bottom:4px">Where can you work?</h2>
+    <div class="mini" style="margin-bottom:18px">You only get shown to customers in the cities you tick.</div>
+    <div class="field"><label>Province <span class="req">*</span></label>
+      <select id="fProv">${Object.keys(CFG.provinces).map(p => `<option ${prov===p?'selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="field"><label>Cities <span class="req">*</span></label>
+      <div class="chips" id="fCities"></div>
+      <div class="err" id="fCityErr">Pick at least one city</div></div>
+    <div class="field"><label>Languages you speak <span class="req">*</span></label>
+      <div class="chips" id="fLangs">${['English','Afrikaans','isiZulu','isiXhosa','Sesotho','Setswana','Sepedi','Xitsonga'].map(l =>
+        `<button class="chip ${(F.langs||[]).includes(l)?'on':''}" data-lang="${l}">${l}</button>`).join('')}</div>
+      <div class="err" id="fLangErr">Pick at least one</div></div>
+    <div class="field"><label>Do you have your own transport?</label>
+      <div class="radios" id="fTrans">
+        <button data-t="yes" class="${F.transport==='yes'?'on':''}">Yes</button>
+        <button data-t="no" class="${F.transport==='no'?'on':''}">No</button>
+      </div></div>
+    ${navBtns()}`;
+}
+
+function fs2(){
+  const kind = F.idKind || 'id';
+  return `<h2 style="font-size:25px;margin-bottom:4px">Documents</h2>
+    <div class="mini" style="margin-bottom:18px">The admin sees and downloads these before deciding.</div>
+    <div class="field"><label>What are you working on? <span class="req">*</span></label>
+      <div class="radios" id="fKind">
+        <button data-k="id" class="${kind==='id'?'on':''}">SA ID</button>
+        <button data-k="passport" class="${kind==='passport'?'on':''}">Passport</button>
+        <button data-k="permit" class="${kind==='permit'?'on':''}">Work permit</button>
+      </div></div>
+    <div class="field"><label>${kind==='id'?'ID number':kind==='passport'?'Passport number':'Work permit number'} <span class="req">*</span></label>
+      <input id="fIdNum" value="${esc(F.idNum||'')}" placeholder="${kind==='id'?'13 digits':'As printed on the document'}">
+      <div class="err" id="fIdErr">${kind==='id'?'A South African ID number is 13 digits':'Enter the number on the document'}</div></div>
+
+    <div class="fieldset-t">Uploads</div>
+    <div class="field"><label>A copy of your ${kind==='id'?'ID':kind==='passport'?'passport':'work permit'} <span class="req">*</span></label>
+      <div class="drop ${F.upId?'filled':''}" data-up="upId">${F.upId
+        ? `${ico('check',20,2.4)}<div><div class="d-t">${esc(F.upId)}</div><div class="d-s">Tap to replace</div></div>`
+        : `${ico('upload',22,1.8)}<div class="d-t">Upload your document</div><div class="d-s">PDF or photo, under 5 MB</div>`}</div>
+      <div class="err" id="fUpIdErr">Required</div></div>
+    <div class="field"><label>Head and shoulders photo <span class="req">*</span></label>
+      <div class="drop ${F.upPhoto?'filled':''}" data-up="upPhoto">${F.upPhoto
+        ? `${ico('check',20,2.4)}<div><div class="d-t">${esc(F.upPhoto)}</div><div class="d-s">Tap to replace</div></div>`
+        : `${ico('camera',22,1.8)}<div class="d-t">Upload your photo</div><div class="d-s">This is the picture customers see when they pick you</div>`}</div>
+      <div class="err" id="fUpPhErr">Required</div></div>
+    <div class="field"><label>Criminal record check <span class="req">*</span></label>
+      <div class="drop ${F.upCrim?'filled':''}" data-up="upCrim">${F.upCrim
+        ? `${ico('check',20,2.4)}<div><div class="d-t">${esc(F.upCrim)}</div><div class="d-s">Tap to replace</div></div>`
+        : `${ico('shield',22,1.8)}<div class="d-t">Upload your police clearance</div><div class="d-s">Issued in the last 12 months</div>`}</div>
+      <div class="err" id="fUpCrErr">Required</div></div>
+    ${navBtns()}`;
+}
+
+function fs3(){
+  return `<h2 style="font-size:25px;margin-bottom:4px">Two references</h2>
+    <div class="mini" style="margin-bottom:18px">People who have paid you for cleaning work. We call them.</div>
+    ${[1,2].map(n => `
+      <div class="fieldset-t">Reference ${n}</div>
+      <div class="grid2">
+        <div class="field"><label>Full name <span class="req">*</span></label><input id="fR${n}Name" value="${esc(F['r'+n+'Name']||'')}"><div class="err">Required</div></div>
+        <div class="field"><label>Contact number <span class="req">*</span></label><input id="fR${n}Phone" value="${esc(F['r'+n+'Phone']||'')}"><div class="err">Enter a valid number</div></div>
+      </div>
+      <div class="field"><label>How do they know you? <span class="req">*</span></label>
+        <input id="fR${n}Rel" placeholder="Cleaned their home every Tuesday for 3 years" value="${esc(F['r'+n+'Rel']||'')}"><div class="err">Required</div></div>`).join('')}
+    <div class="toggle-row"><button class="switch ${F.agree?'on':''}" id="fAgree" aria-label="Agree"></button>
+      <div style="font-size:13.5px">I confirm everything here is true, and I agree to a background check.</div></div>
+    <div class="err" id="fAgreeErr" style="display:${F.agreeBad?'block':'none'};font-size:12.5px;color:var(--clay);margin-top:-8px;margin-bottom:12px">You have to agree before you can submit.</div>
+    ${navBtns('Submit application')}`;
+}
+
+function fs4(){
+  return `<div style="text-align:center;padding:10px 0">
+    <div style="width:66px;height:66px;border-radius:50%;background:var(--gold);color:#332800;display:grid;place-items:center;margin:0 auto 16px">${ico('clock',30,2.4)}</div>
+    <h2 style="font-size:27px;margin-bottom:6px">Application sent</h2>
+    <p class="mini" style="max-width:44ch;margin:0 auto 18px">Thanks ${esc(F.first||'')}. An admin will look at it within two working days. You will get an email and an SMS either way — and you cannot sign in until you are approved.</p>
+    <div class="rows" style="text-align:left">
+      <div class="row-card">${ico('mail',20,1.8)}
+        <div class="rc-main"><div class="rc-t">We sent you a confirmation</div><div class="rc-s">${esc(F.email||'')}</div></div>
+        <div class="rc-act"><button class="btn btn-outline sm" id="readAck">Read it</button></div></div>
+      <div class="row-card">${ico('shield',20,1.8)}
+        <div class="rc-main"><div class="rc-t">The admins were told</div><div class="rc-s">Your form is in their approvals queue now</div></div>
+        <div class="rc-act"><a class="btn btn-outline sm" href="admin.html">See the queue</a></div></div>
+    </div>
+    <div style="margin-top:20px"><button class="btn btn-outline" id="backLand">Back to the start</button></div>
   </div>`;
 }
 
-function aSteps(){
-  $('#aSteps').innerHTML = APPLY_STEPS.map((t,i) => {
-    const cls = A.step > i ? 'done' : A.step === i ? 'on' : '';
-    const n = A.step > i ? ico('check',12,3.4) : (i+1);
-    return `<div class="stp ${cls}"><span class="stp-n">${n}</span><span class="stp-l">${t}</span></div>${i < APPLY_STEPS.length-1 ? '<span class="stp-bar"></span>' : ''}`;
-  }).join('');
-}
-function aGo(n){
-  A.step = n;
-  $$('.pane').forEach(p => p.classList.toggle('on', +p.dataset.p === n));
-  aSteps();
-  window.scrollTo({ top:0, behavior:'smooth' });
+function navBtns(lastLabel){
+  return `<div class="navrow" style="display:flex;gap:10px;margin-top:22px;align-items:center">
+    <button class="btn btn-ghost" id="fBack">${ico('back',16,2.2)} Back</button>
+    <button class="btn btn-primary" style="margin-left:auto" id="fNext">${lastLabel || 'Continue'} ${lastLabel ? '' : ico('arrow',16,2.2)}</button>
+  </div>`;
 }
 
-/* validation — every required field named in the spec */
-function bad(el, isBad){ el.closest('.field').classList.toggle('bad', isBad); return isBad; }
-function aNext(step){
-  let fail = false;
-  if(step === 0){
-    fail |= bad($('#fFull'),  !$('#fFull').value.trim());
-    fail |= bad($('#fSur'),   !$('#fSur').value.trim());
-    fail |= bad($('#fDocNo'), !$('#fDocNo').value.trim());
-    fail |= bad($('#fPhone'), $('#fPhone').value.replace(/\D/g,'').length < 9);
-    fail |= bad($('#fEmail'), !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test($('#fEmail').value.trim()));
-    fail |= bad($('#fHome'),  !$('#fHome').value.trim());
-    // 18+ check, computed from the entered date rather than trusted
-    const dob = $('#fDob').value;
-    let under = !dob;
-    if(dob){
-      const [y,m,d] = dob.split('-').map(Number);
-      const now = new Date(2026, 7, 16);            // fixed "today" keeps the demo deterministic
+/* Picking a radio or attaching a file re-renders the step. Without this,
+   everything already typed would be wiped by that re-render — so read the
+   live inputs back into F first, then redraw.                            */
+const FIELD_MAP = {
+  fFirst:'first', fLast:'last', fDob:'dob', fPhone:'phone', fEmail:'email', fYears:'years',
+  fIdNum:'idNum',
+  fR1Name:'r1Name', fR1Phone:'r1Phone', fR1Rel:'r1Rel',
+  fR2Name:'r2Name', fR2Phone:'r2Phone', fR2Rel:'r2Rel'
+};
+function captureForm(){
+  Object.entries(FIELD_MAP).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if(el) F[key] = el.value;
+  });
+}
+const redraw = () => { captureForm(); render(); };
+
+/* ---------- form validation ---------- */
+function validateStep(){
+  const bad = id => { const el = document.getElementById(id); if(el) el.closest('.field').classList.add('bad'); };
+  const good = id => { const el = document.getElementById(id); if(el) el.closest('.field').classList.remove('bad'); };
+  let ok = true;
+  const req = (id, key, test) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    F[key] = el.value;
+    if(test(el.value)) good(id); else { bad(id); ok = false; }
+  };
+
+  if(fstep === 0){
+    req('fFirst','first', v => v.trim().length > 1);
+    req('fLast','last',  v => v.trim().length > 1);
+    req('fPhone','phone',v => /^(\+27|0)[6-8][0-9]{8}$/.test(v.replace(/\s/g,'')));
+    req('fEmail','email',v => /\S+@\S+\.\S+/.test(v));
+    req('fYears','years',v => v !== '' && +v >= 0 && +v <= 50);
+
+    /* 18+ — computed against a fixed "today" so the demo repeats */
+    const dob = document.getElementById('fDob');
+    F.dob = dob.value;
+    const errEl = document.getElementById('fDobErr');
+    if(!dob.value){ bad('fDob'); errEl.textContent = 'Enter a valid date of birth'; ok = false; }
+    else {
+      const now = dateOf(TODAY);
+      const [y,m,d] = dob.value.split('-').map(Number);
       let age = now.getFullYear() - y;
       if(now.getMonth()+1 < m || (now.getMonth()+1 === m && now.getDate() < d)) age--;
-      under = age < 18;
+      if(age < 18){ bad('fDob'); errEl.textContent = `You are ${age}. We cannot take on anyone under 18.`; ok = false; }
+      else if(age > 75){ bad('fDob'); errEl.textContent = 'Please check the date — that reads as over 75.'; ok = false; }
+      else good('fDob');
     }
-    fail |= bad($('#fDob'), under);
-    fail |= bad($('#fCrim'), A.crim === null);
+    if(!F.group){ document.getElementById('fGroupErr').style.display = 'block'; ok = false; }
+    else document.getElementById('fGroupErr').style.display = 'none';
   }
-  if(step === 1){
-    fail |= bad($('#fProv'), !A.prov);
-    fail |= bad($('#fCities'), A.cities.size === 0);
-    fail |= bad($('#fGroup'), !A.group);
+
+  if(fstep === 1){
+    if(!(F.cities || []).length){ document.getElementById('fCityErr').style.display = 'block'; ok = false; }
+    else document.getElementById('fCityErr').style.display = 'none';
+    if(!(F.langs || []).length){ document.getElementById('fLangErr').style.display = 'block'; ok = false; }
+    else document.getElementById('fLangErr').style.display = 'none';
   }
-  if(step === 2){
-    [1,2].forEach(n => ['Name','Sur','Tel','Addr'].forEach(f => {
-      fail |= bad($(`#r${n}${f}`), !$(`#r${n}${f}`).value.trim());
-    }));
+
+  if(fstep === 2){
+    const num = document.getElementById('fIdNum');
+    F.idNum = num.value;
+    const kind = F.idKind || 'id';
+    const numOK = kind === 'id' ? /^[0-9]{13}$/.test(num.value.replace(/\s/g,'')) : num.value.trim().length >= 6;
+    if(numOK) good('fIdNum'); else { bad('fIdNum'); ok = false; }
+    [['upId','fUpIdErr'],['upPhoto','fUpPhErr'],['upCrim','fUpCrErr']].forEach(([key, err]) => {
+      const e = document.getElementById(err);
+      if(!F[key]){ e.style.display = 'block'; ok = false; } else e.style.display = 'none';
+    });
   }
-  if(fail){ toast('Please complete the highlighted fields','info'); return; }
-  aGo(step + 1);
-}
 
-function fakeUpload(key, name){
-  A.files[key] = name;
-  const el = key === 'id' ? $('#dropId') : $('#dropPic');
-  el.classList.add('filled');
-  el.innerHTML = `${ico('doc',22)}<div><div class="d-t">${name}</div><div class="d-s">Uploaded · tap to replace</div></div>`;
-  el.closest('.field').classList.remove('bad');
-}
-
-function submitApp(){
-  let fail = false;
-  fail |= bad($('#dropId'), !A.files.id);
-  fail |= bad($('#dropPic'), !A.files.pic);
-  if(fail){ toast('Both documents are required','info'); return; }
-  if(!$('#consent').classList.contains('on')){ toast('Please agree to the background check','info'); return; }
-
-  // deterministic reference, no randomness
-  const seed = ($('#fFull').value + $('#fSur').value + $('#fDocNo').value)
-    .split('').reduce((a,c) => (a * 31 + c.charCodeAt(0)) % 899999, 7);
-  aGo(4);
-  $('#appRef').textContent = 'APP-' + String(100000 + seed);
-
-  DB.cleaners.push({
-    id:'cl' + (DB.cleaners.length + 1),
-    name: $('#fFull').value.trim().split(' ')[0] || 'New',
-    surname: $('#fSur').value.trim() || 'Applicant',
-    initials: (($('#fFull').value.trim()[0] || 'N') + ($('#fSur').value.trim()[0] || 'A')).toUpperCase(),
-    rating:0, jobs:0, years:0, langs:['English'],
-    group: A.group === 'both' ? 'indoor' : A.group,
-    city:[...A.cities][0] || '—', prov:A.prov, status:'pending', fav:false, tone:'sky', earnings:0
-  });
-  toast('Application submitted','check');
+  if(fstep === 3){
+    [1,2].forEach(n => {
+      req(`fR${n}Name`,  `r${n}Name`,  v => v.trim().length > 2);
+      req(`fR${n}Phone`, `r${n}Phone`, v => /^(\+27|0)[1-8][0-9]{8}$/.test(v.replace(/\s/g,'')));
+      req(`fR${n}Rel`,   `r${n}Rel`,   v => v.trim().length > 3);
+    });
+    const ae = document.getElementById('fAgreeErr');
+    if(!F.agree){ ae.style.display = 'block'; ok = false; } else ae.style.display = 'none';
+  }
+  return ok;
 }
 
 /* ============================================================
-   MODE 2 — APPROVED CLEANER DASHBOARD
-   NOT in the client's document. Named as an addition, because a
-   cleaner with no dashboard cannot actually work.
+   APPROVED DASHBOARD
    ============================================================ */
-const ME = DB.cleaners[0];                                  // Nomsa
-const myJobs = () => DB.bookings.filter(b => b.cleaner === ME.id);
-const CDONE = new Set();
-const AVAIL = new Set(['Mon','Tue','Wed','Thu','Fri']);
-let cView = 'today';
-
-const CNAV = [
-  { id:'today',   label:'Today', icon:'clock' },
-  { id:'offers',  label:'Job offers', icon:'bell', badge: DB.bookings.filter(b => b.status === 'pending').length },
-  { id:'schedule',label:'My schedule', icon:'cal' },
-  { id:'earnings',label:'Earnings', icon:'wallet' },
-  { id:'ratings', label:'Ratings', icon:'star' },
-  { id:'cprofile',label:'My profile', icon:'user' }
+const TABS = [
+  { id:'today',    label:'Today',        icon:'clock' },
+  { id:'upcoming', label:'Upcoming',     icon:'cal'   },
+  { id:'calendar', label:'My calendar',  icon:'grid'  },
+  { id:'past',     label:'Past bookings',icon:'doc'   },
+  { id:'profile',  label:'My profile',   icon:'user'  }
 ];
 
-function dashView(){
-  return `<main class="wrap shell">
-    <aside class="card side"><div class="side-nav" id="sideNav"></div></aside>
-    <section id="cview"></section>
-  </main>`;
-}
+const myJobs = () => DB.bookings.filter(b => b.cleaner === me.id);
 
-const CVIEWS = {
-today(){
-  const today = myJobs().filter(b => b.status === 'confirmed').slice(0,1)[0];
-  const q = today ? priceBooking(today) : null;
-  const ad = today ? address(today.addr) : null;
-  const cust = today ? custOf(today.cust) : null;
-  const items = today ? ['General cleaning', ...(today.extras || []).map(id => CFG.checklist.find(c => c.id === id).name)] : [];
-  const payout = q ? Math.round(q.base * 0.75 + q.extras * 0.7) : 0;   // cleaner take, config in admin
-
-  return `
-  <div class="page-head"><h1>Good morning, ${ME.name}</h1><p>${myJobs().filter(b=>b.status==='confirmed').length} job confirmed · you are ${AVAIL.size} days available this week</p></div>
-
-  <div class="stats" style="margin-bottom:22px">
-    <div class="stat"><div class="s-l">This week</div><div class="s-v mono">${money(2140)}</div><div class="s-d up">4 jobs completed</div></div>
-    <div class="stat"><div class="s-l">Rating</div><div class="s-v mono">${ME.rating.toFixed(2)}</div><div class="s-d">${ME.jobs} cleans</div></div>
-    <div class="stat"><div class="s-l">Acceptance</div><div class="s-v mono">96%</div><div class="s-d up">Top 10% of cleaners</div></div>
-    <div class="stat"><div class="s-l">Next payout</div><div class="s-v mono">${money(2140)}</div><div class="s-d">Friday 21 Aug</div></div>
-  </div>
-
-  ${today ? `<div class="split">
-    <div>
-      <div class="job" style="margin-bottom:16px">
-        <div class="j-top">
-          <div>
-            <div class="t-sub">${today.id} · ${fmtDate(today.date)} at ${today.time}</div>
-            <div class="j-t">${q.serviceName}</div>
-          </div>
-          <div class="j-pay"><div class="v">${money(payout)}</div><div class="l">Your payout</div></div>
-        </div>
-        <dl class="kv" style="display:grid;grid-template-columns:130px 1fr;gap:6px 14px;font-size:14px;margin:0 0 14px">
-          <dt style="color:var(--ink-45);font-size:13px">Customer</dt><dd style="margin:0;font-weight:500">${cust.name}</dd>
-          <dt style="color:var(--ink-45);font-size:13px">Address</dt><dd style="margin:0;font-weight:500">${ad.line}, ${ad.suburb}</dd>
-          <dt style="color:var(--ink-45);font-size:13px">Access</dt><dd style="margin:0;font-weight:500">${ad.notes}</dd>
-          <dt style="color:var(--ink-45);font-size:13px">Expected time</dt><dd style="margin:0;font-weight:500">${q.hoursLabel}</dd>
-        </dl>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary sm" onclick="toast('Customer notified you are on the way','route')">${ico('route',15,2.2)} I'm on my way</button>
-          <button class="btn btn-outline sm" onclick="toast('Opens Google Maps in the real build','pin')">Navigate</button>
-          <button class="btn btn-outline sm" onclick="toast('Chat opens here','chat')">Message customer</button>
-        </div>
-      </div>
-
-      <div class="card panel">
-        <div class="sect-head" style="margin-bottom:12px">
-          <div><h2 style="font-size:20px">Job checklist</h2><div class="sh-sub">Tick each item as you finish it. The customer sees this live.</div></div>
-          <span class="sh-act"><span class="pill ${CDONE.size === items.length ? 'ok' : 'wait'}">${CDONE.size}/${items.length} done</span></span>
-        </div>
-        ${items.map((t,i) => `<button class="checkitem ${CDONE.has(i) ? 'on' : ''}" onclick="tick(${i})">
-            <span class="cbox">${ico('check',13,3.4)}</span><span class="ci-t">${t}</span></button>`).join('')}
-        <button class="btn btn-primary" style="width:100%;margin-top:10px" ${CDONE.size < items.length ? 'disabled' : ''}
-          onclick="finishJob()">${CDONE.size < items.length ? `Finish job (${items.length - CDONE.size} left)` : 'Mark job complete'}</button>
-      </div>
-    </div>
-
-    <div>
-      <div class="card panel" style="margin-bottom:16px">
-        <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Payout breakdown</h2></div>
-        <div class="li"><span>Service (${q.hoursLabel})</span><span class="v mono">${money(q.base)}</span></div>
-        <div class="li"><span>Extras</span><span class="v mono">${money(q.extras)}</span></div>
-        <div class="li"><span>Platform share</span><span class="v mono">−${money(q.base + q.extras - payout)}</span></div>
-        <div class="rule"></div>
-        <div class="total"><span class="t-l">You earn</span><span class="t-v mono">${money(payout)}</span></div>
-        <div class="note">${ico('info',17,2)}<span>The cleaner share is a setting, not a hard-coded number. Tell me your split and I change one value.</span></div>
-      </div>
-      <div class="card panel">
-        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Availability this week</h2></div>
-        <div class="avail">${DAYS.slice(1).concat(DAYS[0]).map(d => `<button class="${AVAIL.has(d) ? 'on' : ''}" onclick="toggleDay('${d}')">${d}</button>`).join('')}</div>
-        <div class="t-sub" style="margin-top:10px">You only receive offers on the days you switch on.</div>
-      </div>
-    </div>
-  </div>` : `<div class="card panel"><div class="empty">${ico('clock',34)}<div class="e-t">No job today</div></div></div>`}`;
-},
-
-offers(){
-  const open = DB.bookings.filter(b => b.status === 'pending');
-  return `
-  <div class="page-head"><h1>Job offers</h1><p>Jobs in your areas. Accept and it is yours; decline and it goes to the next cleaner.</p></div>
-  <div class="rows">
-    ${open.map(b => {
-      const q = priceBooking(b), ad = address(b.addr);
-      const payout = Math.round(q.base * 0.75 + q.extras * 0.7);
-      return `<div class="job">
-        <div class="j-top">
-          <div><div class="t-sub">${fmtDate(b.date)} at ${b.time} · ${q.hoursLabel}</div>
-            <div class="j-t">${q.serviceName}</div>
-            <div class="t-sub">${ad.suburb}, ${ad.city} · 3.4 km away</div></div>
-          <div class="j-pay"><div class="v">${money(payout)}</div><div class="l">You earn</div></div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary sm" onclick="acceptJob('${b.id}')">Accept job</button>
-          <button class="btn btn-outline sm" onclick="toast('Declined — offered to the next cleaner','x')">Decline</button>
-        </div>
-      </div>`;
-    }).join('')}
-  </div>
-  <div class="note">${ico('info',17,2)}<span>Whether cleaners get offers like this, or an admin simply assigns them, is the open question I raised. This screen exists so you can see both models side by side before deciding.</span></div>`;
-},
-
-schedule(){
+function viewDash(){
   const jobs = myJobs();
-  return `
-  <div class="page-head"><h1>My schedule</h1><p>Everything assigned to you, and the days you are available.</p></div>
-  <div class="card panel" style="margin-bottom:20px">
-    <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Days I can work</h2></div>
-    <div class="avail">${DAYS.slice(1).concat(DAYS[0]).map(d => `<button class="${AVAIL.has(d) ? 'on' : ''}" onclick="toggleDay('${d}')">${d}</button>`).join('')}</div>
-  </div>
-  <div class="tbl-wrap">
-    <table class="tbl">
-      <thead><tr><th>Booking</th><th>Date</th><th>Time</th><th>Service</th><th>Area</th><th>Status</th><th class="num">Payout</th></tr></thead>
-      <tbody>${jobs.map(b => {
-        const q = priceBooking(b), ad = address(b.addr);
-        return `<tr><td class="t-strong mono">${b.id}</td><td>${fmtDate(b.date)}</td><td class="mono">${b.time}</td>
-          <td>${q.serviceName}</td><td>${ad.suburb}</td><td>${statusPill(b.status)}</td>
-          <td class="num">${money(Math.round(q.base*0.75 + q.extras*0.7))}</td></tr>`;
-      }).join('')}</tbody>
-    </table>
-  </div>`;
-},
+  const upcoming = jobs.filter(b => b.status === 'upcoming' && !isPast(b.date)).sort((a,b) => a.date.localeCompare(b.date));
+  return `${protoBar('cleaner.html')}${topBar('Cleaner', NAV, 'cleaner.html')}
+  <div class="wrap"><div class="shell">
+    <aside class="side"><div class="card side-nav" id="sideNav"></div></aside>
+    <main>
+      <div class="page-head">
+        <h1>Good morning, ${me.name}</h1>
+        <p>${upcoming.length ? `${upcoming.length} booking${upcoming.length>1?'s':''} coming up · next on ${fmtDate(upcoming[0].date)}` : 'Nothing booked yet. Keep your calendar open and customers will find you.'}</p>
+      </div>
+      <div id="body"></div>
+    </main>
+  </div></div>`;
+}
 
-earnings(){
-  const weeks = [['Week of 10 Aug',2140,4],['Week of 3 Aug',1860,3],['Week of 27 Jul',2480,5],['Week of 20 Jul',1720,3]];
-  const max = Math.max(...weeks.map(w => w[1]));
-  return `
-  <div class="page-head"><h1>Earnings</h1><p>Paid every Friday for the week before.</p></div>
-  <div class="stats" style="margin-bottom:22px">
-    <div class="stat"><div class="s-l">This week</div><div class="s-v mono">${money(2140)}</div><div class="s-d up">+15% on last week</div></div>
-    <div class="stat"><div class="s-l">This month</div><div class="s-v mono">${money(8200)}</div><div class="s-d">15 jobs</div></div>
-    <div class="stat"><div class="s-l">All time</div><div class="s-v mono">${money(ME.earnings)}</div><div class="s-d">${ME.jobs} cleans</div></div>
-    <div class="stat"><div class="s-l">Next payout</div><div class="s-v mono">${money(2140)}</div><div class="s-d">Friday 21 Aug</div></div>
-  </div>
-  <div class="card panel" style="margin-bottom:20px">
-    <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Last four weeks</h2></div>
-    <div class="bars">${weeks.map(([l,v,n]) => `<div class="bar-row">
-      <span class="t-sub">${l.split(' ').slice(-2).join(' ')}</span>
-      <span class="bar"><span style="width:${(v/max*100).toFixed(0)}%"></span></span>
-      <span class="mono" style="text-align:right;font-weight:600">${money(v)}</span></div>`).join('')}</div>
-  </div>
-  <div class="card panel">
-    <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Payout account</h2></div>
-    <div class="li"><span>Bank</span><span class="v">Capitec · •••• 4471</span></div>
-    <div class="li"><span>Payout day</span><span class="v">Every Friday</span></div>
-    <div class="li"><span>Held for review</span><span class="v mono">${money(0)}</span></div>
-    <button class="btn btn-outline sm" style="margin-top:12px" onclick="toast('Bank details form opens here','wallet')">Change bank details</button>
-  </div>`;
-},
+function renderTab(){
+  sideNav(TABS.map(t => t.id === 'upcoming'
+    ? { ...t, badge: myJobs().filter(b => b.status === 'upcoming' && !isPast(b.date)).length || 0 }
+    : t), tab, id => { tab = id; renderTab(); });
+  document.getElementById('body').innerHTML =
+    ({ today:tabToday, upcoming:tabUpcoming, calendar:tabCalendar, past:tabPast, profile:tabProfile })[tab]();
+  wireTab();
+}
 
-ratings(){
-  const revs = [
-    { by:'Thandi M.', n:5, t:'Spotless, and she was early. Booked her again for next week.', when:'11 Aug' },
-    { by:'Aisha P.',  n:5, t:'Very thorough with the oven. Polite and professional.', when:'6 Aug' },
-    { by:'Riaan v.W.',n:4, t:'Good clean, ran a little over the time slot.', when:'29 Jul' },
-    { by:'Thandi M.', n:5, t:'Always excellent. Knows how we like the kitchen done.', when:'21 Jul' }
-  ];
-  const dist = [5,4,3,2,1].map(n => [n, revs.filter(r => r.n === n).length]);
-  const tot = revs.length;
-  return `
-  <div class="page-head"><h1>Ratings &amp; reviews</h1><p>What customers said after their clean.</p></div>
-  <div class="split">
-    <div class="rows">
-      ${revs.map(r => `<div class="row-card">
-        <div class="avatar sm ${r.n === 5 ? '' : 'gold'}">${r.by.split(' ').map(x=>x[0]).join('')}</div>
-        <div class="rc-main">
-          <div class="stars">${starRow(r.n)}</div>
-          <div class="rc-t" style="font-weight:400;margin-top:3px">${r.t}</div>
-          <div class="rc-s">${r.by} · ${r.when}</div>
-        </div></div>`).join('')}
+function jobCard(b, opts = {}){
+  const p = priceBooking(b), a = addrOf(b), c = custOf(b.cust);
+  return `<div class="jobcard">
+    <div class="jc-h">
+      <div style="flex:1">
+        <div class="jc-t">${svcOf(b.service).name}</div>
+        <div class="mini">${b.id} · ${fmtDateLong(b.date)} at ${b.time} · ${p.hoursLabel}</div>
+      </div>
+      ${statusPill(b.status)}
     </div>
-    <div class="card panel">
-      <div style="text-align:center;margin-bottom:14px">
-        <div style="font-family:'Fraunces',serif;font-size:46px;line-height:1">${ME.rating.toFixed(2)}</div>
-        <div class="stars" style="font-size:16px">${starRow(ME.rating)}</div>
-        <div class="t-sub">${ME.jobs} cleans rated</div>
-      </div>
-      <div class="bars">${dist.map(([n,c]) => `<div class="bar-row">
-        <span class="t-sub">${n} ★</span>
-        <span class="bar"><span style="width:${tot ? (c/tot*100).toFixed(0) : 0}%"></span></span>
-        <span class="mono" style="text-align:right">${c}</span></div>`).join('')}</div>
-    </div>
-  </div>`;
-},
-
-cprofile(){
-  return `
-  <div class="page-head"><h1>My profile</h1><p>What customers see when you are assigned to their booking.</p></div>
-  <div class="split">
-    <div class="card panel">
-      <div class="grid2">
-        <div class="field"><label>Full names</label><input value="${ME.name} Thandeka"></div>
-        <div class="field"><label>Surname</label><input value="${ME.surname}"></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label>Phone number</label><input value="+27 83 114 9928"></div>
-        <div class="field"><label>Email address</label><input value="nomsa.m@example.co.za"></div>
-      </div>
-      <div class="field"><label>Home address</label><input value="24 Sixth Avenue, Kensington, Cape Town"></div>
-      <div class="fieldset-t">Work areas</div>
-      <div class="field"><label>Province</label><select><option>Western Cape</option></select></div>
-      <div class="field"><label>Cities</label>
-        <div class="chips">${['Cape Town','Stellenbosch','Somerset West'].map(c => `<span class="chip on">${c}</span>`).join('')}</div>
-      </div>
-      <div class="fieldset-t">Languages</div>
-      <div class="chips">${ME.langs.map(l => `<span class="chip on">${l}</span>`).join('')}</div>
-      <button class="btn btn-primary" style="margin-top:20px" onclick="toast('Profile saved','check')">Save changes</button>
-    </div>
-    <div>
-      <div class="card panel" style="text-align:center;margin-bottom:16px">
-        <div class="avatar lg" style="margin:0 auto 12px">${ME.initials}</div>
-        <div style="font-family:'Fraunces',serif;font-size:20px">${ME.name} ${ME.surname}</div>
-        <div class="stars">${starRow(ME.rating)}</div>
-        <div class="t-sub" style="margin-bottom:12px">${ME.years} years · ${ME.jobs} cleans</div>
-        <button class="btn btn-outline sm" onclick="toast('Photo picker opens here','user')">Change photo</button>
-      </div>
-      <div class="card panel">
-        <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Documents</h2></div>
-        <div class="li"><span>ID document</span><span class="pill ok">Verified</span></div>
-        <div class="li"><span>Profile photo</span><span class="pill ok">Verified</span></div>
-        <div class="li"><span>Police clearance</span><span class="pill ok">Valid to Mar 2027</span></div>
-        <div class="li"><span>References</span><span class="pill ok">2 of 2 called</span></div>
-      </div>
-    </div>
+    <dl class="kv">
+      <dt>Customer</dt><dd>${esc(c ? c.name : '—')}</dd>
+      <dt>Address</dt><dd>${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)}, ${esc(a.city)}</dd>
+      ${b.extras && b.extras.length ? `<dt>Extras</dt><dd>${b.extras.map(id => CFG.extras.find(e => e.id === id).name).join(', ')}</dd>` : ''}
+      ${a.notes ? `<dt>Access</dt><dd>${esc(a.notes)}</dd>` : ''}
+      ${b.note ? `<dt>Their note</dt><dd>“${esc(b.note)}”</dd>` : ''}
+      <dt>You earn</dt><dd class="t-strong">${money(p.labour + p.extras)}</dd>
+    </dl>
+    ${b.rating ? `<div class="rule"></div>
+      <div class="review"><div class="rv-h"><span class="stars">${starRow(b.rating.stars)}</span> ${esc(c ? c.name : '')}</div>
+        ${b.rating.comment ? `<div class="rv-b">“${esc(b.rating.comment)}”</div>` : '<div class="rv-b mini">No comment left.</div>'}</div>` : ''}
+    ${opts.actions || ''}
   </div>`;
 }
-};
 
-function cRender(){ $('#cview').innerHTML = CVIEWS[cView](); }
-function cGo(v){ cView = v; sideNav(CNAV, v, cGo); cRender(); window.scrollTo({top:0,behavior:'smooth'}); }
-function tick(i){ CDONE.has(i) ? CDONE.delete(i) : CDONE.add(i); cRender(); }
-function toggleDay(d){ AVAIL.has(d) ? AVAIL.delete(d) : AVAIL.add(d); cRender(); }
-function finishJob(){
-  modal({
-    title:'Mark this job complete?',
-    sub:'The customer is asked to confirm and rate',
-    body:`<p style="margin:0 0 12px;color:var(--ink-70)">Payment is captured and released to you two hours after the customer confirms. Add a photo if anything needs flagging.</p>
-          <div class="drop">${ico('upload',22)}<div class="d-t">Add completion photos</div><div class="d-s">Optional</div></div>`,
-    actions:[
-      { label:'Not yet', cls:'btn-outline' },
-      { label:'Complete job', cls:'btn-primary', fn(){ toast('Job completed — payout queued for Friday','check'); } }
-    ]
+function tabToday(){
+  const jobs = myJobs().filter(b => b.date === TODAY && b.status !== 'cancelled');
+  return `<div class="sect-head"><h2>Today — ${fmtDateLong(TODAY)}</h2></div>
+    ${jobs.length ? jobs.map(b => jobCard(b)).join('')
+      : `<div class="card panel"><div class="empty">${ico('clock',40,1.4)}
+          <div class="e-t">Nothing on today</div>
+          <div>Your next job is on ${(() => { const n = myJobs().filter(b => b.status==='upcoming' && !isPast(b.date)).sort((a,c)=>a.date.localeCompare(c.date))[0]; return n ? fmtDateLong(n.date) : 'no date yet'; })()}.</div>
+        </div></div>`}`;
+}
+
+function tabUpcoming(){
+  const jobs = myJobs().filter(b => b.status === 'upcoming' && !isPast(b.date)).sort((a,b) => a.date.localeCompare(b.date));
+  return `<div class="sect-head"><h2>Upcoming bookings</h2>
+      <div class="sh-sub">Booked by customers who picked you.</div></div>
+    ${jobs.length ? jobs.map(b => jobCard(b)).join('')
+      : `<div class="card panel"><div class="empty">${ico('cal',40,1.4)}<div class="e-t">Nothing booked</div>
+          <div>Open up more days on your calendar so customers can find you.</div></div></div>`}`;
+}
+
+function tabPast(){
+  const jobs = myJobs().filter(b => b.status === 'completed' || b.status === 'cancelled').sort((a,b) => b.date.localeCompare(a.date));
+  const earned = jobs.filter(b => b.status === 'completed')
+    .reduce((n, b) => { const p = priceBooking(b); return n + p.labour + p.extras; }, 0);
+  return `<div class="sect-head"><h2>Past bookings</h2>
+      <div class="sh-sub">${jobs.filter(b=>b.status==='completed').length} completed · ${money(earned)} earned</div></div>
+    ${jobs.length ? jobs.map(b => jobCard(b)).join('')
+      : `<div class="card panel"><div class="empty">${ico('doc',40,1.4)}<div class="e-t">No history yet</div></div></div>`}`;
+}
+
+/* ---------- calendar: block off days ---------- */
+let calMonth = 7;   // 0-indexed; August 2026
+let calYear  = 2026;
+
+function tabCalendar(){
+  const first = new Date(calYear, calMonth, 1);
+  const days  = new Date(calYear, calMonth + 1, 0).getDate();
+  const lead  = first.getDay();
+  const cells = [];
+  for(let i = 0; i < lead; i++) cells.push('<span></span>');
+  for(let d = 1; d <= days; d++){
+    const iso = isoOf(new Date(calYear, calMonth, d));
+    const off = (me.blocked || []).includes(iso);
+    const booked = myJobs().some(b => b.date === iso && b.status !== 'cancelled');
+    const past = isPast(iso);
+    const cls = [past ? '' : '', off ? 'off' : '', booked ? 'booked' : '', iso === TODAY ? 'today' : ''].filter(Boolean).join(' ');
+    cells.push(`<button class="cal-day ${cls}" data-day="${iso}" ${past || booked ? 'disabled' : ''}
+      title="${booked ? 'You have a booking this day' : off ? 'Marked unavailable' : 'Available'}">
+      ${d}${booked ? '<span class="cd-dot"></span>' : ''}</button>`);
+  }
+  const offCount = (me.blocked || []).filter(d => !isPast(d)).length;
+  return `<div class="sect-head"><h2>My calendar</h2>
+      <div class="sh-sub">Tap a day to mark yourself unavailable. Customers will not see you on those days.</div></div>
+    <div class="card panel">
+      <div class="cal-head">
+        <button class="pill-btn sm" id="calPrev">${ico('back',14,2.2)}</button>
+        <div class="ch-t">${MONTHS[calMonth]} ${calYear}</div>
+        <button class="pill-btn sm" id="calNext">${ico('arrow',14,2.2)}</button>
+      </div>
+      <div class="cal-grid">${DAYS.map(d => `<div class="cal-dow">${d}</div>`).join('')}${cells.join('')}</div>
+      <div class="cal-key">
+        <span><i style="background:var(--paper-2);border:1.5px solid var(--ink-08)"></i>Available</span>
+        <span><i style="background:var(--clay-soft);border:1.5px solid rgba(192,82,44,.34)"></i>You marked unavailable</span>
+        <span><i style="background:var(--moss-soft);border:1.5px solid rgba(44,85,72,.3)"></i>Already booked — cannot block</span>
+      </div>
+      <div class="note" style="margin-top:16px">${ico('info',16,2)}
+        <span>${offCount ? `You have blocked off ${offCount} upcoming day${offCount>1?'s':''}.` : 'You are available every upcoming day this month.'} A day you are already booked on cannot be blocked — cancel the booking first.</span></div>
+    </div>`;
+}
+
+function tabProfile(){
+  const revs = reviewsFor(me.id);
+  const r = ratingOf(me.id);
+  return `<div class="sect-head"><h2>My profile</h2>
+      <div class="sh-sub">This is what customers see when they choose a cleaner.</div></div>
+    <div class="card panel" style="margin-bottom:14px">
+      <div class="pro-line" style="margin-bottom:16px">
+        ${portrait(me, 84)}
+        <div style="flex:1">
+          <div style="font-family:'Fraunces',serif;font-size:22px">${me.name} ${me.surname}</div>
+          <div class="mini">${r ? `${starRow(r)} ${r.toFixed(2)} from ${revs.length} rating${revs.length>1?'s':''}` : 'No ratings yet'}</div>
+          <div class="mini">${me.group === 'indoor' ? 'Indoor' : 'Outdoor'} cleaner · ${me.city} · ${me.years} years</div>
+        </div>
+      </div>
+      <div class="drop" id="photoDrop">${ico('camera',22,1.8)}
+        <div class="d-t">Change your photo</div>
+        <div class="d-s">Head and shoulders, face clearly visible. This is the picture on your card.</div></div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="field"><label>Mobile number</label><input id="pPhone" value="+27 82 000 0000"></div>
+        <div class="field"><label>Email address</label><input id="pEmail" value="${me.name.toLowerCase()}.${me.surname[0].toLowerCase()}@example.co.za"></div>
+      </div>
+      <div class="field"><label>Languages</label>
+        <div class="chips">${me.langs.map(l => `<button class="chip on">${l}</button>`).join('')}</div></div>
+      <button class="btn btn-primary" id="pSave">Save changes</button>
+    </div>
+
+    <div class="sect-head"><h2>What customers said</h2></div>
+    <div class="card panel">
+      ${revs.length ? revs.map(v => `<div class="review">
+          <div class="rv-h"><span class="stars">${starRow(v.stars)}</span> ${esc(v.cust)} · ${fmtDate(v.date)} · ${v.id}</div>
+          ${v.comment ? `<div class="rv-b">“${esc(v.comment)}”</div>` : '<div class="rv-b mini">No comment left.</div>'}
+        </div>`).join('')
+        : `<div class="empty">${ico('star',40,1.4)}<div class="e-t">No ratings yet</div>
+            <div>Ratings appear here once customers rate a completed job.</div></div>`}
+    </div>`;
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+function signIn(id){
+  const c = cleaner(id);
+  if(c.account !== 'approved'){ gate = c; view = 'gate'; render(); return; }
+  me = c; view = 'dash'; tab = 'today'; render();
+}
+
+function wire(){
+  const on = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
+
+  on('goApply', () => { view = 'apply'; fstep = 0; render(); });
+  on('goSignin', () => { view = 'signin'; render(); });
+  on('toApply', () => { view = 'apply'; fstep = 0; render(); });
+  on('gBack', () => { view = 'signin'; render(); });
+  on('gReapply', () => { view = 'apply'; fstep = 0; render(); });
+  on('backLand', () => { view = 'land'; render(); });
+  on('ciGo', () => {
+    const em = document.getElementById('ciEmail'), pw = document.getElementById('ciPass');
+    let bad = false;
+    [[em, /\S+@\S+\.\S+/.test(em.value)], [pw, pw.value.length > 0]].forEach(([el, ok]) => {
+      el.closest('.field').classList.toggle('bad', !ok); if(!ok) bad = true;
+    });
+    if(bad) return;
+    signIn('cl1');
+  });
+  document.querySelectorAll('[data-as]').forEach(b => b.onclick = () => signIn(b.dataset.as));
+
+  if(view === 'apply') wireForm();
+  if(view === 'dash') renderTab();
+}
+
+function wireForm(){
+  const on = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
+
+  on('fBack', () => { captureForm(); if(fstep === 0){ view = 'land'; } else fstep--; render(); });
+  on('fNext', () => {
+    if(!validateStep()) return toast('Check the fields in red', 'info');
+    captureForm();
+    if(fstep === 3) return submitApplication();
+    fstep++; render();
+  });
+
+  document.querySelectorAll('#fGroup button').forEach(b => b.onclick = () => { F.group = b.dataset.g; redraw(); });
+  document.querySelectorAll('#fTrans button').forEach(b => b.onclick = () => { F.transport = b.dataset.t; redraw(); });
+  document.querySelectorAll('#fKind button').forEach(b => b.onclick = () => { F.idKind = b.dataset.k; F.idNum = ''; redraw(); });
+  document.querySelectorAll('#fLangs [data-lang]').forEach(b => b.onclick = () => {
+    const l = b.dataset.lang;
+    F.langs = (F.langs || []).includes(l) ? F.langs.filter(x => x !== l) : [...(F.langs || []), l];
+    b.classList.toggle('on');
+  });
+  document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => {
+    const key = b.dataset.up;
+    F[key] = { upId:'id-document.pdf', upPhoto:'profile-photo.jpg', upCrim:'police-clearance.pdf' }[key];
+    redraw(); toast('File attached');
+  });
+  on('fAgree', () => { F.agree = !F.agree; redraw(); });
+
+  const prov = document.getElementById('fProv');
+  if(prov){
+    prov.onchange = () => { F.prov = prov.value; F.cities = []; fillCityChips(); };
+    fillCityChips();
+  }
+  on('readAck', () => sendNotice({
+    channel:'email', to:F.email || '',
+    subject:'We have your Sparrow application',
+    body:`<h4>Thanks, ${esc(F.first || '')}.</h4>
+      <p>Your application to work as ${F.group === 'outdoor' ? 'an outdoor' : 'an indoor'} cleaner is with our admin team. We review applications within two working days.</p>
+      <p>You will get an email and an SMS the moment there is a decision. Until then you will not be able to sign in — that is normal.</p>
+      <p style="color:#6b7a70;font-size:12.5px">Applied for: ${F.group === 'outdoor' ? 'Outdoor' : 'Indoor'} cleaner · ${(F.cities || []).join(', ')}</p>` }));
+}
+
+function fillCityChips(){
+  const box = document.getElementById('fCities');
+  if(!box) return;
+  const list = CFG.provinces[F.prov || 'Western Cape'] || [];
+  box.innerHTML = list.map(c =>
+    `<button class="chip ${(F.cities || []).includes(c) ? 'on' : ''}" data-city="${c}">${c}</button>`).join('');
+  box.querySelectorAll('[data-city]').forEach(b => b.onclick = () => {
+    const c = b.dataset.city;
+    F.cities = (F.cities || []).includes(c) ? F.cities.filter(x => x !== c) : [...(F.cities || []), c];
+    b.classList.toggle('on');
   });
 }
-function acceptJob(id){
-  const b = DB.bookings.find(x => x.id === id);
-  b.status = 'confirmed'; b.cleaner = ME.id; b.eta = b.time;
-  toast('Job accepted — added to your schedule','check');
-  CNAV.find(n => n.id === 'offers').badge = DB.bookings.filter(x => x.status === 'pending').length;
-  cGo('offers');
+
+function submitApplication(){
+  const id = 'cl' + (DB.cleaners.length + 20);
+  DB.cleaners.push({
+    id, name:F.first, surname:F.last, initials:(F.first[0] + F.last[0]).toUpperCase(),
+    rating:0, jobs:0, years:+F.years || 0, langs:F.langs || ['English'],
+    group:F.group, city:(F.cities || [])[0], prov:F.prov || 'Western Cape',
+    account:'pending', fav:false, skin:'#8a5a3b', hair:'#2a1e18', shirt:'#2F5D50', blocked:[]
+  });
+  DB.applications.unshift({ id, submitted:TODAY });
+  fstep = 4; render();
+  toast('Application submitted');
 }
 
-/* ---------- mode switching ---------- */
-function setMode(m){
-  $$('#modeSwitch button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
-  if(m === 'apply'){
-    $('#root').innerHTML = applyView();
-    A.step = 0; aSteps();
-    $('#fProv').onchange = e => {
-      A.prov = e.target.value; A.cities.clear();
-      const box = $('#fCities');
-      box.innerHTML = A.prov
-        ? `<div class="chips">${CFG.provinces[A.prov].map(c => `<button class="chip" data-city="${c}">${c}</button>`).join('')}</div>`
-        : '<span class="cb-empty">Choose a province first.</span>';
-      box.querySelectorAll('[data-city]').forEach(btn => btn.onclick = () => {
-        const c = btn.dataset.city;
-        A.cities.has(c) ? A.cities.delete(c) : A.cities.add(c);
-        btn.classList.toggle('on');
-        $('#cityCount').textContent = A.cities.size ? `${A.cities.size} area${A.cities.size > 1 ? 's' : ''} selected.` : 'No areas selected.';
-        if(A.cities.size) box.closest('.field').classList.remove('bad');
-      });
-      e.target.closest('.field').classList.remove('bad');
-    };
-    $$('#fCrim button').forEach(b => b.onclick = () => {
-      A.crim = b.dataset.c;
-      $$('#fCrim button').forEach(x => x.classList.toggle('on', x === b));
-      $('#fCrim').closest('.field').classList.remove('bad');
-    });
-    $$('#fGroup button').forEach(b => b.onclick = () => {
-      A.group = b.dataset.g;
-      $$('#fGroup button').forEach(x => x.classList.toggle('on', x === b));
-      $('#fGroup').closest('.field').classList.remove('bad');
-    });
-  } else {
-    $('#root').innerHTML = dashView();
-    cGo('today');
-  }
-  window.scrollTo({ top:0, behavior:'smooth' });
+function wireTab(){
+  const on = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
+  on('calPrev', () => { calMonth--; if(calMonth < 0){ calMonth = 11; calYear--; } renderTab(); });
+  on('calNext', () => { calMonth++; if(calMonth > 11){ calMonth = 0; calYear++; } renderTab(); });
+  document.querySelectorAll('[data-day]').forEach(b => b.onclick = () => {
+    const iso = b.dataset.day;
+    me.blocked = me.blocked || [];
+    if(me.blocked.includes(iso)){ me.blocked = me.blocked.filter(d => d !== iso); toast('Available again on ' + fmtDate(iso)); }
+    else { me.blocked.push(iso); toast('Marked unavailable on ' + fmtDate(iso)); }
+    renderTab();
+  });
+  on('photoDrop', () => toast('Photo updated — customers see it right away'));
+  on('pSave', () => toast('Profile saved'));
 }
-$$('#modeSwitch button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
-setMode('apply');
+
+render();
 </script>
 </body>
 </html>

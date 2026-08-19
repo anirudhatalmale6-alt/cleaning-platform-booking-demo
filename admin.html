@@ -1,574 +1,422 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sparrow — Admin dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sparrow — admin dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/app.css">
 <style>
-  .split{display:grid;grid-template-columns:1fr 330px;gap:20px;align-items:start}
-  @media(max-width:1000px){.split{grid-template-columns:1fr}}
-  .assign-card{border:1.5px solid var(--ink-14);border-radius:var(--radius);padding:13px;cursor:pointer;background:transparent;width:100%;text-align:left;font:inherit;color:inherit;transition:.18s var(--ease);display:flex;gap:12px;align-items:center;margin-bottom:9px}
-  .assign-card:hover{border-color:var(--moss)}
-  .assign-card.on{border-color:var(--moss);background:var(--moss-soft)}
-  .assign-card .radio{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--ink-14);flex:0 0 auto;display:grid;place-items:center;margin-left:auto}
-  .assign-card.on .radio{border-color:var(--moss)}
-  .assign-card.on .radio::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--moss)}
-  .best{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--gold);color:#332800;padding:2px 8px;border-radius:999px}
-  .bars{display:grid;gap:9px}
-  .bar-row{display:grid;grid-template-columns:96px 1fr 54px;gap:10px;align-items:center;font-size:13px}
-  .bar{height:9px;border-radius:999px;background:var(--ink-08);overflow:hidden}
-  .bar span{display:block;height:100%;background:var(--moss);border-radius:999px}
-  .bar.clay span{background:var(--clay)}
-  .searchbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-  .searchbar .sb-in{position:relative;flex:1;min-width:200px}
-  .searchbar .sb-in svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-45)}
-  .searchbar input{width:100%;border:1.5px solid var(--ink-14);background:var(--paper-2);border-radius:11px;padding:10px 13px 10px 36px;font:inherit;font-size:14px}
-  .searchbar input:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 4px rgba(44,85,72,.10)}
-  .kv{display:grid;grid-template-columns:150px 1fr;gap:7px 16px;font-size:14px}
-  @media(max-width:520px){.kv{grid-template-columns:1fr;gap:2px 0}.kv dt{margin-top:9px}}
-  .kv dt{color:var(--ink-45);font-size:13px}
-  .kv dd{margin:0;font-weight:500}
+  .searchbar{display:flex;align-items:center;gap:10px;border:1.5px solid var(--ink-14);border-radius:999px;padding:9px 16px;background:var(--paper-2);margin-bottom:14px}
+  .searchbar input{border:0;background:transparent;font:inherit;font-size:14.5px;width:100%;outline:none;color:var(--ink)}
+  .searchbar svg{color:var(--ink-45);flex:0 0 auto}
 </style>
 </head>
 <body>
-
-<main class="wrap shell">
-  <aside class="card side"><div class="side-nav" id="sideNav"></div></aside>
-  <section id="view"></section>
-</main>
-
+<div id="app"></div>
 <script src="assets/app.js"></script>
 <script>
-mountChrome({
-  page:'admin.html', role:'Admin',
-  links:[['admin.html','Dashboard'],['admin.html','Bookings'],['index.html','Website']]
-});
+/* ============================================================
+   Admin dashboard.
 
-const ADMIN = { name:'Lebo', surname:'Ndlovu', initials:'LN', role:'Operations manager' };
+   From the client, 19 Aug: list employees by role (indoor /
+   outdoor); show new registrations; approve or decline them —
+   approve sends a congratulations message, decline takes a comment
+   and sends the reason; show signed-up customers and their order
+   history; and for a new registration, view the submitted form and
+   download the documents.
+   ============================================================ */
+let view = 'overview';
+let custQ = '';
+let roleFilter = 'all';
 
-const pending   = () => DB.bookings.filter(b => b.status === 'pending');
-const upcoming  = () => DB.bookings.filter(b => ['confirmed','enroute','inprogress'].includes(b.status));
-const history   = () => DB.bookings.filter(b => ['completed','cancelled'].includes(b.status));
-const candidates= () => DB.cleaners.filter(c => c.status === 'pending');
-const groupOf   = b => (svcOf(b.service) || {}).group;
+const NAV = [['index.html','Website'],['admin.html','Admin']];
+const app = () => document.getElementById('app');
 
-let view = 'overview', sub = null;
+const pendingApps = () => DB.applications.filter(a => cleaner(a.id) && cleaner(a.id).account === 'pending');
+const newOrders   = () => DB.bookings.filter(b => b.status === 'upcoming' && !isPast(b.date));
 
-const NAV = () => ([
-  { id:'overview',  label:'Overview',        icon:'grid' },
-  { id:'services',  label:'View services',   icon:'cal' },
-  { id:'confirm',   label:'Confirm bookings',icon:'check', badge: pending().length },
-  { id:'candidates',label:'Candidates',      icon:'users', badge: candidates().length },
-  { id:'customers', label:'Customers',       icon:'user' },
-  { id:'upload',    label:'Upload new worker',icon:'upload' },
-  { id:'notifs',    label:'Notifications',   icon:'bell', badge:3 }
-]);
+const ITEMS = () => [
+  { id:'overview', label:'Overview',       icon:'grid' },
+  { id:'orders',   label:'Orders',         icon:'cal',    badge:newOrders().length },
+  { id:'apps',     label:'New registrations', icon:'doc', badge:pendingApps().length },
+  { id:'staff',    label:'Employees',      icon:'users' },
+  { id:'custs',    label:'Customers',      icon:'user' },
+  { id:'outbox',   label:'Sent messages',  icon:'mail' }
+];
 
-function go(v, s){
-  view = v; sub = s || null;
-  sideNav(NAV(), v, go);
-  render();
-  window.scrollTo({ top:0, behavior:'smooth' });
-}
-function render(){
-  $('#view').innerHTML = VIEWS[view]();
-  if(view === 'upload') fillCities();   // populate the city list for the default province
-}
-
-/* ---------- shared fragments ---------- */
-function bookingRow(b, opts = {}){
-  const q = priceBooking(b), cl = cleaner(b.cleaner), cu = custOf(b.cust), ad = address(b.addr);
-  return `<tr>
-    <td class="t-strong mono">${b.id}</td>
-    <td>${fmtDate(b.date)}<div class="t-sub">${b.time}</div></td>
-    <td>${q.serviceName}<div class="t-sub">${q.hoursLabel} · ${groupOf(b)}</div></td>
-    <td><div class="who"><span class="avatar sm ${cu.tone}">${cu.initials}</span>
-      <span><span class="w-n">${cu.name}</span><span class="w-s">${ad.suburb}</span></span></div></td>
-    <td>${cl ? `<div class="who"><span class="avatar sm ${cl.tone}">${cl.initials}</span><span class="w-n">${cl.name} ${cl.surname}</span></div>`
-             : '<span class="pill wait">Unassigned</span>'}</td>
-    <td>${statusPill(b.status)}</td>
-    <td class="num">${money(q.total)}</td>
-    ${opts.action ? `<td class="num">${opts.action(b)}</td>` : ''}
-  </tr>`;
-}
-function bookingTable(list, opts = {}){
-  if(!list.length) return `<div class="card panel"><div class="empty">${ico('cal',32)}<div class="e-t">${opts.empty || 'Nothing here'}</div></div></div>`;
-  return `<div class="tbl-wrap"><table class="tbl">
-    <thead><tr><th>Booking</th><th>When</th><th>Service</th><th>Customer</th><th>Professional</th><th>Status</th><th class="num">Value</th>${opts.action ? '<th></th>' : ''}</tr></thead>
-    <tbody>${list.map(b => bookingRow(b, opts)).join('')}</tbody></table></div>`;
+function shell(){
+  return `${protoBar('admin.html')}${topBar('Admin', NAV, 'admin.html')}
+  <div class="wrap"><div class="shell">
+    <aside class="side"><div class="card side-nav" id="sideNav"></div></aside>
+    <main>
+      <div class="page-head"><h1 id="pgT"></h1><p id="pgS"></p></div>
+      <div id="body"></div>
+    </main>
+  </div></div>`;
 }
 
-/* ---------- views ---------- */
-const VIEWS = {
-
-overview(){
-  const rev = DB.bookings.filter(b => b.status !== 'cancelled')
-                         .reduce((s,b) => s + priceBooking(b).total, 0);
-  const bars = [
-    ['Indoor',  DB.bookings.filter(b => groupOf(b) === 'indoor').length],
-    ['Outdoor', DB.bookings.filter(b => groupOf(b) === 'outdoor').length]
-  ];
-  const maxB = Math.max(...bars.map(b => b[1]));
-
-  return `
-  <div class="page-head" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <div class="avatar lg">${ADMIN.initials}</div>
-    <div>
-      <h1>Welcome back, ${ADMIN.name}</h1>
-      <p>${ADMIN.role} · ${pending().length} booking${pending().length === 1 ? '' : 's'} waiting on you</p>
-    </div>
-  </div>
-
-  <div class="stats" style="margin-bottom:22px">
-    <div class="stat"><div class="s-l">Awaiting confirmation</div><div class="s-v mono">${pending().length}</div><div class="s-d ${pending().length ? 'down' : 'up'}">${pending().length ? 'Needs assigning' : 'All clear'}</div></div>
-    <div class="stat"><div class="s-l">Upcoming jobs</div><div class="s-v mono">${upcoming().length}</div><div class="s-d">Assigned and confirmed</div></div>
-    <div class="stat"><div class="s-l">Active cleaners</div><div class="s-v mono">${DB.cleaners.filter(c => c.status === 'active').length}</div><div class="s-d">${candidates().length} awaiting approval</div></div>
-    <div class="stat"><div class="s-l">Booked value</div><div class="s-v mono">${money(rev)}</div><div class="s-d">incl. VAT</div></div>
-  </div>
-
-  <div class="sect-head"><h2>Quick actions</h2></div>
-  <div class="qa-grid" style="margin-bottom:24px">
-    <button class="qa" onclick="go('services','indoor')">${ico('home',22)}<div><div class="q-t">Indoor cleaning</div><div class="q-s">Upcoming &amp; history</div></div></button>
-    <button class="qa" onclick="go('services','outdoor')">${ico('leaf',22)}<div><div class="q-t">Outdoor cleaning</div><div class="q-s">Upcoming &amp; history</div></div></button>
-    <button class="qa" onclick="go('confirm')">${ico('check',22)}<div><div class="q-t">Confirm bookings</div><div class="q-s">${pending().length} waiting</div></div></button>
-    <button class="qa" onclick="go('candidates')">${ico('users',22)}<div><div class="q-t">Candidates</div><div class="q-s">${candidates().length} new applications</div></div></button>
-    <button class="qa" onclick="go('customers')">${ico('user',22)}<div><div class="q-t">Customers</div><div class="q-s">${DB.customers.length} profiles</div></div></button>
-    <button class="qa" onclick="go('upload')">${ico('upload',22)}<div><div class="q-t">Upload new worker</div><div class="q-s">Add a cleaner manually</div></div></button>
-  </div>
-
-  <div class="split">
-    <div>
-      <div class="sect-head"><h2>Needs your attention</h2>
-        <span class="sh-act"><button class="pill-btn sm" onclick="go('confirm')">Go to queue</button></span></div>
-      ${bookingTable(pending(), {
-        empty:'Every booking is confirmed',
-        action: b => `<button class="btn btn-primary sm" onclick="assignFlow('${b.id}')">Confirm &amp; assign</button>`
-      })}
-    </div>
-    <div>
-      <div class="card panel" style="margin-bottom:16px">
-        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Indoor vs outdoor</h2></div>
-        <div class="bars">${bars.map(([l,v],i) => `<div class="bar-row">
-          <span class="t-sub">${l}</span>
-          <span class="bar ${i ? 'clay' : ''}"><span style="width:${(v/maxB*100).toFixed(0)}%"></span></span>
-          <span class="mono" style="text-align:right;font-weight:600">${v}</span></div>`).join('')}</div>
-      </div>
-      <div class="card panel">
-        <div class="sect-head" style="margin-bottom:12px"><h2 style="font-size:19px">Top cleaners</h2></div>
-        <div class="rows">
-          ${DB.cleaners.filter(c => c.status === 'active').sort((a,b) => b.jobs - a.jobs).slice(0,4)
-            .map(c => `<div style="display:flex;gap:11px;align-items:center">
-              <span class="avatar sm ${c.tone}">${c.initials}</span>
-              <span style="flex:1"><span class="w-n">${c.name} ${c.surname}</span>
-                <span class="w-s" style="display:block">${c.jobs} cleans · ${c.rating.toFixed(2)} ★</span></span>
-              <span class="mono t-sub">${money(c.earnings)}</span>
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>
-  </div>`;
-},
-
-services(){
-  const g = sub || 'indoor';
-  const inGroup = list => list.filter(b => groupOf(b) === g);
-  return `
-  <div class="page-head"><h1>View services</h1><p>Bookings split by indoor and outdoor, exactly as your document lays it out.</p></div>
-  <div class="tabs" style="margin-bottom:18px">
-    <button class="tab ${g === 'indoor' ? 'on' : ''}" onclick="go('services','indoor')">Indoor cleaning</button>
-    <button class="tab ${g === 'outdoor' ? 'on' : ''}" onclick="go('services','outdoor')">Outdoor cleaning</button>
-  </div>
-
-  <div class="sect-head"><h2>Upcoming bookings</h2><span class="sh-sub">${inGroup(upcoming()).length + inGroup(pending()).length} scheduled</span></div>
-  <div style="margin-bottom:26px">${bookingTable(inGroup(pending()).concat(inGroup(upcoming())), {
-    empty:`No upcoming ${g} bookings`,
-    action: b => b.status === 'pending'
-      ? `<button class="btn btn-primary sm" onclick="assignFlow('${b.id}')">Confirm &amp; assign</button>`
-      : `<button class="btn btn-outline sm" onclick="viewBooking('${b.id}')">View</button>`
-  })}</div>
-
-  <div class="sect-head"><h2>Booking history</h2><span class="sh-sub">${inGroup(history()).length} past</span></div>
-  ${bookingTable(inGroup(history()), {
-    empty:`No ${g} history yet`,
-    action: b => `<button class="btn btn-outline sm" onclick="viewBooking('${b.id}')">View</button>`
-  })}`;
-},
-
-confirm(){
-  return `
-  <div class="page-head"><h1>Confirm bookings</h1><p>Every paid booking lands here first. Confirm it and assign a worker, or reject it back to the customer.</p></div>
-  ${pending().length ? '' : `<div class="note">${ico('check',17,2.2)}<span>Queue is clear. Every booking has a professional assigned.</span></div>`}
-  ${bookingTable(pending(), {
-    empty:'Nothing waiting — every booking is confirmed and assigned',
-    action: b => `<button class="btn btn-primary sm" onclick="assignFlow('${b.id}')">Confirm &amp; assign</button>
-                  <button class="btn btn-ghost sm" style="color:var(--clay)" onclick="rejectBooking('${b.id}')">Reject</button>`
-  })}
-
-  <div class="sect-head" style="margin-top:28px"><h2>Confirmed &amp; assigned</h2></div>
-  ${bookingTable(upcoming(), {
-    empty:'Nothing assigned yet',
-    action: b => `<button class="btn btn-outline sm" onclick="assignFlow('${b.id}')">Reassign</button>`
-  })}`;
-},
-
-candidates(){
-  const g = sub || 'indoor';
-  const list = DB.cleaners.filter(c => c.group === g);
-  const news = candidates().filter(c => c.group === g);
-  const card = c => `<div class="row-card">
-    <span class="avatar ${c.tone}">${c.initials}</span>
-    <div class="rc-main">
-      <div class="rc-t">${c.name} ${c.surname} ${c.status === 'pending' ? '<span class="pill wait" style="margin-left:6px">New application</span>' : ''}</div>
-      <div class="rc-s">${c.city}, ${c.prov} · ${c.years} years · ${c.langs.join(', ')}</div>
-      <div class="rc-s">${c.status === 'active' ? `${c.jobs} cleans · ${c.rating.toFixed(2)} ★ · earned ${money(c.earnings)}` : 'Documents awaiting verification'}</div>
-    </div>
-    <div class="rc-act">
-      <button class="btn btn-outline sm" onclick="viewCleaner('${c.id}')">Profile</button>
-      ${c.status === 'pending'
-        ? `<button class="btn btn-primary sm" onclick="approveCleaner('${c.id}')">Approve</button>
-           <button class="btn btn-ghost sm" style="color:var(--clay)" onclick="rejectCleaner('${c.id}')">Reject</button>`
-        : `<span class="pill ok">Active</span>`}
-    </div>
-  </div>`;
-
-  return `
-  <div class="page-head"><h1>Candidates</h1><p>Every worker profile, split by the work they do.</p></div>
-  <div class="tabs" style="margin-bottom:18px">
-    <button class="tab ${g === 'indoor' ? 'on' : ''}" onclick="go('candidates','indoor')">Indoor cleaners</button>
-    <button class="tab ${g === 'outdoor' ? 'on' : ''}" onclick="go('candidates','outdoor')">Outdoor cleaners</button>
-  </div>
-  ${news.length ? `<div class="sect-head"><h2>Awaiting approval</h2><span class="sh-sub">${news.length} new</span></div>
-    <div class="rows" style="margin-bottom:26px">${news.map(card).join('')}</div>` : ''}
-  <div class="sect-head"><h2>All ${g} cleaners</h2><span class="sh-sub">${list.length} profiles</span></div>
-  <div class="rows">${list.filter(c => c.status === 'active').map(card).join('') || `<div class="card panel"><div class="empty">${ico('users',32)}<div class="e-t">No active ${g} cleaners yet</div></div></div>`}</div>`;
-},
-
-customers(){
-  return `
-  <div class="page-head"><h1>Customers</h1><p>Profiles, favourite cleaner and booking history.</p></div>
-  <div class="searchbar">
-    <span class="sb-in">${ico('search',17)}<input id="custQ" placeholder="Search by name, email or phone" oninput="filterCust(this.value)"></span>
-    <button class="btn btn-outline sm" onclick="toast('CSV export queued','doc')">Export CSV</button>
-  </div>
-  <div class="tbl-wrap"><table class="tbl">
-    <thead><tr><th>Customer</th><th>Contact</th><th>Favourite cleaner</th><th class="num">Bookings</th><th class="num">Lifetime spend</th><th>Joined</th><th></th></tr></thead>
-    <tbody id="custBody">${DB.customers.map(custRow).join('')}</tbody>
-  </table></div>`;
-},
-
-upload(){
-  const g = sub || 'indoor';
-  return `
-  <div class="page-head"><h1>Upload new worker</h1><p>For cleaners you recruit off-platform. They appear immediately as an active professional.</p></div>
-  <div class="tabs" style="margin-bottom:18px">
-    <button class="tab ${g === 'indoor' ? 'on' : ''}" onclick="go('upload','indoor')">Indoor cleaner</button>
-    <button class="tab ${g === 'outdoor' ? 'on' : ''}" onclick="go('upload','outdoor')">Outdoor cleaner</button>
-  </div>
-  <div class="split">
-    <div class="card panel">
-      <div class="grid2">
-        <div class="field"><label>Name <span class="req">*</span></label><input id="wName" placeholder="Precious"><div class="err">Required</div></div>
-        <div class="field"><label>Surname <span class="req">*</span></label><input id="wSur" placeholder="Sithole"><div class="err">Required</div></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label>Age <span class="req">*</span></label><input id="wAge" type="number" min="18" max="75" placeholder="34"><div class="err">Must be 18 or older</div></div>
-        <div class="field"><label>Phone number <span class="req">*</span></label><input id="wTel" placeholder="+27 82 000 0000"><div class="err">Required</div></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label>Province</label>
-          <select id="wProv" onchange="fillCities()">${Object.keys(CFG.provinces).map(p => `<option>${p}</option>`).join('')}</select></div>
-        <div class="field"><label>City</label><select id="wCity"></select></div>
-      </div>
-      <div class="field"><label>Photo <span class="req">*</span></label>
-        <div class="drop" id="wDrop" onclick="workerPhoto()">${ico('user',24)}
-          <div class="d-t">Upload head and shoulders photo</div>
-          <div class="d-s">Shown to customers when assigned</div></div>
-        <div class="err">A photo is required</div>
-      </div>
-      <button class="btn btn-primary" style="margin-top:8px" onclick="saveWorker('${g}')">Add ${g} cleaner</button>
-    </div>
-    <div class="card panel">
-      <div class="sect-head" style="margin-bottom:10px"><h2 style="font-size:19px">Recently added</h2></div>
-      <div class="rows">
-        ${DB.cleaners.slice(-4).reverse().map(c => `<div style="display:flex;gap:11px;align-items:center">
-          <span class="avatar sm ${c.tone}">${c.initials}</span>
-          <span style="flex:1"><span class="w-n">${c.name} ${c.surname}</span>
-            <span class="w-s" style="display:block">${c.group} · ${c.city}</span></span>
-          <span class="pill ${c.status === 'active' ? 'ok' : 'wait'}">${c.status === 'active' ? 'Active' : 'Pending'}</span>
-        </div>`).join('')}
-      </div>
-      <div class="note">${ico('info',17,2)}<span>Your document lists Indoor cleaner twice under this heading. I have read the second one as Outdoor — say the word if it was meant to be something else.</span></div>
-    </div>
-  </div>`;
-},
-
-notifs(){
-  const items = [
-    { t:`${pending().length} bookings are waiting for confirmation`, s:'Oldest has been waiting 3 hours', k:'wait' },
-    { t:`${candidates().length} cleaner applications need review`, s:'Documents uploaded, references not yet called', k:'wait' },
-    { t:'Nomsa Mabaso completed SPW-103980', s:'Rated 5 stars by Thandi Mokoena · yesterday', k:'ok' },
-    { t:'Payout run scheduled for Friday 21 Aug', s:`${money(14820)} across 9 cleaners`, k:'live' },
-    { t:'Booking SPW-103551 was cancelled', s:'Free cancellation window · no charge', k:'bad' }
-  ];
-  return `
-  <div class="page-head" style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
-    <div><h1>Notifications</h1><p>Operational alerts across the platform.</p></div>
-    <button class="btn btn-ghost sm" style="margin-left:auto" onclick="toast('All marked as read','check')">Mark all read</button>
-  </div>
-  <div class="rows">${items.map(n => `<div class="row-card">
-    <span class="pill ${n.k}" style="padding:5px;border-radius:50%"></span>
-    <div class="rc-main"><div class="rc-t">${n.t}</div><div class="rc-s">${n.s}</div></div>
-  </div>`).join('')}</div>`;
-}
+const HEADS = {
+  overview:['Welcome back, Lebo','Everything that needs you this morning.'],
+  orders:  ['Orders','Every booking customers have placed, newest first.'],
+  apps:    ['New registrations','Read the form, download the documents, then approve or decline.'],
+  staff:   ['Employees','Everyone on the books, by role.'],
+  custs:   ['Customers','Signed-up customers and what they have ordered.'],
+  outbox:  ['Sent messages','Every automatic email and SMS the platform has sent this session.']
 };
 
-function custRow(c){
-  return `<tr>
-    <td><div class="who"><span class="avatar sm ${c.tone}">${c.initials}</span>
-      <span><span class="w-n">${c.name}</span><span class="w-s">${c.id.toUpperCase()}</span></span></div></td>
-    <td>${c.email}<div class="t-sub">${c.phone}</div></td>
-    <td>${c.fav}</td>
-    <td class="num">${c.bookings}</td>
-    <td class="num">${money(c.spend)}</td>
-    <td>${c.joined}</td>
-    <td class="num"><button class="btn btn-outline sm" onclick="viewCustomer('${c.id}')">Profile</button></td>
+function render(){
+  if(!document.getElementById('body')) app().innerHTML = shell();
+  sideNav(ITEMS(), view, id => { view = id; render(); });
+  document.getElementById('pgT').textContent = HEADS[view][0];
+  document.getElementById('pgS').textContent = HEADS[view][1];
+  document.getElementById('body').innerHTML =
+    ({ overview:vOverview, orders:vOrders, apps:vApps, staff:vStaff, custs:vCusts, outbox:vOutbox })[view]();
+  wire();
+}
+
+/* ---------- overview ---------- */
+function vOverview(){
+  const orders = DB.bookings.filter(b => b.status !== 'cancelled');
+  const revenue = orders.reduce((n, b) => n + priceBooking(b).total, 0);
+  const apps = pendingApps();
+  return `
+    <div class="stats" style="margin-bottom:18px">
+      <div class="stat"><div class="s-l">Orders</div><div class="s-v">${orders.length}</div><div class="s-d">${newOrders().length} still to come</div></div>
+      <div class="stat"><div class="s-l">Taken</div><div class="s-v">${money(revenue)}</div><div class="s-d">across all orders</div></div>
+      <div class="stat"><div class="s-l">Employees</div><div class="s-v">${DB.cleaners.filter(c => c.account === 'approved').length}</div><div class="s-d">approved and working</div></div>
+      <div class="stat"><div class="s-l">Waiting on you</div><div class="s-v">${apps.length}</div><div class="s-d">${apps.length ? 'new registrations' : 'nothing pending'}</div></div>
+    </div>
+
+    <div class="sect-head"><h2>New registrations</h2>
+      <button class="btn btn-outline sm sh-act" data-view="apps">See all</button></div>
+    ${apps.length ? `<div class="rows" style="margin-bottom:22px">${apps.slice(0,3).map(a => {
+      const c = cleaner(a.id);
+      return `<div class="row-card">${portrait(c, 42)}
+        <div class="rc-main"><div class="rc-t">${c.name} ${c.surname}</div>
+          <div class="rc-s">${c.group === 'indoor' ? 'Indoor' : 'Outdoor'} cleaner · ${c.city} · applied ${fmtDate(a.submitted)}</div></div>
+        <div class="rc-act"><button class="btn btn-outline sm" data-form="${c.id}">View form</button></div></div>`;
+    }).join('')}</div>` : `<div class="card panel" style="margin-bottom:22px"><div class="empty">${ico('check',36,1.5)}
+        <div class="e-t">Queue is clear</div><div>No registrations waiting.</div></div></div>`}
+
+    <div class="sect-head"><h2>Latest orders</h2>
+      <button class="btn btn-outline sm sh-act" data-view="orders">See all</button></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Order</th><th>Customer</th><th>Service</th><th>Cleaner</th><th>When</th><th class="num">Total</th></tr></thead>
+      <tbody>${DB.bookings.slice(0,5).map(b => orderRow(b)).join('')}</tbody>
+    </table></div>`;
+}
+
+function orderRow(b){
+  const p = priceBooking(b), c = custOf(b.cust), cl = cleaner(b.cleaner);
+  return `<tr data-order="${b.id}" style="cursor:pointer">
+    <td class="t-strong">${b.id}<div class="t-sub">${STATUS[b.status].label}</div></td>
+    <td>${esc(c ? c.name : '—')}</td>
+    <td>${svcOf(b.service).name}<div class="t-sub">${p.hoursLabel}</div></td>
+    <td>${cl ? `${cl.name} ${cl.surname}` : '—'}</td>
+    <td>${fmtDate(b.date)}<div class="t-sub">${b.time}</div></td>
+    <td class="num">${money(p.total)}</td>
   </tr>`;
 }
-function filterCust(q){
-  q = q.trim().toLowerCase();
-  const hits = DB.customers.filter(c =>
-    !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q));
-  $('#custBody').innerHTML = hits.length
-    ? hits.map(custRow).join('')
-    : `<tr><td colspan="7"><div class="empty" style="padding:26px">${ico('search',28)}<div class="e-t">No customer matches “${q}”</div></div></td></tr>`;
+
+/* ---------- orders ---------- */
+function vOrders(){
+  const list = [...DB.bookings].sort((a, b) => b.date.localeCompare(a.date));
+  return `<div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Order</th><th>Customer</th><th>Service</th><th>Cleaner</th><th>When</th><th class="num">Total</th></tr></thead>
+    <tbody>${list.map(b => orderRow(b)).join('')}</tbody></table></div>
+    <div class="note" style="margin-top:14px">${ico('info',16,2)}
+      <span>Click any row for the full order. The customer picks their own cleaner at checkout, so orders arrive already assigned — nothing here needs your approval.</span></div>`;
 }
 
-/* ============================================================
-   THE CORE ADMIN FLOW — confirm a booking and assign a worker.
-   Candidates are filtered to cleaners who do that kind of work
-   and cover that city; the best match is suggested, never forced.
-   ============================================================ */
-function assignFlow(id){
+function showOrder(id){
   const b = DB.bookings.find(x => x.id === id);
-  const q = priceBooking(b), ad = address(b.addr), cu = custOf(b.cust);
-  const want = groupOf(b);
-
-  const eligible = DB.cleaners
-    .filter(c => c.status === 'active' && c.group === want && c.city === ad.city)
-    .sort((x,y) => y.rating - x.rating);
-  const favName = cu.fav;
-  let picked = b.cleaner || (eligible[0] && eligible[0].id) || null;
-
-  const body = `
-    <dl class="kv" style="margin-bottom:16px">
-      <dt>Service</dt><dd>${q.serviceName} · ${q.hoursLabel}</dd>
-      <dt>When</dt><dd>${fmtDateLong(b.date)} at ${b.time}</dd>
-      <dt>Customer</dt><dd>${cu.name}</dd>
-      <dt>Address</dt><dd>${ad.line}, ${ad.suburb}</dd>
-      <dt>Value</dt><dd class="mono">${money(q.total)} incl. VAT</dd>
-    </dl>
-    <div class="fieldset-t">Assign ${want === 'outdoor' ? 'an' : 'a'} ${want} cleaner in ${ad.city}</div>
-    <div id="assignList">
-      ${eligible.length ? eligible.map((c,i) => `
-        <button class="assign-card ${c.id === picked ? 'on' : ''}" data-cl="${c.id}">
-          <span class="avatar sm ${c.tone}">${c.initials}</span>
-          <span style="flex:1">
-            <span class="w-n">${c.name} ${c.surname}
-              ${`${c.name} ${c.surname}` === favName ? '<span class="best" style="background:var(--clay);color:#fff">Customer favourite</span>' : (i === 0 ? '<span class="best">Best match</span>' : '')}
-            </span>
-            <span class="w-s">${c.rating.toFixed(2)} ★ · ${c.jobs} cleans · ${c.city}</span>
-          </span>
-          <span class="radio"></span>
-        </button>`).join('')
-        : `<div class="empty" style="padding:22px">${ico('users',28)}
-             <div class="e-t">No ${want} cleaner covers ${ad.city}</div>
-             <div>Approve a candidate for this area, or add a worker manually.</div></div>`}
-    </div>`;
-
-  const v = modal({
-    title: b.cleaner ? 'Reassign booking' : 'Confirm booking',
-    sub: `${b.id} · currently ${STATUS[b.status].label.toLowerCase()}`,
-    body,
-    actions:[
-      { label:'Close', cls:'btn-outline' },
-      { label: b.cleaner ? 'Reassign' : 'Confirm & assign', cls:'btn-primary', fn(){
-          if(!picked){ toast('Pick a cleaner first','info'); return true; }
-          b.cleaner = picked;
-          b.status = 'confirmed';
-          b.eta = b.time;
-          const c = cleaner(picked);
-          toast(`${b.id} assigned to ${c.name} ${c.surname}`,'check');
-          go(view, sub);
-        } }
-    ]
-  });
-  v.querySelectorAll('[data-cl]').forEach(el => el.onclick = () => {
-    picked = el.dataset.cl;
-    v.querySelectorAll('[data-cl]').forEach(x => x.classList.toggle('on', x === el));
-  });
-}
-
-function rejectBooking(id){
-  const b = DB.bookings.find(x => x.id === id);
-  modal({
-    title:'Reject this booking?',
-    sub:`${b.id} · ${fmtDate(b.date)} at ${b.time}`,
-    body:`<p style="margin:0 0 12px;color:var(--ink-70)">The customer is notified and the authorised payment is released, not captured.</p>
-          <div class="field"><label>Reason sent to the customer</label>
-            <select><option>No cleaner available in that area</option><option>Outside our service area</option><option>Requested time not possible</option><option>Other</option></select></div>`,
-    actions:[
-      { label:'Keep it', cls:'btn-outline' },
-      { label:'Reject booking', cls:'btn-danger', fn(){
-          b.status = 'cancelled'; b.cleaner = null;
-          toast('Booking rejected and customer notified','check'); go(view, sub);
-        } }
-    ]
-  });
-}
-
-function viewBooking(id){
-  const b = DB.bookings.find(x => x.id === id);
-  const q = priceBooking(b), cl = cleaner(b.cleaner), cu = custOf(b.cust), ad = address(b.addr);
-  const items = (b.extras || []).map(x => CFG.checklist.find(c => c.id === x)).filter(Boolean);
-  modal({
-    title:q.serviceName, sub:`${b.id} · ${STATUS[b.status].label}`,
-    body:`<dl class="kv">
-        <dt>Date &amp; time</dt><dd>${fmtDateLong(b.date)} at ${b.time}</dd>
-        <dt>Duration</dt><dd>${q.hoursLabel}</dd>
-        <dt>Frequency</dt><dd>${q.freqLabel}</dd>
-        <dt>Customer</dt><dd>${cu.name} · ${cu.phone}</dd>
-        <dt>Address</dt><dd>${ad.line}, ${ad.suburb}</dd>
-        <dt>Access notes</dt><dd>${ad.notes}</dd>
-        <dt>Professional</dt><dd>${cl ? `${cl.name} ${cl.surname}` : 'Unassigned'}</dd>
+  const p = priceBooking(b), c = custOf(b.cust), cl = cleaner(b.cleaner), a = addrOf(b);
+  modal({ title:b.id, sub:`${svcOf(b.service).name} · ${fmtDateLong(b.date)} at ${b.time}`, wide:true,
+    body:`<dl class="kv" style="margin-bottom:16px">
+        <dt>Status</dt><dd>${statusPill(b.status)}</dd>
+        <dt>Customer</dt><dd>${esc(c ? c.name : '—')}${c ? ` · ${esc(c.phone)}` : ''}</dd>
+        <dt>Cleaner</dt><dd>${cl ? `${cl.name} ${cl.surname} (${cl.group === 'indoor' ? 'Indoor' : 'Outdoor'})` : '—'}</dd>
+        <dt>Address</dt><dd>${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)}, ${esc(a.city)}</dd>
+        ${a.notes ? `<dt>Access</dt><dd>${esc(a.notes)}</dd>` : ''}
+        ${b.note ? `<dt>Note to cleaner</dt><dd>“${esc(b.note)}”</dd>` : ''}
+        ${b.extras && b.extras.length ? `<dt>Extras</dt><dd>${b.extras.map(x => CFG.extras.find(e => e.id === x).name).join(', ')}</dd>` : ''}
+        <dt>Duration</dt><dd>${p.hoursLabel}</dd>
       </dl>
-      ${items.length ? `<div class="fieldset-t">Checklist</div><div class="chips">${items.map(i => `<span class="chip on">${i.name}</span>`).join('')}</div>` : ''}
-      <div class="fieldset-t">Money</div>
-      <div class="li"><span>Service fee</span><span class="v mono">${money(q.base)}</span></div>
-      <div class="li"><span>Extras</span><span class="v mono">${money(q.extras)}</span></div>
-      <div class="li ${q.discount ? 'disc' : ''}"><span>Discount</span><span class="v mono">${q.discount ? '−' + money(q.discount) : money(0)}</span></div>
-      <div class="li"><span>Platform fee</span><span class="v mono">${money(q.fee)}</span></div>
-      <div class="li"><span>VAT (${(CFG.vatRate*100).toFixed(0)}%)</span><span class="v mono">${money(q.vat)}</span></div>
       <div class="rule"></div>
-      <div class="total"><span class="t-l">Total</span><span class="t-v mono">${money(q.total)}</span></div>`,
-    actions:[{ label:'Close', cls:'btn-outline' }]
-  });
+      <div class="li"><span>Flat rate</span><span class="v">${money(p.flat)}</span></div>
+      <div class="li"><span>${p.serviceHoursLabel} @ ${money(CFG.hourlyRate)}/hr</span><span class="v">${money(p.labour)}</span></div>
+      ${p.extras ? `<div class="li"><span>Extra tasks</span><span class="v">${money(p.extras)}</span></div>` : ''}
+      <div class="li"><span>Service fee</span><span class="v">${money(p.fee)}</span></div>
+      <div class="rule"></div>
+      <div class="total"><span class="t-l">Total</span><span class="t-v">${money(p.total)}</span></div>
+      ${b.rating ? `<div class="rule"></div><div class="review"><div class="rv-h"><span class="stars">${starRow(b.rating.stars)}</span> ${esc(c ? c.name : '')}</div>
+        ${b.rating.comment ? `<div class="rv-b">“${esc(b.rating.comment)}”</div>` : ''}</div>` : ''}`,
+    actions:[{ label:'Close', cls:'btn-primary' }] });
 }
 
-function viewCleaner(id){
-  const c = cleaner(id);
-  modal({
-    title:`${c.name} ${c.surname}`, sub:`${c.group} cleaner · ${c.status === 'active' ? 'Active' : 'Awaiting approval'}`,
-    body:`<div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">
-        <span class="avatar lg ${c.tone}">${c.initials}</span>
-        <div><div class="stars">${starRow(c.rating)} <span class="t-sub" style="letter-spacing:0">${c.rating ? c.rating.toFixed(2) : 'not yet rated'}</span></div>
-        <div class="t-sub">${c.jobs} cleans · ${c.years} years experience</div></div>
+/* ---------- new registrations ---------- */
+function vApps(){
+  const apps = pendingApps();
+  if(!apps.length) return `<div class="card panel"><div class="empty">${ico('check',40,1.5)}
+    <div class="e-t">Nothing waiting</div><div>Every registration has been dealt with.</div></div></div>`;
+  return `<div class="rows">${apps.map(a => {
+    const c = cleaner(a.id);
+    return `<div class="row-card">
+      ${portrait(c, 54)}
+      <div class="rc-main">
+        <div class="rc-t">${c.name} ${c.surname}</div>
+        <div class="rc-s">${c.group === 'indoor' ? 'Indoor' : 'Outdoor'} cleaner · ${c.city}, ${c.prov} · ${c.years} years · applied ${fmtDate(a.submitted)}</div>
       </div>
-      <dl class="kv">
-        <dt>Works in</dt><dd>${c.city}, ${c.prov}</dd>
+      <div class="rc-act">
+        <button class="btn btn-outline sm" data-form="${c.id}">View form</button>
+        <button class="btn btn-primary sm" data-approve="${c.id}">Approve</button>
+        <button class="btn btn-danger sm" data-decline="${c.id}">Decline</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function showForm(id){
+  const c = cleaner(id);
+  const a = DB.applications.find(x => x.id === id);
+  modal({ title:`${c.name} ${c.surname}`, sub:`Submitted ${a ? fmtDateLong(a.submitted) : '—'}`, wide:true,
+    body:`
+      <div class="pro-line" style="margin-bottom:16px">${portrait(c, 72)}
+        <div><div class="t-strong">${c.name} ${c.surname}</div>
+          <div class="mini">${c.group === 'indoor' ? 'Indoor' : 'Outdoor'} cleaner · ${c.years} years</div>
+          <div class="mini">${ACCOUNT[c.account].label}</div></div></div>
+      <dl class="kv" style="margin-bottom:16px">
+        <dt>Mobile</dt><dd>+27 82 000 0000</dd>
+        <dt>Email</dt><dd>${esc(c.name.toLowerCase())}.${esc(c.surname[0].toLowerCase())}@example.co.za</dd>
+        <dt>Province</dt><dd>${esc(c.prov)}</dd>
+        <dt>Cities</dt><dd>${esc(c.city)}</dd>
         <dt>Languages</dt><dd>${c.langs.join(', ')}</dd>
-        <dt>Total earned</dt><dd class="mono">${money(c.earnings)}</dd>
+        <dt>Own transport</dt><dd>Yes</dd>
+        <dt>ID number</dt><dd>9•••••••••••3</dd>
+      </dl>
+      <div class="fieldset-t">References</div>
+      <dl class="kv" style="margin-bottom:16px">
+        <dt>1</dt><dd>Mrs A. Fourie · 082 111 2222 · weekly clean, 4 years</dd>
+        <dt>2</dt><dd>Riaan van Wyk · 083 220 7712 · office clean, 2 years</dd>
       </dl>
       <div class="fieldset-t">Documents</div>
-      <div class="li"><span>ID / passport / permit</span><span class="pill ${c.status === 'active' ? 'ok' : 'wait'}">${c.status === 'active' ? 'Verified' : 'Uploaded'}</span></div>
-      <div class="li"><span>Head &amp; shoulders photo</span><span class="pill ${c.status === 'active' ? 'ok' : 'wait'}">${c.status === 'active' ? 'Verified' : 'Uploaded'}</span></div>
-      <div class="li"><span>References</span><span class="pill ${c.status === 'active' ? 'ok' : 'wait'}">${c.status === 'active' ? '2 of 2 called' : 'Not called'}</span></div>
-      <div class="li"><span>Criminal record declared</span><span class="pill ${c.status === 'active' ? 'ok' : 'mute'}">${c.status === 'active' ? 'None · clearance valid' : 'Pending check'}</span></div>`,
-    actions: c.status === 'pending'
-      ? [{ label:'Close', cls:'btn-outline' }, { label:'Approve cleaner', cls:'btn-primary', fn(){ approveCleaner(id); } }]
-      : [{ label:'Close', cls:'btn-outline' }]
-  });
-}
-
-function approveCleaner(id){
-  const c = cleaner(id);
-  c.status = 'active';
-  toast(`${c.name} ${c.surname} approved — can now be assigned`,'check');
-  go('candidates', c.group);
-}
-function rejectCleaner(id){
-  const c = cleaner(id);
-  modal({
-    title:`Reject ${c.name} ${c.surname}?`,
-    sub:'The applicant is notified by SMS',
-    body:`<div class="field"><label>Reason</label><select>
-        <option>Documents could not be verified</option>
-        <option>References did not check out</option>
-        <option>No demand in that area right now</option>
-        <option>Other</option></select></div>`,
+      <div class="docs">${DOCS.map(d => `<div class="doc-row">${ico('doc',20,1.8)}
+        <div class="dr-main"><div class="dr-t">${d.name}</div><div class="dr-s">${d.file} · ${d.size}</div></div>
+        <button class="btn btn-outline sm" data-dl="${d.file}">${ico('download',15,2)} Download</button></div>`).join('')}</div>
+      <div class="note" style="margin-top:14px">${ico('info',16,2)}
+        <span>Downloads are stubbed until there is a backend holding the real uploads. The button proves the wiring, not the file.</span></div>`,
     actions:[
-      { label:'Keep', cls:'btn-outline' },
-      { label:'Reject application', cls:'btn-danger', fn(){
-          DB.cleaners.splice(DB.cleaners.findIndex(x => x.id === id), 1);
-          toast('Application rejected','check'); go('candidates', c.group);
+      { label:'Close', cls:'btn-outline' },
+      { label:'Decline', cls:'btn-danger', fn:() => { setTimeout(() => declineFlow(id), 60); } },
+      { label:'Approve', cls:'btn-primary', fn:() => { setTimeout(() => approve(id), 60); } }
+    ] });
+}
+
+function approve(id){
+  const c = cleaner(id);
+  c.account = 'approved';
+  DB.applications = DB.applications.filter(x => x.id !== id);
+  render();
+  toast(`${c.name} approved — they can sign in now`);
+  sendNotice({ channel:'email', to:`${c.name.toLowerCase()}.${c.surname[0].toLowerCase()}@example.co.za`,
+    subject:'Congratulations — you are approved to work with Sparrow',
+    body:`<h4>Welcome aboard, ${c.name}.</h4>
+      <p>Your application has been approved. You can sign in to your cleaner dashboard right now.</p>
+      <p>First thing to do: open your calendar and block off any days you cannot work. Customers in ${esc(c.city)} will see you on every day you leave open, and they book you directly.</p>
+      <p><a class="m-btn" href="#">Sign in to your dashboard</a></p>
+      <p style="color:#6b7a70;font-size:12.5px">You are listed as ${c.group === 'indoor' ? 'an indoor' : 'an outdoor'} cleaner covering ${esc(c.city)}.</p>` });
+}
+
+function declineFlow(id){
+  const c = cleaner(id);
+  const v = modal({ title:`Decline ${c.name} ${c.surname}`,
+    sub:'The reason you write is sent to them, so write it as you want them to read it.',
+    body:`<div class="field"><label>Why are you declining? <span class="req">*</span></label>
+        <textarea id="dcReason" rows="4" placeholder="e.g. The criminal record check came back unresolved."></textarea>
+        <div class="err" id="dcErr" style="display:none">Write a reason — it goes to the applicant.</div></div>
+      <div class="field"><label>Send it by</label>
+        <div class="radios" id="dcCh"><button data-c="email" class="on">Email</button><button data-c="sms">SMS</button></div></div>`,
+    actions:[
+      { label:'Cancel', cls:'btn-outline' },
+      { label:'Decline and send', cls:'btn-danger', fn:(veil) => {
+          const t = veil.querySelector('#dcReason').value.trim();
+          if(t.length < 8){ veil.querySelector('#dcErr').style.display = 'block'; return true; }
+          const ch = veil.querySelector('#dcCh .on').dataset.c;
+          c.account = 'declined'; c.declineReason = t;
+          DB.applications = DB.applications.filter(x => x.id !== id);
+          render();
+          toast(`${c.name} declined — ${ch === 'sms' ? 'SMS' : 'email'} sent`);
+          setTimeout(() => sendNotice({ channel:ch,
+            to: ch === 'sms' ? `${c.name} ${c.surname} · +27 82 000 0000`
+                             : `${c.name.toLowerCase()}.${c.surname[0].toLowerCase()}@example.co.za`,
+            subject: ch === 'sms' ? '' : 'About your Sparrow application',
+            body:`<p>Hi ${c.name},</p>
+              <p>Thank you for applying to work with Sparrow. We are not able to take your application further at this time.</p>
+              <p><b>Reason:</b> ${esc(t)}</p>
+              <p>You are welcome to apply again once that changes.</p>` }), 80);
         } }
-    ]
+    ] });
+  v.querySelectorAll('#dcCh button').forEach(b => b.onclick = () => {
+    v.querySelectorAll('#dcCh button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
   });
 }
 
-function viewCustomer(id){
+/* ---------- employees, by role ---------- */
+function vStaff(){
+  const all = DB.cleaners.filter(c => c.account !== 'pending');
+  const list = roleFilter === 'all' ? all : all.filter(c => c.group === roleFilter);
+  const group = g => list.filter(c => c.group === g);
+  const block = (g, title) => {
+    const rows = group(g);
+    if(!rows.length) return '';
+    return `<div class="sect-head" style="margin-top:20px"><h2>${title}</h2>
+      <div class="sh-sub">${rows.length} on the books</div></div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>Employee</th><th>Area</th><th>Rating</th><th>Jobs</th><th>Account</th><th></th></tr></thead>
+        <tbody>${rows.map(c => {
+          const r = ratingOf(c.id);
+          const done = DB.bookings.filter(b => b.cleaner === c.id && b.status === 'completed').length;
+          return `<tr>
+            <td><div class="who">${portrait(c, 34)}<div><div class="w-n">${c.name} ${c.surname}</div>
+              <div class="w-s">${c.years} years · ${c.langs.slice(0,2).join(', ')}</div></div></div></td>
+            <td>${esc(c.city)}<div class="t-sub">${esc(c.prov)}</div></td>
+            <td>${r ? `<span class="stars">${starRow(r)}</span><div class="t-sub">${r.toFixed(2)}</div>` : '<span class="t-sub">no ratings</span>'}</td>
+            <td class="num">${done}</td>
+            <td><span class="pill ${ACCOUNT[c.account].cls}">${ACCOUNT[c.account].label}</span></td>
+            <td><button class="btn btn-outline sm" data-staff="${c.id}">Open</button></td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+  };
+  return `<div class="chips" style="margin-bottom:6px">
+      ${[['all','Everyone'],['indoor','Indoor'],['outdoor','Outdoor']].map(([k,l]) =>
+        `<button class="chip ${roleFilter === k ? 'on' : ''}" data-role="${k}">${l}</button>`).join('')}
+    </div>
+    ${block('indoor','Indoor cleaners')}
+    ${block('outdoor','Outdoor cleaners')}
+    ${list.length ? '' : `<div class="card panel"><div class="empty">${ico('users',40,1.4)}<div class="e-t">Nobody in this role</div></div></div>`}`;
+}
+
+function showStaff(id){
+  const c = cleaner(id);
+  const jobs = DB.bookings.filter(b => b.cleaner === id);
+  const revs = reviewsFor(id);
+  const earned = jobs.filter(b => b.status === 'completed')
+    .reduce((n, b) => { const p = priceBooking(b); return n + p.labour + p.extras; }, 0);
+  modal({ title:`${c.name} ${c.surname}`, sub:`${c.group === 'indoor' ? 'Indoor' : 'Outdoor'} cleaner · ${c.city}`, wide:true,
+    body:`<div class="pro-line" style="margin-bottom:16px">${portrait(c, 72)}
+        <div><div class="mini">${ratingOf(id) ? `${starRow(ratingOf(id))} ${ratingOf(id).toFixed(2)}` : 'No ratings yet'}</div>
+          <div class="mini">${jobs.filter(b => b.status === 'completed').length} completed · ${money(earned)} earned</div>
+          <div class="mini">Account ${ACCOUNT[c.account].label.toLowerCase()}</div></div></div>
+      ${(c.blocked || []).length ? `<div class="note warn">${ico('cal',16,2)}
+        <span>Unavailable on ${c.blocked.map(fmtDate).join(', ')} — they blocked these off themselves.</span></div>` : ''}
+      <div class="fieldset-t">Bookings</div>
+      ${jobs.length ? `<div class="tbl-wrap"><table class="tbl" style="min-width:0">
+        <thead><tr><th>Order</th><th>When</th><th>Status</th></tr></thead>
+        <tbody>${jobs.map(b => `<tr><td class="t-strong">${b.id}</td><td>${fmtDate(b.date)}</td><td>${statusPill(b.status)}</td></tr>`).join('')}</tbody>
+      </table></div>` : '<div class="mini">No bookings yet.</div>'}
+      ${revs.length ? `<div class="fieldset-t">Ratings</div>
+        ${revs.map(v => `<div class="review"><div class="rv-h"><span class="stars">${starRow(v.stars)}</span> ${esc(v.cust)} · ${fmtDate(v.date)}</div>
+          ${v.comment ? `<div class="rv-b">“${esc(v.comment)}”</div>` : ''}</div>`).join('')}` : ''}`,
+    actions:[{ label:'Close', cls:'btn-primary' }] });
+}
+
+/* ---------- customers ---------- */
+function vCusts(){
+  const q = custQ.toLowerCase();
+  const list = DB.customers.filter(c =>
+    !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q));
+  return `<div class="searchbar">${ico('search',18,2)}
+      <input id="custSearch" placeholder="Search by name, email or number" value="${esc(custQ)}"></div>
+    ${list.length ? `<div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Customer</th><th>Contact</th><th>Orders</th><th class="num">Spent</th><th></th></tr></thead>
+      <tbody id="custBody">${list.map(c => {
+        const orders = DB.bookings.filter(b => b.cust === c.id && b.status !== 'cancelled');
+        const spend = orders.reduce((n, b) => n + priceBooking(b).total, 0);
+        return `<tr>
+          <td><div class="who"><div class="avatar sm ${c.tone}">${c.initials}</div>
+            <div><div class="w-n">${esc(c.name)}</div><div class="w-s">Joined ${c.joined}</div></div></div></td>
+          <td>${esc(c.email)}<div class="t-sub">${esc(c.phone)}</div></td>
+          <td class="num">${orders.length}</td>
+          <td class="num">${money(spend)}</td>
+          <td><button class="btn btn-outline sm" data-cust="${c.id}">Order history</button></td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`
+    : `<div class="card panel"><div class="empty">${ico('search',40,1.4)}<div class="e-t">Nobody matches “${esc(custQ)}”</div></div></div>`}`;
+}
+
+function showCust(id){
   const c = custOf(id);
-  const theirs = DB.bookings.filter(b => b.cust === id);
-  modal({
-    title:c.name, sub:`${c.id.toUpperCase()} · joined ${c.joined}`,
-    body:`<dl class="kv">
-        <dt>Email</dt><dd>${c.email}</dd>
-        <dt>Phone</dt><dd>${c.phone}</dd>
-        <dt>Favourite cleaner</dt><dd>${c.fav}</dd>
-        <dt>Total bookings</dt><dd class="mono">${c.bookings}</dd>
-        <dt>Lifetime spend</dt><dd class="mono">${money(c.spend)}</dd>
-      </dl>
-      <div class="fieldset-t">Booking history</div>
-      ${theirs.length ? theirs.map(b => {
-        const q = priceBooking(b), cl = cleaner(b.cleaner);
-        return `<div class="li"><span>${fmtDate(b.date)} · ${q.serviceName}<br>
-          <span class="t-sub">${b.id} · ${cl ? cl.name : 'unassigned'}</span></span>
-          <span class="v mono">${money(q.total)}<br>${statusPill(b.status)}</span></div>`;
-      }).join('') : '<p class="t-sub">No bookings on this profile yet.</p>'}`,
-    actions:[{ label:'Close', cls:'btn-outline' }]
+  const orders = DB.bookings.filter(b => b.cust === id).sort((a, b) => b.date.localeCompare(a.date));
+  const spend = orders.filter(b => b.status !== 'cancelled').reduce((n, b) => n + priceBooking(b).total, 0);
+  modal({ title:c.name, sub:`${esc(c.email)} · ${esc(c.phone)} · joined ${c.joined}`, wide:true,
+    body:`<div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+        <div class="stat"><div class="s-l">Orders</div><div class="s-v">${orders.length}</div></div>
+        <div class="stat"><div class="s-l">Spent</div><div class="s-v">${money(spend)}</div></div>
+        <div class="stat"><div class="s-l">Ratings left</div><div class="s-v">${orders.filter(b => b.rating).length}</div></div>
+      </div>
+      ${orders.length ? `<div class="tbl-wrap"><table class="tbl" style="min-width:0">
+        <thead><tr><th>Order</th><th>Service</th><th>Cleaner</th><th>When</th><th class="num">Total</th></tr></thead>
+        <tbody>${orders.map(b => { const cl = cleaner(b.cleaner);
+          return `<tr><td class="t-strong">${b.id}<div class="t-sub">${STATUS[b.status].label}</div></td>
+            <td>${svcOf(b.service).name}</td><td>${cl ? cl.name : '—'}</td>
+            <td>${fmtDate(b.date)}</td><td class="num">${money(priceBooking(b).total)}</td></tr>`; }).join('')}
+      </tbody></table></div>` : `<div class="mini">No orders yet.</div>`}`,
+    actions:[{ label:'Close', cls:'btn-primary' }] });
+}
+
+/* ---------- outbox ---------- */
+function vOutbox(){
+  if(!SENT.length) return `<div class="card panel"><div class="empty">${ico('mail',40,1.4)}
+    <div class="e-t">Nothing sent yet</div>
+    <div>Approve or decline a registration, or place an order on the website, and the message lands here.</div></div></div>`;
+  return `<div class="rows">${SENT.map((m, i) => `<div class="row-card">
+      ${ico(m.channel === 'sms' ? 'chat' : 'mail', 20, 1.8)}
+      <div class="rc-main"><div class="rc-t">${esc(m.subject || 'SMS')}</div>
+        <div class="rc-s">To ${esc(m.to)} · ${m.at}</div></div>
+      <div class="rc-act"><button class="btn btn-outline sm" data-sent="${i}">Read</button></div>
+    </div>`).join('')}</div>`;
+}
+
+/* ---------- wiring ---------- */
+function wire(){
+  document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { view = b.dataset.view; render(); });
+  document.querySelectorAll('[data-order]').forEach(r => r.onclick = () => showOrder(r.dataset.order));
+  document.querySelectorAll('[data-form]').forEach(b => b.onclick = e => { e.stopPropagation(); showForm(b.dataset.form); });
+  document.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => approve(b.dataset.approve));
+  document.querySelectorAll('[data-decline]').forEach(b => b.onclick = () => declineFlow(b.dataset.decline));
+  document.querySelectorAll('[data-staff]').forEach(b => b.onclick = () => showStaff(b.dataset.staff));
+  document.querySelectorAll('[data-cust]').forEach(b => b.onclick = () => showCust(b.dataset.cust));
+  document.querySelectorAll('[data-role]').forEach(b => b.onclick = () => { roleFilter = b.dataset.role; render(); });
+  document.querySelectorAll('[data-sent]').forEach(b => b.onclick = () => {
+    const m = SENT[+b.dataset.sent];
+    modal({ title:m.channel === 'sms' ? 'SMS' : 'Email', sub:`To ${esc(m.to)}`, wide:true,
+      body:`<div class="mailer"><div class="mail-hd">
+          <div><span class="mail-lbl">To</span> ${esc(m.to)}</div>
+          ${m.subject ? `<div><span class="mail-lbl">Subject</span> ${esc(m.subject)}</div>` : ''}
+        </div><div class="mail-bd">${m.body}</div></div>`,
+      actions:[{ label:'Close', cls:'btn-primary' }] });
   });
+
+  const s = document.getElementById('custSearch');
+  if(s){
+    s.oninput = () => {
+      custQ = s.value;
+      const pos = s.selectionStart;
+      render();
+      const el = document.getElementById('custSearch');
+      el.focus(); el.setSelectionRange(pos, pos);
+    };
+  }
+  document.querySelectorAll('[data-dl]').forEach(b => b.onclick = () =>
+    toast('Downloading ' + b.dataset.dl, 'download'));
 }
 
-/* ---------- upload new worker ---------- */
-let workerPic = null;
-function fillCities(){
-  const p = $('#wProv').value;
-  $('#wCity').innerHTML = CFG.provinces[p].map(c => `<option>${c}</option>`).join('');
-}
-function workerPhoto(){
-  workerPic = 'worker.jpg';
-  const el = $('#wDrop');
-  el.classList.add('filled');
-  el.innerHTML = `${ico('doc',22)}<div><div class="d-t">worker.jpg</div><div class="d-s">Uploaded · tap to replace</div></div>`;
-  el.closest('.field').classList.remove('bad');
-}
-function saveWorker(group){
-  const f = (sel, cond) => { const el = $(sel); el.closest('.field').classList.toggle('bad', cond); return cond; };
-  let fail = false;
-  fail |= f('#wName', !$('#wName').value.trim());
-  fail |= f('#wSur',  !$('#wSur').value.trim());
-  fail |= f('#wAge',  !($('#wAge').value >= 18 && $('#wAge').value <= 75));
-  fail |= f('#wTel',  $('#wTel').value.replace(/\D/g,'').length < 9);
-  fail |= f('#wDrop', !workerPic);
-  if(fail){ toast('Please complete the highlighted fields','info'); return; }
-
-  const name = $('#wName').value.trim(), sur = $('#wSur').value.trim();
-  DB.cleaners.push({
-    id:'cl' + (DB.cleaners.length + 1), name, surname:sur,
-    initials:(name[0] + sur[0]).toUpperCase(),
-    rating:0, jobs:0, years:0, langs:['English'], group,
-    city:$('#wCity').value, prov:$('#wProv').value,
-    status:'active', fav:false, tone:['','sky','clay','gold'][DB.cleaners.length % 4], earnings:0
-  });
-  workerPic = null;
-  toast(`${name} ${sur} added as a ${group} cleaner`,'check');
-  go('upload', group);
-}
-
-go('overview');
+app().innerHTML = shell();
+render();
 </script>
 </body>
 </html>

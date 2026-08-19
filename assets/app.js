@@ -1,72 +1,75 @@
 /* ============================================================
    Sparrow — shared config, mock data and UI helpers.
 
-   PRICING NOTE: every rate below is a PLACEHOLDER. The spec fixes
-   the *structure* (rooms -> 40 min each -> hours; office by unit
-   size band; VAT as its own checkout line) but not the numbers.
-   All of it lives here so the admin dashboard edits data, never
-   logic, and so real rates drop in without touching any screen.
+   PRICING comes from the client's message of 19 Aug 2026 and is
+   used verbatim:
+
+     R35 per hour · R35 service fee · R155 flat rate
+     1–2 bedroom est 4h · 3–4 bedroom est 6h · 5+ bedroom est 8h
+     extras priced and timed per his list
+     a cleaner may not be booked past 10 hours
+
+   Anything still marked PLACEHOLDER is mine and is waiting on him.
+   Every number lives in this one object so the admin dashboard
+   edits data, never logic.
    ============================================================ */
 const CFG = {
   currency: 'R',
-  minutesPerRoom: 40,          // from the customer spec, verbatim
-  minHours: 2,                 // shortest job we will dispatch a cleaner for
-  hourlyRate: 120,             // PLACEHOLDER — awaiting client
-  vatRate: 0.15,               // South African standard rate, added on top
-  vatRegistered: true,
-  serviceFeePct: 0.07,         // platform fee on the net
 
-  unitTypes: ['House', 'Flat / Apartment', 'Townhouse', 'Cottage', 'Bachelor unit'],
+  /* --- the client's four price levers --- */
+  hourlyRate: 35,      // R35 per hour
+  serviceFee: 35,      // R35 service fee, once per booking
+  flatRate: 155,       // R155 flat rate, once per booking
 
-  // Office cleaning is priced by unit size band x number of units
-  officeBands: [
-    { id:'xs', label:'Under 50 m²',  hours:2,  price:340 },
-    { id:'s',  label:'50 – 120 m²',  hours:3,  price:520 },
-    { id:'m',  label:'120 – 250 m²', hours:5,  price:820 },
-    { id:'l',  label:'250 – 500 m²', hours:8,  price:1280 },
-    { id:'xl', label:'Over 500 m²',  hours:12, price:1850 }
+  /* --- the client's time rules --- */
+  maxHours: 10,        // "employees are only allowed to work a maximum of 10 hours"
+  stepMins: 30,        // hours move in 30-minute steps
+  reduceMins: 30,      // the customer may take at most 30 min OFF the estimate
+
+  /* Unit size -> estimated hours. His words: "these are just estimates
+     for the unit size and could add more hours."                        */
+  bedroomBands: [
+    { id:'b12', label:'1 – 2 bedroom', hours:4 },
+    { id:'b34', label:'3 – 4 bedroom', hours:6 },
+    { id:'b5',  label:'5+ bedroom',    hours:8 }
   ],
 
+  propertyTypes: ['House', 'Flat / Apartment', 'Townhouse', 'Cottage', 'Bachelor unit'],
+
+  /* Extra tasks — his list, in his order. Each adds BOTH money and time. */
+  extras: [
+    { id:'oven',     name:'Oven clean',                mins:30,  price:35  },
+    { id:'fridge',   name:'Fridge clean',              mins:30,  price:35  },
+    { id:'cupboard', name:'Cupboard clean',            mins:60,  price:35  },
+    { id:'washfold', name:'Basic wash, dry and fold',  mins:60,  price:180 },
+    { id:'washiron', name:'Wash, dry and iron',        mins:120, price:250 }
+  ],
+
+  /* Strictly laundry — pick a wash, then pick a finish. */
+  laundryWash: [
+    { id:'hand',    name:'Hand wash',            hours:5, sub:'Delicates and hand-wash-only fabrics' },
+    { id:'machine', name:'Washing machine wash', hours:4, sub:'Standard machine load' }
+  ],
+  laundryFinish: [
+    { id:'dryfold', name:'Dry & fold',        hours:2,   sub:'Line or tumble dried, folded' },
+    { id:'dryiron', name:'Dry, iron & fold',  hours:3.5, sub:'Dried, pressed and folded' }
+  ],
+
+  /* Services. `estHours` on the non-bedroom services is a PLACEHOLDER —
+     the client has priced indoor house cleaning and laundry, not these. */
   services: [
-    { id:'standard', group:'indoor',  name:'Standard house cleaning', model:'rooms',  icon:'home',    mins:0 },
-    { id:'deep',     group:'indoor',  name:'Deep clean',              model:'rooms',  icon:'sparkle', roomFactor:1.5 },
-    { id:'move',     group:'indoor',  name:'Move-in / move-out',      model:'rooms',  icon:'box',     roomFactor:1.8 },
-    { id:'office',   group:'indoor',  name:'Office cleaning',         model:'office', icon:'office' },
-    { id:'laundry',  group:'indoor',  name:'Laundry & ironing',       model:'flat',   icon:'shirt',   price:220, hours:2 },
-    { id:'outdoor',  group:'outdoor', name:'Outdoor cleaning',        model:'flat',   icon:'leaf',    price:360, hours:2.5 },
-    { id:'garden',   group:'outdoor', name:'Gardening',               model:'flat',   icon:'shovel',  price:400, hours:3 },
-    { id:'windows',  group:'outdoor', name:'Window cleaning',         model:'flat',   icon:'window',  price:300, hours:2 },
-    { id:'pool',     group:'outdoor', name:'Pool service',            model:'flat',   icon:'wave',    price:380, hours:1.5 }
+    { id:'standard', group:'indoor',  name:'Standard house cleaning', model:'bedrooms', icon:'home',    addHours:0,   desc:'Kitchen, bathrooms, bedrooms and living areas' },
+    { id:'deep',     group:'indoor',  name:'Deep clean',              model:'bedrooms', icon:'sparkle', addHours:2,   desc:'Everything in a standard clean, done to the corners', placeholder:true },
+    { id:'move',     group:'indoor',  name:'Move-in / move-out',      model:'bedrooms', icon:'box',     addHours:3,   desc:'Empty property, cupboards and appliances inside', placeholder:true },
+    { id:'laundry',  group:'indoor',  name:'Laundry & ironing',       model:'laundry',  icon:'shirt',   desc:'Wash, dry, iron and fold' },
+    { id:'office',   group:'indoor',  name:'Office cleaning',         model:'hours',    icon:'office',  estHours:5,   desc:'Desks, floors, kitchen and bathrooms', placeholder:true },
+    { id:'outdoor',  group:'outdoor', name:'Outdoor cleaning',        model:'hours',    icon:'leaf',    estHours:4,   desc:'Patios, driveways, walls and paving', placeholder:true },
+    { id:'garden',   group:'outdoor', name:'Gardening',               model:'hours',    icon:'shovel',  estHours:4,   desc:'Mowing, weeding, trimming and clearing', placeholder:true },
+    { id:'windows',  group:'outdoor', name:'Window cleaning',         model:'hours',    icon:'window',  estHours:3,   desc:'Inside and outside, frames and sills', placeholder:true },
+    { id:'pool',     group:'outdoor', name:'Pool service',            model:'hours',    icon:'wave',    estHours:2,   desc:'Skim, vacuum, brush and chemical check', placeholder:true }
   ],
 
-  // Booking checklist — taken from the customer document, in its order
-  checklist: [
-    { id:'general', name:'General cleaning',   price:0,   mins:0,  note:'included' },
-    { id:'laundry', name:'Laundry',            price:85,  mins:40 },
-    { id:'ironing', name:'Ironing',            price:100, mins:60 },
-    { id:'windows', name:'Windows',            price:90,  mins:30 },
-    { id:'oven',    name:'Oven',               price:120, mins:35 },
-    { id:'fridge',  name:'Fridge',             price:90,  mins:25 },
-    { id:'wardrobe',name:'Wardrobe packing',   price:150, mins:50 },
-    { id:'rug',     name:'Rug cleaning',       price:180, mins:45 },
-    { id:'garage',  name:'Garage cleaning',    price:200, mins:60 },
-    { id:'washing', name:'Laundry washing',    price:80,  mins:35 },
-    { id:'drying',  name:'Laundry drying',     price:60,  mins:30 },
-    { id:'fulllaun',name:'Full laundry service',price:260,mins:110 }
-  ],
-
-  frequencies: [
-    { id:'once',   title:'One-off',   sub:'Just this time',      mult:1.00, save:0  },
-    { id:'weekly', title:'Weekly',    sub:'Same pro, same slot', mult:0.85, save:15 },
-    { id:'biweek', title:'Bi-weekly', sub:'Every 2 weeks',       mult:0.90, save:10 }
-  ],
-
-  promos: {
-    SPARROW20: { type:'pct',  val:.20, label:'20% off your first clean' },
-    WELCOME50: { type:'flat', val:50,  label:'R50 off' }
-  },
-
-  slots: ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00'],
+  slots: ['07:00','08:00','09:00','10:00','11:00','12:00','13:00'],
 
   provinces: {
     'Western Cape':   ['Cape Town','Stellenbosch','Paarl','George','Somerset West'],
@@ -81,83 +84,129 @@ const CFG = {
   }
 };
 
-/* ---------- money / time ---------- */
-const money = n => CFG.currency + Math.round(n).toLocaleString('en-ZA');
+/* ---------- money / time ----------
+   Half an hour at R35 is R17.50, so totals land on 50c. Rounding those
+   to a whole rand would quietly charge more than the price list says —
+   show the cents instead, and only when there are any.                */
+const money = n => {
+  const c = Math.round(n * 100);
+  const whole = Math.trunc(c / 100).toLocaleString('en-ZA').replace(/ /g, ' ');
+  return CFG.currency + whole + (c % 100 ? '.' + String(c % 100).padStart(2, '0') : '');
+};
 const hoursLabel = h => {
   const m = Math.round(h * 60);
-  return `${Math.floor(m/60)}h${m%60 ? ' ' + (m%60) + 'm' : ''}`;
+  const hh = Math.floor(m / 60), mm = m % 60;
+  return hh ? `${hh}h${mm ? ' ' + mm + 'm' : ''}` : `${mm}m`;
 };
 
 /* ============================================================
-   PRICE ENGINE — one function, used by the booking flow, the
-   customer dashboard and the admin quote screen so the three
-   can never disagree about what a job costs.
+   HOURS — the estimate, and the window the customer may move it in.
+
+   "customer can change the hours by only being able to decrease by
+    only 30 minutes and be able to increase with however minutes /
+    hours (it should be in 30 minute range)"
+
+   So: floor = estimate − 30 min. Ceiling = whatever is left under
+   the 10-hour cap once the chosen extras are counted.
+   ============================================================ */
+function baseHoursFor(b){
+  const svc = svcOf(b.service);
+  if(!svc) return 0;
+  if(svc.model === 'bedrooms'){
+    const band = CFG.bedroomBands.find(x => x.id === b.band) || CFG.bedroomBands[0];
+    return band.hours + (svc.addHours || 0);
+  }
+  if(svc.model === 'laundry'){
+    const w = CFG.laundryWash.find(x => x.id === b.wash);
+    const f = CFG.laundryFinish.find(x => x.id === b.finish);
+    return (w ? w.hours : 0) + (f ? f.hours : 0);
+  }
+  return svc.estHours || 0;
+}
+
+const extrasMins = b => (b.extras || [])
+  .reduce((n, id) => n + (CFG.extras.find(x => x.id === id)?.mins || 0), 0);
+
+/* Extras are only offered on the indoor house-cleaning services —
+   laundry has its own choices and the outdoor services have none.  */
+const allowsExtras = b => svcOf(b.service)?.model === 'bedrooms';
+
+function hoursWindow(b){
+  const est   = baseHoursFor(b);
+  const exH   = allowsExtras(b) ? extrasMins(b) / 60 : 0;
+  const min   = Math.max(0.5, est - CFG.reduceMins / 60);
+  const max   = Math.max(min, CFG.maxHours - exH);
+  return { est, min, max, extraHours: exH };
+}
+
+/* Can this extra still be ticked without pushing the cleaner past 10h?
+   This is what greys tasks out on a 5+ bedroom job — 8 hours of base
+   work leaves only 2 hours of extras before the cap bites.            */
+function extraAllowed(b, id){
+  if((b.extras || []).includes(id)) return true;      // already on, always removable
+  const e = CFG.extras.find(x => x.id === id);
+  if(!e) return false;
+  const svcH = b.hours != null ? b.hours : baseHoursFor(b);
+  return svcH + extrasMins(b) / 60 + e.mins / 60 <= CFG.maxHours + 1e-9;
+}
+
+/* ============================================================
+   PRICE ENGINE — one function. The booking flow, the customer
+   dashboard, the cleaner job card and the admin order screen all
+   call it, so they cannot disagree about what a job costs.
+
+     total = R155 flat + (hours × R35) + extras + R35 service fee
+
+   Extras are charged at the client's listed price and their time is
+   added to the job; that time is NOT billed again at the hourly rate,
+   which would charge for it twice. Flagged to him.
    ============================================================ */
 function priceBooking(b){
-  const svc = CFG.services.find(s => s.id === b.service);
+  const svc = svcOf(b.service);
   if(!svc) return null;
-  let hours = 0, base = 0;
 
-  if(svc.model === 'rooms'){
-    const rooms = Math.max(1, b.rooms || 1);
-    hours = Math.max(CFG.minHours, rooms * CFG.minutesPerRoom / 60 * (svc.roomFactor || 1));
-    base  = hours * CFG.hourlyRate;
-  } else if(svc.model === 'office'){
-    const band = CFG.officeBands.find(x => x.id === b.band) || CFG.officeBands[0];
-    const units = Math.max(1, b.units || 1);
-    hours = band.hours * units;
-    base  = band.price * units;
-  } else {
-    hours = svc.hours;
-    base  = svc.price;
-  }
+  const win     = hoursWindow(b);
+  const svcH    = b.hours != null ? Math.min(Math.max(b.hours, win.min), win.max) : win.est;
+  const exMins  = allowsExtras(b) ? extrasMins(b) : 0;
+  const hours   = svcH + exMins / 60;
 
-  let extras = 0, extraMins = 0;
-  (b.extras || []).forEach(id => {
-    const e = CFG.checklist.find(x => x.id === id);
-    if(e){ extras += e.price; extraMins += e.mins; }
-  });
-  hours += extraMins / 60;
+  const labour  = svcH * CFG.hourlyRate;
+  const extras  = allowsExtras(b)
+    ? (b.extras || []).reduce((n, id) => n + (CFG.extras.find(x => x.id === id)?.price || 0), 0)
+    : 0;
 
-  const freq = CFG.frequencies.find(f => f.id === (b.freq || 'once'));
-  const sub = base + extras;
-  const freqDisc = Math.round(sub * (1 - freq.mult));
-
-  let promoDisc = 0;
-  const promo = b.promo && CFG.promos[b.promo];
-  if(promo) promoDisc = promo.type === 'pct'
-    ? Math.round((sub - freqDisc) * promo.val)
-    : Math.min(promo.val, sub - freqDisc);
-
-  const discount = freqDisc + promoDisc;
-  const net      = sub - discount;
-  const fee      = Math.round(net * CFG.serviceFeePct);
-  const exVat    = net + fee;
-  const vat      = CFG.vatRegistered ? Math.round(exVat * CFG.vatRate) : 0;
+  const total = CFG.flatRate + labour + extras + CFG.serviceFee;
 
   return {
-    serviceName: svc.name, base: Math.round(base), extras, freqDisc, promoDisc,
-    discount, fee, exVat, vat, total: exVat + vat,
-    hours, hoursLabel: hoursLabel(hours), freqLabel: freq.title, model: svc.model
+    serviceName: svc.name, model: svc.model,
+    flat: CFG.flatRate, labour, extras,
+    fee: CFG.serviceFee, total,
+    serviceHours: svcH, hours,
+    estHours: win.est, minHours: win.min, maxHours: win.max,
+    hoursLabel: hoursLabel(hours), serviceHoursLabel: hoursLabel(svcH),
+    overEstimate: Math.round((svcH - win.est) * 60),
+    placeholder: !!svc.placeholder
   };
 }
 
 /* ============================================================
    MOCK DATA — stands in for the API. Deliberately shared across
-   all three dashboards so the same booking reads consistently
-   from the customer, cleaner and admin side.
+   all three dashboards so one booking reads the same from the
+   customer, the cleaner and the admin side.
    ============================================================ */
+const TODAY = '2026-08-19';                 // fixed so the demo repeats identically
+
 const DB = {
   customer: {
-    name:'Thandi', surname:'Mokoena', initials:'TM', email:'thandi.m@example.co.za',
-    phone:'+27 82 445 1190', points:1840, tier:'Gold', referrals:3,
+    id:'cu1', name:'Thandi', surname:'Mokoena', initials:'TM',
+    email:'thandi.m@example.co.za', phone:'+27 82 445 1190',
     joined:'March 2026', memberNo:'CUS-10428'
   },
 
   addresses: [
-    { id:'a1', label:'Home',   line:'18 Ocean View Drive, Flat 4B', suburb:'Sea Point', city:'Cape Town', prov:'Western Cape', notes:'Buzzer 12. Two cats — keep the balcony door shut.', primary:true },
-    { id:'a2', label:'Mom’s place', line:'7 Protea Street', suburb:'Rondebosch', city:'Cape Town', prov:'Western Cape', notes:'Key under the ceramic pot.', primary:false },
-    { id:'a3', label:'Office', line:'Unit 3, The Foundry, 12 Prestwich St', suburb:'Green Point', city:'Cape Town', prov:'Western Cape', notes:'Reception has the access card.', primary:false }
+    { id:'a1', label:'Home', type:'Flat / Apartment', line:'18 Ocean View Drive', unit:'Flat 4B', suburb:'Sea Point', city:'Cape Town', prov:'Western Cape', notes:'Buzzer 12. Two cats — keep the balcony door shut.', primary:true },
+    { id:'a2', label:'Mom’s place', type:'House', line:'7 Protea Street', unit:'', suburb:'Rondebosch', city:'Cape Town', prov:'Western Cape', notes:'Key under the ceramic pot.', primary:false },
+    { id:'a3', label:'Office', type:'Townhouse', line:'12 Prestwich Street', unit:'Unit 3', suburb:'Green Point', city:'Cape Town', prov:'Western Cape', notes:'Reception has the access card.', primary:false }
   ],
 
   cards: [
@@ -165,60 +214,64 @@ const DB = {
     { id:'c2', brand:'Mastercard', last4:'6613', exp:'04/28', primary:false }
   ],
 
+  /* account: approved | pending | declined — only `approved` may sign in */
   cleaners: [
-    { id:'cl1', name:'Nomsa', surname:'Mabaso', initials:'NM', rating:4.94, jobs:216, years:6, langs:['English','isiZulu','isiXhosa'], group:'indoor', city:'Cape Town', prov:'Western Cape', status:'active', fav:true,  tone:'', earnings:18420 },
-    { id:'cl2', name:'Sipho', surname:'Dlamini', initials:'SD', rating:4.81, jobs:143, years:4, langs:['English','isiZulu'], group:'outdoor', city:'Cape Town', prov:'Western Cape', status:'active', fav:true, tone:'sky', earnings:14180 },
-    { id:'cl3', name:'Grace', surname:'Nkosi',   initials:'GN', rating:4.88, jobs:302, years:9, langs:['English','Sesotho'], group:'indoor', city:'Cape Town', prov:'Western Cape', status:'active', fav:false, tone:'clay', earnings:26900 },
-    { id:'cl4', name:'Lerato', surname:'Molefe', initials:'LM', rating:4.72, jobs:88,  years:3, langs:['English','Setswana'], group:'indoor', city:'Johannesburg', prov:'Gauteng', status:'active', fav:false, tone:'gold', earnings:9110 },
-    { id:'cl5', name:'Andile', surname:'Khumalo',initials:'AK', rating:0,    jobs:0,   years:2, langs:['English','isiXhosa'], group:'outdoor', city:'Durban', prov:'KwaZulu-Natal', status:'pending', fav:false, tone:'sky', earnings:0 },
-    { id:'cl6', name:'Precious', surname:'Sithole', initials:'PS', rating:0, jobs:0,  years:5, langs:['English','isiZulu'], group:'indoor', city:'Cape Town', prov:'Western Cape', status:'pending', fav:false, tone:'', earnings:0 }
+    { id:'cl1', name:'Nomsa',    surname:'Mabaso',  initials:'NM', rating:4.94, jobs:216, years:6, langs:['English','isiZulu','isiXhosa'], group:'indoor',  city:'Cape Town',    prov:'Western Cape',  account:'approved', fav:true,  skin:'#8a5a3b', hair:'#2a1e18', shirt:'#2F5D50', blocked:['2026-08-24'] },
+    { id:'cl2', name:'Sipho',    surname:'Dlamini', initials:'SD', rating:4.81, jobs:143, years:4, langs:['English','isiZulu'],             group:'outdoor', city:'Cape Town',    prov:'Western Cape',  account:'approved', fav:true,  skin:'#6f4429', hair:'#181310', shirt:'#3E6FA3', blocked:[] },
+    { id:'cl3', name:'Grace',    surname:'Nkosi',   initials:'GN', rating:4.88, jobs:302, years:9, langs:['English','Sesotho'],             group:'indoor',  city:'Cape Town',    prov:'Western Cape',  account:'approved', fav:false, skin:'#a8734a', hair:'#3a2418', shirt:'#B4573A', blocked:[] },
+    { id:'cl7', name:'Zanele',   surname:'Ndlovu',  initials:'ZN', rating:4.76, jobs:64,  years:3, langs:['English','isiZulu'],             group:'indoor',  city:'Cape Town',    prov:'Western Cape',  account:'approved', fav:false, skin:'#7a4e30', hair:'#241a14', shirt:'#7A6A3A', blocked:['2026-08-20'] },
+    { id:'cl8', name:'Thabo',    surname:'Maseko',  initials:'TM', rating:4.69, jobs:51,  years:2, langs:['English','Sesotho'],             group:'outdoor', city:'Cape Town',    prov:'Western Cape',  account:'approved', fav:false, skin:'#95643f', hair:'#1e1712', shirt:'#4C7A5A', blocked:[] },
+    { id:'cl4', name:'Lerato',   surname:'Molefe',  initials:'LM', rating:4.72, jobs:88,  years:3, langs:['English','Setswana'],            group:'indoor',  city:'Johannesburg', prov:'Gauteng',       account:'approved', fav:false, skin:'#8a5a3b', hair:'#2e2018', shirt:'#8C5A8C', blocked:[] },
+    { id:'cl5', name:'Andile',   surname:'Khumalo', initials:'AK', rating:0,    jobs:0,   years:2, langs:['English','isiXhosa'],            group:'outdoor', city:'Durban',       prov:'KwaZulu-Natal', account:'pending',  fav:false, skin:'#6f4429', hair:'#181310', shirt:'#3E6FA3', blocked:[] },
+    { id:'cl6', name:'Precious', surname:'Sithole', initials:'PS', rating:0,    jobs:0,   years:5, langs:['English','isiZulu'],             group:'indoor',  city:'Cape Town',    prov:'Western Cape',  account:'pending',  fav:false, skin:'#a8734a', hair:'#2a1e18', shirt:'#2F5D50', blocked:[] },
+    { id:'cl9', name:'Bongani',  surname:'Zulu',    initials:'BZ', rating:0,    jobs:0,   years:1, langs:['English'],                       group:'outdoor', city:'Cape Town',    prov:'Western Cape',  account:'declined', declineReason:'Criminal record check came back unresolved. Welcome to reapply once it clears.', fav:false, skin:'#7a4e30', hair:'#1e1712', shirt:'#8A8A8A', blocked:[] }
   ],
 
   customers: [
-    { id:'cu1', name:'Thandi Mokoena', initials:'TM', email:'thandi.m@example.co.za', phone:'+27 82 445 1190', bookings:14, spend:9840, fav:'Nomsa Mabaso', joined:'Mar 2026', tone:'' },
-    { id:'cu2', name:'Riaan van Wyk', initials:'RW', email:'riaan.vw@example.co.za', phone:'+27 83 220 7712', bookings:6, spend:4120, fav:'Grace Nkosi', joined:'May 2026', tone:'sky' },
-    { id:'cu3', name:'Aisha Patel', initials:'AP', email:'aisha.p@example.co.za', phone:'+27 71 998 0032', bookings:22, spend:17650, fav:'Nomsa Mabaso', joined:'Jan 2026', tone:'clay' },
-    { id:'cu4', name:'Johan Botha', initials:'JB', email:'j.botha@example.co.za', phone:'+27 84 551 3390', bookings:2, spend:1180, fav:'—', joined:'Aug 2026', tone:'gold' }
+    { id:'cu1', name:'Thandi Mokoena', initials:'TM', email:'thandi.m@example.co.za', phone:'+27 82 445 1190', joined:'Mar 2026', tone:'' },
+    { id:'cu2', name:'Riaan van Wyk',  initials:'RW', email:'riaan.vw@example.co.za', phone:'+27 83 220 7712', joined:'May 2026', tone:'sky' },
+    { id:'cu3', name:'Aisha Patel',    initials:'AP', email:'aisha.p@example.co.za',  phone:'+27 71 998 0032', joined:'Jan 2026', tone:'clay' },
+    { id:'cu4', name:'Johan Botha',    initials:'JB', email:'j.botha@example.co.za',  phone:'+27 84 551 3390', joined:'Aug 2026', tone:'gold' }
   ],
 
-  /* status: pending (awaiting admin confirmation) -> confirmed (cleaner assigned)
-     -> enroute -> inprogress -> completed | cancelled                          */
+  /* status: paid -> upcoming -> inprogress -> completed | cancelled
+     The customer picks the cleaner at checkout, so `cleaner` is always set. */
   bookings: [
-    { id:'SPW-104312', cust:'cu1', service:'standard', rooms:4, extras:['oven','fridge'], freq:'weekly',
-      date:'2026-08-18', time:'09:00', addr:'a1', cleaner:'cl1', status:'confirmed', eta:'08:45', rated:null },
-    { id:'SPW-104298', cust:'cu1', service:'outdoor', extras:[], freq:'once',
-      date:'2026-08-22', time:'11:00', addr:'a2', cleaner:null, status:'pending', eta:null, rated:null },
-    { id:'SPW-104201', cust:'cu1', service:'office', band:'m', units:1, extras:['windows'], freq:'biweek',
-      date:'2026-08-25', time:'07:00', addr:'a3', cleaner:'cl3', status:'confirmed', eta:'06:50', rated:null },
-    { id:'SPW-103980', cust:'cu1', service:'standard', rooms:4, extras:['laundry'], freq:'weekly',
-      date:'2026-08-11', time:'09:00', addr:'a1', cleaner:'cl1', status:'completed', eta:null, rated:5 },
-    { id:'SPW-103844', cust:'cu1', service:'deep', rooms:4, extras:['oven','rug'], freq:'once',
-      date:'2026-07-29', time:'08:00', addr:'a1', cleaner:'cl3', status:'completed', eta:null, rated:4 },
-    { id:'SPW-103702', cust:'cu1', service:'garden', extras:[], freq:'once',
-      date:'2026-07-15', time:'10:00', addr:'a2', cleaner:'cl2', status:'completed', eta:null, rated:5 },
-    { id:'SPW-103551', cust:'cu1', service:'windows', extras:[], freq:'once',
-      date:'2026-06-30', time:'13:00', addr:'a1', cleaner:'cl2', status:'cancelled', eta:null, rated:null },
-    { id:'SPW-104355', cust:'cu2', service:'standard', rooms:3, extras:['fridge'], freq:'once',
-      date:'2026-08-19', time:'10:00', addr:'a1', cleaner:null, status:'pending', eta:null, rated:null },
-    { id:'SPW-104361', cust:'cu3', service:'deep', rooms:5, extras:['oven','garage'], freq:'once',
-      date:'2026-08-20', time:'08:00', addr:'a1', cleaner:null, status:'pending', eta:null, rated:null },
-    { id:'SPW-104366', cust:'cu4', service:'garden', extras:[], freq:'once',
-      date:'2026-08-21', time:'09:00', addr:'a2', cleaner:'cl2', status:'confirmed', eta:'08:40', rated:null }
+    { id:'SPW-104312', cust:'cu1', service:'standard', band:'b34', hours:6,   extras:['oven','fridge'], addr:'a1', cleaner:'cl1', date:'2026-08-21', time:'09:00', status:'upcoming', note:'Please start with the kitchen.', rating:null },
+    { id:'SPW-104298', cust:'cu1', service:'garden',   hours:4,               extras:[],                addr:'a2', cleaner:'cl2', date:'2026-08-22', time:'11:00', status:'upcoming', note:'Back garden only.', rating:null },
+    { id:'SPW-104201', cust:'cu1', service:'laundry',  wash:'machine', finish:'dryiron', extras:[],     addr:'a3', cleaner:'cl3', date:'2026-08-25', time:'07:00', status:'upcoming', note:'', rating:null },
+    { id:'SPW-103980', cust:'cu1', service:'standard', band:'b34', hours:6,   extras:['washfold'],      addr:'a1', cleaner:'cl1', date:'2026-08-11', time:'09:00', status:'completed', note:'', rating:{ stars:5, comment:'Nomsa was early, thorough and lovely with the cats. Booking her again.' } },
+    { id:'SPW-103844', cust:'cu1', service:'deep',     band:'b34', hours:8,   extras:['oven'],          addr:'a1', cleaner:'cl3', date:'2026-07-29', time:'08:00', status:'completed', note:'', rating:{ stars:4, comment:'Great clean overall, skirting boards in the hallway were missed.' } },
+    { id:'SPW-103702', cust:'cu1', service:'windows',  hours:3,               extras:[],                addr:'a2', cleaner:'cl2', date:'2026-07-15', time:'10:00', status:'completed', note:'', rating:null },
+    { id:'SPW-103551', cust:'cu1', service:'outdoor',  hours:4,               extras:[],                addr:'a1', cleaner:'cl8', date:'2026-06-30', time:'13:00', status:'cancelled', note:'', rating:null },
+    { id:'SPW-104355', cust:'cu2', service:'standard', band:'b12', hours:4,   extras:['fridge'],        addr:'a1', cleaner:'cl7', date:'2026-08-20', time:'10:00', status:'upcoming', note:'Gate code 4471.', rating:null },
+    { id:'SPW-104361', cust:'cu3', service:'standard', band:'b5',  hours:8,   extras:['oven','fridge'], addr:'a1', cleaner:'cl3', date:'2026-08-20', time:'08:00', status:'upcoming', note:'', rating:null },
+    { id:'SPW-104366', cust:'cu4', service:'garden',   hours:4,               extras:[],                addr:'a2', cleaner:'cl8', date:'2026-08-21', time:'09:00', status:'upcoming', note:'', rating:null },
+    { id:'SPW-104290', cust:'cu3', service:'laundry',  wash:'hand', finish:'dryfold', extras:[],        addr:'a1', cleaner:'cl1', date:'2026-08-08', time:'07:00', status:'completed', note:'', rating:{ stars:5, comment:'Everything came back folded beautifully.' } },
+    { id:'SPW-104277', cust:'cu2', service:'standard', band:'b12', hours:4,   extras:[],                addr:'a2', cleaner:'cl7', date:'2026-08-05', time:'09:00', status:'completed', note:'', rating:{ stars:4, comment:'Good job, arrived a little late.' } }
+  ],
+
+  /* Applications waiting on the admin — the form the cleaner submitted. */
+  applications: [
+    { id:'cl6', submitted:'2026-08-17' },
+    { id:'cl5', submitted:'2026-08-18' }
   ],
 
   notifications: [
-    { id:'n1', t:'Nomsa confirmed your Tuesday clean', s:'Booking SPW-104312 · 2 hours ago', kind:'ok' },
+    { id:'n1', t:'Nomsa is confirmed for Friday', s:'Booking SPW-104312 · 2 hours ago', kind:'ok' },
     { id:'n2', t:'Your invoice for SPW-103980 is ready', s:'Yesterday', kind:'mute' },
-    { id:'n3', t:'You earned 180 loyalty points', s:'2 days ago', kind:'ok' },
-    { id:'n4', t:'Outdoor booking SPW-104298 is awaiting confirmation', s:'3 days ago', kind:'wait' }
-  ],
-
-  offers: [
-    { id:'o1', t:'20% off your next deep clean', s:'Use code SPARROW20 · expires 30 Sep', kind:'promo' },
-    { id:'o2', t:'Refer a friend, both get R100', s:'You have referred 3 friends so far', kind:'referral' },
-    { id:'o3', t:'Spring window special', s:'Windows + patio bundled, save R140', kind:'season' }
+    { id:'n3', t:'How did Grace do? Leave a rating', s:'2 days ago', kind:'wait' },
+    { id:'n4', t:'Payment approved — R575', s:'3 days ago', kind:'ok' }
   ]
 };
+
+/* Documents every applicant uploads, per the cleaner spec. */
+const DOCS = [
+  { id:'id',   name:'ID / passport',        file:'id-document.pdf',   size:'412 KB' },
+  { id:'photo',name:'Head & shoulders photo',file:'profile-photo.jpg', size:'268 KB' },
+  { id:'crim', name:'Criminal record check', file:'police-clearance.pdf', size:'701 KB' },
+  { id:'permit',name:'Work permit',          file:'work-permit.pdf',   size:'355 KB' }
+];
 
 /* ---------- lookups ---------- */
 const byId    = (arr, id) => arr.find(x => x.id === id) || null;
@@ -226,30 +279,95 @@ const cleaner = id => byId(DB.cleaners, id);
 const address = id => byId(DB.addresses, id);
 const custOf  = id => byId(DB.customers, id);
 const svcOf   = id => CFG.services.find(s => s.id === id);
+/* A booking's address may be a saved-address id or a one-off object
+   typed in at checkout (guests have no saved addresses).            */
+const addrOf  = b => (b && typeof b.addr === 'object' && b.addr) ? b.addr : address(b && b.addr);
 
 const STATUS = {
-  pending:   { label:'Awaiting confirmation', cls:'wait' },
-  confirmed: { label:'Confirmed',             cls:'ok'   },
-  enroute:   { label:'On the way',            cls:'live' },
-  inprogress:{ label:'In progress',           cls:'live' },
-  completed: { label:'Completed',             cls:'mute' },
-  cancelled: { label:'Cancelled',             cls:'bad'  }
+  paid:      { label:'Paid',        cls:'ok'   },
+  upcoming:  { label:'Upcoming',    cls:'ok'   },
+  inprogress:{ label:'In progress', cls:'live' },
+  completed: { label:'Completed',   cls:'mute' },
+  cancelled: { label:'Cancelled',   cls:'bad'  }
 };
 const statusPill = s => `<span class="pill ${STATUS[s].cls}">${STATUS[s].label}</span>`;
 
+const ACCOUNT = {
+  approved: { label:'Approved', cls:'ok'   },
+  pending:  { label:'Pending',  cls:'wait' },
+  declined: { label:'Declined', cls:'bad'  }
+};
+
+/* ============================================================
+   AVAILABILITY — "list all the workers available around the area
+   for that day". A cleaner shows up only if they do that kind of
+   work, cover that city, are approved, have not blocked the day
+   off, and still have room under the 10-hour cap.
+   ============================================================ */
+function bookedHoursOn(cleanerId, date){
+  return DB.bookings
+    .filter(b => b.cleaner === cleanerId && b.date === date &&
+                 b.status !== 'cancelled')
+    .reduce((n, b) => n + (priceBooking(b)?.hours || 0), 0);
+}
+
+function availableCleaners(b){
+  const svc = svcOf(b.service);
+  const ad  = addrOf(b);
+  if(!svc || !ad || !b.date) return [];
+  const need = priceBooking(b)?.hours || 0;
+  return DB.cleaners.filter(c =>
+    c.account === 'approved' &&
+    c.group === svc.group &&
+    c.city === ad.city &&
+    !(c.blocked || []).includes(b.date) &&
+    bookedHoursOn(c.id, b.date) + need <= CFG.maxHours + 1e-9
+  ).sort((x, y) => y.rating - x.rating);
+}
+
+/* Ratings a cleaner has actually been given, from the bookings. */
+function reviewsFor(cleanerId){
+  return DB.bookings
+    .filter(b => b.cleaner === cleanerId && b.rating)
+    .map(b => ({ ...b.rating, id:b.id, date:b.date, cust:custOf(b.cust)?.name || '' }));
+}
+function ratingOf(cleanerId){
+  const r = reviewsFor(cleanerId);
+  if(!r.length) return null;
+  return Math.round(r.reduce((n, x) => n + x.stars, 0) / r.length * 100) / 100;
+}
+
+/* ---------- dates ---------- */
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-function fmtDate(iso){
-  const [y,m,d] = iso.split('-').map(Number);
-  const dt = new Date(y, m-1, d);
-  return `${DAYS[dt.getDay()]} ${d} ${MON[m-1]}`;
-}
-function fmtDateLong(iso){
-  const [y,m,d] = iso.split('-').map(Number);
-  const dt = new Date(y, m-1, d);
-  return `${DAYS[dt.getDay()]} ${d} ${MON[m-1]} ${y}`;
-}
+const dateOf = iso => { const [y,m,d] = iso.split('-').map(Number); return new Date(y, m-1, d); };
+const isoOf  = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+const fmtDate     = iso => { const dt = dateOf(iso); return `${DAYS[dt.getDay()]} ${dt.getDate()} ${MON[dt.getMonth()]}`; };
+const fmtDateLong = iso => { const dt = dateOf(iso); return `${DAYS[dt.getDay()]} ${dt.getDate()} ${MON[dt.getMonth()]} ${dt.getFullYear()}`; };
+const isPast = iso => iso < TODAY;
 const starRow = n => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
+
+/* ============================================================
+   PORTRAIT — the cleaner's uploaded head-and-shoulders photo goes
+   here. Until there is a backend to hold real uploads this draws a
+   deterministic illustration so the card layout is honest about
+   its shape without inventing a person's face.
+   ============================================================ */
+function portrait(c, size = 84){
+  const s = c || {};
+  return `<svg class="portrait" width="${size}" height="${size}" viewBox="0 0 100 100" role="img" aria-label="${s.name || ''} ${s.surname || ''}">
+    <defs><clipPath id="pc${s.id || 'x'}"><circle cx="50" cy="50" r="50"/></clipPath></defs>
+    <g clip-path="url(#pc${s.id || 'x'})">
+      <rect width="100" height="100" fill="#E7E1D5"/>
+      <path d="M50 62c19 0 33 13 36 30v8H14v-8c3-17 17-30 36-30z" fill="${s.shirt || '#2F5D50'}"/>
+      <circle cx="50" cy="41" r="20" fill="${s.skin || '#8a5a3b'}"/>
+      <path d="M30 39c0-13 9-21 20-21s20 8 20 21c0-6-8-9-20-9s-20 3-20 9z" fill="${s.hair || '#2a1e18'}"/>
+      <circle cx="43" cy="42" r="1.9" fill="#2b211a"/><circle cx="57" cy="42" r="1.9" fill="#2b211a"/>
+      <path d="M45 50c3 2.4 7 2.4 10 0" stroke="#2b211a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    </g>
+  </svg>`;
+}
 
 /* ---------- icons ---------- */
 const I = {
@@ -278,15 +396,20 @@ const I = {
   wallet:'<path d="M3 7a2 2 0 0 1 2-2h12v3"/><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="17" cy="13.5" r="1.3"/>',
   doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
   upload:'<path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
+  download:'<path d="M12 4v12M8 12l4 4 4-4"/><path d="M4 18v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1"/>',
   chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   shield:'<path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6l7-3z"/>',
   star:'<path d="M12 4l2.4 5 5.6.8-4 4 1 5.5-5-2.7-5 2.7 1-5.5-4-4 5.6-.8z"/>',
-  route:'<circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a3 3 0 0 1 0 6h-4a3 3 0 0 0 0 6h5.6"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5L12 13l8.5-6.5"/>',
+  lock:'<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
   logout:'<path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M12 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h6"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/>',
   arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
-  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>'
+  minus:'<path d="M5 12h14"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+  camera:'<path d="M4 8h3l1.6-2h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/>'
 };
 const ico = (k, sz = 20, sw = 1.7) =>
   `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${I[k] || ''}</svg>`;
@@ -294,6 +417,8 @@ const ico = (k, sz = 20, sw = 1.7) =>
 /* ---------- tiny UI helpers ---------- */
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function toast(msg, icon = 'check'){
   let host = $('.toast-host');
@@ -306,11 +431,11 @@ function toast(msg, icon = 'check'){
   setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, 2600);
 }
 
-function modal({ title, sub, body, actions = [] }){
+function modal({ title, sub, body, actions = [], wide = false }){
   const veil = document.createElement('div');
   veil.className = 'veil on';
   veil.innerHTML = `
-    <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal${wide ? ' wide' : ''}" role="dialog" aria-modal="true">
       <div class="modal-head">
         <div><h3>${title}</h3>${sub ? `<div class="mh-s">${sub}</div>` : ''}</div>
         <button class="x-btn" data-close aria-label="Close">${ico('x', 20, 2.2)}</button>
@@ -323,6 +448,7 @@ function modal({ title, sub, body, actions = [] }){
     const b = document.createElement('button');
     b.className = 'btn ' + (a.cls || 'btn-outline');
     b.textContent = a.label;
+    if(a.id) b.id = a.id;
     b.onclick = () => { const keep = a.fn && a.fn(veil); if(!keep) veil.remove(); };
     foot.appendChild(b);
   });
@@ -330,6 +456,30 @@ function modal({ title, sub, body, actions = [] }){
   veil.onclick = e => { if(e.target === veil) veil.remove(); };
   document.body.appendChild(veil);
   return veil;
+}
+
+/* ============================================================
+   NOTIFICATIONS — every automatic email / SMS in the brief is
+   rendered here exactly as it would be sent, so the wording can be
+   signed off before there is a mail server to send it with.
+   ============================================================ */
+const SENT = [];      // an outbox the admin dashboard can show
+
+function sendNotice({ channel, to, subject, body }){
+  SENT.unshift({ channel, to, subject, body, at:'just now' });
+  return modal({
+    title: channel === 'sms' ? 'SMS queued' : 'Email queued',
+    sub: 'This is the message the platform sends automatically. No mail server is wired up yet — this is the exact wording for you to approve.',
+    body: `<div class="mailer">
+        <div class="mail-hd">
+          <div><span class="mail-lbl">To</span> ${esc(to)}</div>
+          ${subject ? `<div><span class="mail-lbl">Subject</span> ${esc(subject)}</div>` : ''}
+        </div>
+        <div class="mail-bd">${body}</div>
+      </div>`,
+    actions: [{ label:'Close', cls:'btn-primary' }],
+    wide: true
+  });
 }
 
 /* ---------- shared chrome ---------- */
