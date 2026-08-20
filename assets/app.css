@@ -335,8 +335,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
 .task .tk-box{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--ink-14);display:grid;place-items:center;flex:0 0 auto;color:transparent;background:var(--paper-2)}
 .task.on .tk-box{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
 .task .tk-main{flex:1;min-width:0}
-.task .tk-t{font-weight:600;font-size:14.5px}
-.task .tk-s{font-size:12.5px;color:var(--ink-45)}
+/* Both are spans inside a flex row, so without display:block the name
+   and its sub-label run together — "Small carHatchback or city car". */
+.task .tk-t{display:block;font-weight:600;font-size:14.5px}
+.task .tk-s{display:block;margin-top:2px;font-size:12.5px;color:var(--ink-45)}
 .task .tk-p{font-variant-numeric:tabular-nums;font-weight:600;font-size:14.5px;white-space:nowrap}
 .cap-note{font-size:12.5px;color:#6d5504;background:var(--gold-soft);border-radius:10px;padding:9px 12px;margin-top:10px;display:flex;gap:9px}
 

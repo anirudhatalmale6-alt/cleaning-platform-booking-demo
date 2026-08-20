@@ -405,6 +405,7 @@ function jobCard(b, opts = {}){
     </div>
     <dl class="kv">
       <dt>Customer</dt><dd>${esc(c ? c.name : '—')}</dd>
+      <dt>Job</dt><dd>${esc(jobDetail(b))}</dd>
       <dt>Address</dt><dd>${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)}, ${esc(a.city)}</dd>
       ${b.extras && b.extras.length ? `<dt>Extras</dt><dd>${b.extras.map(id => CFG.extras.find(e => e.id === id).name).join(', ')}</dd>` : ''}
       ${a.notes ? `<dt>Access</dt><dd>${esc(a.notes)}</dd>` : ''}

@@ -137,6 +137,7 @@ function showOrder(id){
   modal({ title:b.id, sub:`${svcOf(b.service).name} · ${fmtDateLong(b.date)} at ${b.time}`, wide:true,
     body:`<dl class="kv" style="margin-bottom:16px">
         <dt>Status</dt><dd>${statusPill(b.status)}</dd>
+        <dt>Job</dt><dd>${esc(jobDetail(b))}</dd>
         <dt>Customer</dt><dd>${esc(c ? c.name : '—')}${c ? ` · ${esc(c.phone)}` : ''}</dd>
         <dt>Cleaner</dt><dd>${cl ? `${cl.name} ${cl.surname} (${cl.group === 'indoor' ? 'Indoor' : 'Outdoor'})` : '—'}</dd>
         <dt>Address</dt><dd>${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)}, ${esc(a.city)}</dd>

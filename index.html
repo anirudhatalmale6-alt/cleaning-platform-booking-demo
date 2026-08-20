@@ -88,6 +88,7 @@
 const B = {
   service:null, band:'b12', hours:null, extras:[],
   wash:null, finish:null,
+  rooms:CFG.windowRooms.base, vehicle:null,
   addr:{ type:'', line:'', unit:'', suburb:'', city:'Cape Town', prov:'Western Cape', notes:'' },
   geo:false, date:null, time:null, cleaner:null, note:'', ref:'',
   signedIn:false, guest:false
@@ -154,6 +155,8 @@ function viewHome(){
       ${CFG.services.map(s => {
         const seed = s.model === 'bedrooms' ? { service:s.id, band:'b12', extras:[] }
                    : s.model === 'laundry'  ? { service:s.id, wash:'machine', finish:'dryfold', extras:[] }
+                   : s.model === 'rooms'    ? { service:s.id, rooms:CFG.windowRooms.base, extras:[] }
+                   : s.model === 'vehicle'  ? { service:s.id, vehicle:CFG.vehicles[0].id, extras:[] }
                    : { service:s.id, extras:[] };
         const p = priceBooking(seed);
         return `<button class="svc" data-jump="${s.id}">
@@ -317,6 +320,8 @@ function seedForService(){
   B.cleaner = null;
   if(svc.model === 'bedrooms'){ B.band = B.band || 'b12'; B.hours = baseHoursFor(B); }
   else if(svc.model === 'laundry'){ B.wash = null; B.finish = null; B.hours = null; }
+  else if(svc.model === 'rooms'){ B.rooms = CFG.windowRooms.base; B.hours = baseHoursFor(B); }
+  else if(svc.model === 'vehicle'){ B.vehicle = null; B.hours = null; }
   else { B.hours = svc.estHours; }
 }
 
@@ -356,7 +361,9 @@ function renderSummary(){
     ${cl ? `<div class="rule"></div><div class="pro-line">${portrait(cl,42)}
         <div><div class="t-strong">${cl.name} ${cl.surname}</div><div class="mini">Your cleaner</div></div></div>` : ''}
     ${p.placeholder ? `<div class="note warn" style="margin-top:14px">${ico('info',16,2)}
-      <span>Hours for ${svc.name.toLowerCase()} are my estimate — this service is not in your price list yet.</span></div>` : ''}`;
+      <span>Hours for ${svc.name.toLowerCase()} are my estimate — this service is not in your price list yet.</span></div>` : ''}
+    ${p.extrasPlaceholder ? `<div class="note warn" style="margin-top:14px">${ico('info',16,2)}
+      <span>The pool service price is my estimate — its ${hoursLabel(CFG.extras.find(e => e.id === 'pool').mins / 60)} at your ${money(CFG.hourlyRate)} an hour. Send me the real figure.</span></div>` : ''}`;
   bar.textContent = money(p.total);
   btn.disabled = !canAdvance();
   btn.textContent = step === 4 ? 'Pay ' + money(p.total) : 'Continue';
@@ -373,17 +380,11 @@ function moneyLines(p){
 
 function detailLine(){
   const svc = svcOf(B.service);
-  if(svc.model === 'bedrooms'){
-    const band = CFG.bedroomBands.find(x => x.id === B.band);
-    const ex = B.extras.length ? ` · ${B.extras.length} extra${B.extras.length > 1 ? 's' : ''}` : '';
-    return `${band.label}${ex}`;
-  }
-  if(svc.model === 'laundry'){
-    const w = CFG.laundryWash.find(x => x.id === B.wash);
-    const f = CFG.laundryFinish.find(x => x.id === B.finish);
-    return [w && w.name, f && f.name].filter(Boolean).join(' · ') || 'Choose a wash';
-  }
-  return svc.desc;
+  if(svc.model === 'laundry' && !B.wash) return 'Choose a wash';
+  if(svc.model === 'vehicle' && !B.vehicle) return 'Choose your vehicle';
+  const n  = chosenExtras(B).length;
+  const ex = n ? ` · ${n} extra${n > 1 ? 's' : ''}` : '';
+  return jobDetail(B) + ex;
 }
 
 /* ---------- pane 0: service ---------- */
@@ -397,7 +398,7 @@ function paneService(){
   return `
     <div class="pane">
       <h2 style="font-size:27px;margin-bottom:4px">What do you need done?</h2>
-      <div class="mini" style="margin-bottom:18px">Indoor jobs are estimated from your unit size. Outdoor jobs are estimated by the job.</div>
+      <div class="mini" style="margin-bottom:18px">Indoor cleans are estimated from your unit size, window cleaning from the number of rooms, and a car wash from the vehicle.</div>
       <div class="fieldset-t">Indoor</div>
       <div class="svc-grid">${grp('indoor')}</div>
       <div class="fieldset-t">Outdoor</div>
@@ -413,7 +414,11 @@ function paneDetails(){
   return `<div class="pane">
     <h2 style="font-size:27px;margin-bottom:4px">${svc.name}</h2>
     <div class="mini" style="margin-bottom:18px">${svc.desc}</div>
-    ${svc.model === 'bedrooms' ? bedroomBlock() : svc.model === 'laundry' ? laundryBlock() : hoursOnlyBlock()}
+    ${svc.model === 'bedrooms' ? bedroomBlock()
+    : svc.model === 'laundry'  ? laundryBlock()
+    : svc.model === 'rooms'    ? roomsBlock()
+    : svc.model === 'vehicle'  ? vehicleBlock()
+    : hoursOnlyBlock()}
     <div class="navrow"><button class="btn btn-ghost" data-back>${ico('back',16,2.2)} Back</button>
       <button class="btn btn-primary spacer" id="nextBtn" ${canAdvance() ? '' : 'disabled'}>Continue ${ico('arrow',16,2.2)}</button></div>
   </div>`;
@@ -433,8 +438,17 @@ function bedroomBlock(){
     <div class="fieldset-t">Hours</div>
     ${stepperBlock(p)}
 
-    <div class="fieldset-t">Extra tasks</div>
     ${tasksBlock()}`;
+}
+
+/* What the estimate is based on — the stepper says so, so nobody is
+   told a car wash is estimated from a "unit size".                  */
+function estBasis(){
+  const m = svcOf(B.service)?.model;
+  return m === 'bedrooms' ? 'this unit size'
+       : m === 'rooms'    ? 'this many rooms'
+       : m === 'vehicle'  ? 'this vehicle'
+       : 'this job';
 }
 
 function stepperBlock(p){
@@ -446,7 +460,7 @@ function stepperBlock(p){
       <button class="st-btn" id="hMinus" ${canDown ? '' : 'disabled'} aria-label="Less time">${ico('minus',18,2.4)}</button>
       <div class="st-mid">
         <div class="st-v" id="hVal">${hoursLabel(p.serviceHours)}</div>
-        <div class="st-s" id="hSub">${delta === 0 ? 'estimate for this unit size'
+        <div class="st-s" id="hSub">${delta === 0 ? 'estimate for ' + estBasis()
           : delta > 0 ? `${hoursLabel(delta/60)} more than the estimate`
           : `${hoursLabel(-delta/60)} less than the estimate`}</div>
       </div>
@@ -458,22 +472,69 @@ function stepperBlock(p){
 }
 
 function tasksBlock(){
-  const rows = CFG.extras.map(e => {
+  const offered = extrasFor(B);
+  if(!offered.length) return '';
+  const rows = offered.map(e => {
     const on = B.extras.includes(e.id);
     const ok = extraAllowed(B, e.id);
     return `<button class="task ${on ? 'on' : ''}" data-task="${e.id}" ${ok ? '' : 'disabled'}>
       <span class="tk-box">${ico('check',14,3)}</span>
       <span class="tk-main">
-        <span class="tk-t">${e.name}</span>
-        <span class="tk-s">${ok ? `adds ${hoursLabel(e.mins/60)}` : `no room — would take the job past ${CFG.maxHours} hours`}</span>
+        <span class="tk-t">${e.name}${e.placeholder ? ' <em style="font-style:normal;opacity:.6">· my estimate</em>' : ''}</span>
+        <span class="tk-s">${ok ? `adds ${hoursLabel(e.mins/60)}${e.sub ? ' · ' + e.sub : ''}` : `no room — would take the job past ${CFG.maxHours} hours`}</span>
       </span>
       <span class="tk-p">${money(e.price)}</span>
     </button>`;
   }).join('');
-  const blocked = CFG.extras.filter(e => !extraAllowed(B, e.id)).length;
-  return `<div class="tasks">${rows}</div>
+  const blocked = offered.filter(e => !extraAllowed(B, e.id)).length;
+  return `<div class="fieldset-t">Extra tasks</div>
+    <div class="tasks">${rows}</div>
     ${blocked ? `<div class="cap-note">${ico('info',15,2)}
-      <span>${blocked} task${blocked > 1 ? 's are' : ' is'} greyed out because this job would run a cleaner past ${CFG.maxHours} hours. Take time off the clean, or book a second visit.</span></div>` : ''}`;
+      <span>${blocked} task${blocked > 1 ? 's are' : ' is'} greyed out because this job would run a cleaner past ${CFG.maxHours} hours. Take time off the job, or book a second visit.</span></div>` : ''}`;
+}
+
+/* ---------- window cleaning: priced off the number of rooms ---------- */
+function roomsBlock(){
+  const p  = priceBooking(B);
+  const n  = roomsOf(B);
+  const W  = CFG.windowRooms;
+  const opts = [];
+  for(let r = W.base; r <= W.max; r++) opts.push(r);
+  return `
+    <div class="fieldset-t">How many rooms in the house?</div>
+    <div class="chips">${opts.map(r => `
+      <button class="chip ${n === r ? 'on' : ''}" data-rooms="${r}">${r === W.max ? r + '+' : r} room${r > 1 ? 's' : ''}
+        <span class="c-price">est ${hoursLabel(roomHours(r))}</span></button>`).join('')}
+    </div>
+    <div class="note" style="margin-top:12px">${ico('info',16,2)}
+      <span>This is for cleaning the windows <strong>inside and out</strong> — both sides of the glass, plus frames and sills.
+      ${W.base} rooms is estimated at ${W.hours} hours, and every room after that adds ${W.addMins} minutes.
+      These are estimates and can be adjusted below.</span></div>
+
+    <div class="fieldset-t">Hours</div>
+    ${stepperBlock(p)}
+
+    ${tasksBlock()}`;
+}
+
+/* ---------- car wash: priced off the vehicle ---------- */
+function vehicleBlock(){
+  const chosen = CFG.vehicles.find(v => v.id === B.vehicle);
+  return `
+    <div class="fieldset-t">What are we washing?</div>
+    <div class="tasks">${CFG.vehicles.map(v => `
+      <button class="task ${B.vehicle === v.id ? 'on' : ''}" data-vehicle="${v.id}">
+        <span class="tk-box">${ico('check',14,3)}</span>
+        <span class="tk-main"><span class="tk-t">${v.name}</span><span class="tk-s">${v.sub}</span></span>
+        <span class="tk-p">est ${hoursLabel(v.hours)}</span>
+      </button>`).join('')}</div>
+    ${chosen ? `
+      <div class="fieldset-t">Hours</div>
+      ${stepperBlock(priceBooking(B))}` : `
+      <div class="cap-note">${ico('info',15,2)}<span>Pick the vehicle first.</span></div>`}
+    <div class="note warn" style="margin-top:14px">${ico('info',16,2)}
+      <span>You gave me the list of vehicles but no times or prices for them, so the estimates above are mine.
+      The R${CFG.flatRate} flat rate is being used here — tell me if car washes should be on the R110 base like window cleaning.</span></div>`;
 }
 
 function laundryBlock(){
@@ -506,7 +567,8 @@ function hoursOnlyBlock(){
     <div class="fieldset-t">Hours</div>
     ${stepperBlock(p)}
     <div class="note warn" style="margin-top:14px">${ico('info',16,2)}
-      <span>The ${svc.estHours}-hour estimate for ${svc.name.toLowerCase()} is mine, not yours — your price list covers indoor cleaning and laundry. Send me the numbers and this changes in one line.</span></div>`;
+      <span>The ${svc.estHours}-hour estimate for ${svc.name.toLowerCase()} is mine, not yours — your price list covers indoor cleaning, laundry and window cleaning. Send me the numbers and this changes in one line.</span></div>
+    ${tasksBlock()}`;
 }
 
 /* ---------- pane 2: address + when ---------- */
@@ -692,7 +754,7 @@ function orderTable(){
     <tr><td>${svcOf(B.service).name} — ${detailLine()}</td><td>${p.serviceHoursLabel}</td></tr>
     <tr><td>Flat rate</td><td>${money(p.flat)}</td></tr>
     <tr><td>${p.serviceHoursLabel} at ${money(CFG.hourlyRate)}/hr</td><td>${money(p.labour)}</td></tr>
-    ${p.extras ? `<tr><td>Extra tasks (${B.extras.map(id => CFG.extras.find(e => e.id === id).name).join(', ')})</td><td>${money(p.extras)}</td></tr>` : ''}
+    ${p.extras ? `<tr><td>Extra tasks (${chosenExtras(B).map(e => e.name).join(', ')})</td><td>${money(p.extras)}</td></tr>` : ''}
     <tr><td>Service fee</td><td>${money(p.fee)}</td></tr>
     <tr><td><b>Total paid</b></td><td>${money(p.total)}</td></tr>
   </table>`;
@@ -739,6 +801,7 @@ function canAdvance(){
   if(step === 1){
     if(!svc) return false;
     if(svc.model === 'laundry') return !!(B.wash && B.finish);
+    if(svc.model === 'vehicle') return !!B.vehicle;
     return true;
   }
   if(step === 2) return !!(B.geo && B.date && B.time);
@@ -811,6 +874,18 @@ function wirePane(){
     B.cleaner = null;
     render();
   });
+  /* window cleaning — rooms */
+  document.querySelectorAll('[data-rooms]').forEach(b => b.onclick = () => {
+    B.rooms = Number(b.dataset.rooms);
+    B.hours = baseHoursFor(B);
+    B.extras = B.extras.filter(id => extraAllowed(B, id));
+    B.cleaner = null;
+    render();
+  });
+  /* car wash — vehicle */
+  document.querySelectorAll('[data-vehicle]').forEach(b => b.onclick = () => {
+    B.vehicle = b.dataset.vehicle; B.hours = baseHoursFor(B); B.cleaner = null; render();
+  });
   /* laundry */
   document.querySelectorAll('[data-wash]').forEach(b => b.onclick = () => { B.wash = b.dataset.wash; B.hours = null; B.cleaner = null; render(); });
   document.querySelectorAll('[data-finish]').forEach(b => b.onclick = () => { B.finish = b.dataset.finish; B.hours = null; B.cleaner = null; render(); });
@@ -872,7 +947,8 @@ function pay(){
     const p = priceBooking(B);
     DB.bookings.unshift({
       id:B.ref, cust:'cu1', service:B.service, band:B.band, hours:p.serviceHours,
-      wash:B.wash, finish:B.finish, extras:[...B.extras], addr:B.addr.id || { ...B.addr, label:'This booking' },
+      wash:B.wash, finish:B.finish, rooms:B.rooms, vehicle:B.vehicle,
+      extras:[...B.extras], addr:B.addr.id || { ...B.addr, label:'This booking' },
       cleaner:B.cleaner, date:B.date, time:B.time, status:'upcoming', note:B.note, rating:null
     });
     step = 5; render();

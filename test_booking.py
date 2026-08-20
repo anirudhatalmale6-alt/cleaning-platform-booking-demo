@@ -14,11 +14,18 @@ URL   = (HERE / "index.html").as_uri()
 SHOTS = HERE / "shots"; SHOTS.mkdir(exist_ok=True)
 
 FLAT, RATE, FEE, MAX_H = 155, 35, 35, 10
+FLAT_WINDOWS = 110          # his 22 Aug instruction: window cleaning has its own base fee
 BAND_H = {"b12": 4, "b34": 6, "b5": 8}
 EXTRA  = {  # id: (minutes, price)
     "oven": (30, 35), "fridge": (30, 35), "cupboard": (60, 35),
     "washfold": (60, 180), "washiron": (120, 250),
 }
+POOL   = (120, 70)          # the outdoor extra — time and price are my placeholders
+VEHICLE_H = {"small": 1, "medium": 1.5, "big": 2, "suv": 2.5, "bakkie": 2.5, "truck": 3}
+
+def window_hours(rooms):
+    """4 rooms is 4 hours; every room after that adds 30 minutes."""
+    return 4 + max(0, rooms - 4) * 0.5
 
 fails = []
 def check(label, got, want):
@@ -36,13 +43,18 @@ def amt(txt):
 def cents(x):
     return int(round(x * 100))
 
+def hlabel(h):
+    """The same '4h 30m' string the page prints."""
+    m = int(round(h * 60))
+    return f"{m // 60}h" + (f" {m % 60}m" if m % 60 else "") if m >= 60 else f"{m}m"
+
 def zar(x):
     """The same string the page renders, for 'is this in the email' checks."""
     c = cents(x)
     return f"R{c // 100}" + (f".{c % 100:02d}" if c % 100 else "")
 
-def total_for(service_hours, extras=()):
-    return FLAT + service_hours * RATE + sum(EXTRA[e][1] for e in extras) + FEE
+def total_for(service_hours, extras=(), flat=FLAT):
+    return flat + service_hours * RATE + sum(EXTRA[e][1] for e in extras) + FEE
 
 
 def sign_in(pg):
@@ -119,6 +131,57 @@ def run(pw):
           pg.locator(".task[disabled] .tk-t").inner_text(), "Wash, dry and iron")
     check("and it says why",
           "past 10 hours" in pg.locator(".task[disabled] .tk-s").inner_text(), True)
+
+    print("\n5b. Window cleaning is priced off the rooms, on its own R110 base fee")
+    sign_in(pg); pick(pg, "windows")
+    check("starts at his 4 rooms", pg.locator("[data-rooms].on").inner_text().startswith("4 room"), True)
+    check("4 rooms is 4 hours", pg.locator("#hVal").inner_text(), "4h")
+    check("the base fee is R110, not R155",
+          amt(pg.locator("#sum .li").first.inner_text()), cents(FLAT_WINDOWS))
+    check("4-room total", amt(pg.locator("#sumTot").inner_text()),
+          cents(total_for(4, flat=FLAT_WINDOWS)))
+    for rooms in (5, 6, 9):
+        pg.click(f"[data-rooms='{rooms}']")
+        h = window_hours(rooms)
+        check(f"{rooms} rooms is {h}h", pg.locator("#hVal").inner_text(), hlabel(h))
+        check(f"{rooms}-room total", amt(pg.locator("#sumTot").inner_text()),
+              cents(total_for(h, flat=FLAT_WINDOWS)))
+    check("it says the job is in and out",
+          "inside and out" in pg.locator(".note").first.text_content(), True)
+    check("the room choices stop where the 10-hour cap does",
+          pg.locator("[data-rooms]").count(), 13)          # 4 .. 16 rooms
+
+    print("\n5c. Pool service is now an extra task on the outdoor jobs")
+    pg.click("[data-rooms='4']")
+    check("it is offered here", pg.locator("[data-task='pool']").count(), 1)
+    check("and the indoor extras are not",
+          pg.locator("[data-task='oven']").count(), 0)
+    pg.click("[data-task='pool']")
+    check("pool adds its price", amt(pg.locator("#sumTot").inner_text()),
+          cents(FLAT_WINDOWS + 4 * RATE + POOL[1] + FEE))
+    check("and its 2 hours", pg.locator("#sum .mini").last.inner_text(), "Estimated 6h on site")
+    check("it is labelled as my estimate, not his",
+          "my estimate" in pg.locator("[data-task='pool'] .tk-t").text_content(), True)
+    pg.screenshot(path=str(SHOTS / "book-windows.png"))
+    sign_in(pg); pick(pg, "standard")
+    check("pool is not offered on an indoor clean", pg.locator("[data-task='pool']").count(), 0)
+
+    print("\n5d. Car wash asks for the vehicle first")
+    sign_in(pg); pick(pg, "carwash")
+    check("all six vehicle sizes are offered", pg.locator("[data-vehicle]").count(), 6)
+    check("no hours until one is picked", pg.locator("#hVal").count(), 0)
+    check("cannot continue yet", pg.locator("#nextBtn").is_disabled(), True)
+    for veh in ("small", "suv", "truck"):
+        pg.click(f"[data-vehicle='{veh}']")
+        h = VEHICLE_H[veh]
+        check(f"{veh} is {h}h", pg.locator("#hVal").inner_text(), hlabel(h))
+        check(f"{veh} total", amt(pg.locator("#sumTot").inner_text()), cents(total_for(h)))
+    check("can continue now", pg.locator("#nextBtn").is_disabled(), False)
+    check("the vehicle shows on the summary",
+          "Truck" in pg.locator("#sum .mini").first.inner_text(), True)
+    check("the hours are declared as mine",
+          "estimates above are mine" in pg.locator(".pane .note.warn").last.text_content(), True)
+    pg.screenshot(path=str(SHOTS / "book-carwash.png"))
 
     print("\n6. Laundry is its own flow, with its own estimates")
     pg.goto(URL); pg.click("#hcIn"); pg.click("#siGo")

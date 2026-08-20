@@ -39,6 +39,23 @@ profile and in the admin employee list.
 Laundry is its own flow: hand wash (5 h) or machine wash (4 h), then dry &
 fold (+2 h) or dry, iron & fold (+3.5 h).
 
+**Window cleaning** is priced off the number of rooms in the house, and is
+the one service on a different base fee:
+
+| | |
+|---|---|
+| Base fee | **R110** (not R155) |
+| 4 rooms | 4 hours |
+| Every room after that | +30 minutes |
+
+It is stated on screen that this covers the windows **inside and out**.
+
+**Car wash** is priced off the vehicle — small car, medium car, big car,
+SUV, bakkie, truck. The hours are placeholders (see below).
+
+**Pool service** is an extra task on the outdoor jobs, not a service of its
+own.
+
 **Time rules.** The customer may take at most 30 minutes off the estimate and
 add as much as they like, in 30-minute steps. A cleaner may not be booked
 past 10 hours in a day — that cap is what greys extras out on a 5+ bedroom
@@ -73,9 +90,16 @@ There is no mail server yet; this is the wording, for sign-off.
 
 ## Placeholders — mine, not the client's
 
-- Office cleaning and all four outdoor services have **estimated hours I made
-  up**. The price list covers indoor house cleaning and laundry only. These
-  are marked on screen wherever they appear.
+- Office cleaning, outdoor cleaning and gardening have **estimated hours I
+  made up**. The price list covers indoor house cleaning, laundry and window
+  cleaning. These are marked on screen wherever they appear.
+- The six **car wash** durations are mine — the client gave the vehicle
+  sizes but no times or prices. Car washes are on the R155 flat rate;
+  whether they should be on the R110 base like window cleaning is an open
+  question, asked on screen and in chat.
+- **Pool service** costs R70, which is its 2 hours at the client's own
+  R35/hr, because he has not priced it. Both the time and the price are
+  labelled "my estimate" on the task itself.
 - Deep clean and move-in/move-out add 2 h and 3 h to the band estimate. Also
   mine.
 - Geocoding runs against a stand-in. It swaps to Google Places once there is

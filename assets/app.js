@@ -36,13 +36,20 @@ const CFG = {
 
   propertyTypes: ['House', 'Flat / Apartment', 'Townhouse', 'Cottage', 'Bachelor unit'],
 
-  /* Extra tasks — his list, in his order. Each adds BOTH money and time. */
+  /* Extra tasks — his list, in his order. Each adds BOTH money and time.
+     `set` decides which services offer it: 'home' on the indoor house
+     cleans, 'outdoor' on the outdoor range. Pool service moved here on
+     22 Aug — "please put pool services under outdoor as an extra task". */
   extras: [
-    { id:'oven',     name:'Oven clean',                mins:30,  price:35  },
-    { id:'fridge',   name:'Fridge clean',              mins:30,  price:35  },
-    { id:'cupboard', name:'Cupboard clean',            mins:60,  price:35  },
-    { id:'washfold', name:'Basic wash, dry and fold',  mins:60,  price:180 },
-    { id:'washiron', name:'Wash, dry and iron',        mins:120, price:250 }
+    { id:'oven',     set:'home',    name:'Oven clean',                mins:30,  price:35  },
+    { id:'fridge',   set:'home',    name:'Fridge clean',              mins:30,  price:35  },
+    { id:'cupboard', set:'home',    name:'Cupboard clean',            mins:60,  price:35  },
+    { id:'washfold', set:'home',    name:'Basic wash, dry and fold',  mins:60,  price:180 },
+    { id:'washiron', set:'home',    name:'Wash, dry and iron',        mins:120, price:250 },
+    /* PLACEHOLDER: he has not priced the pool. R70 is its 2 hours at his
+       own R35/hr, so it at least follows his method until he says. */
+    { id:'pool',     set:'outdoor', name:'Pool service',              mins:120, price:70, placeholder:true,
+      sub:'Skim, vacuum, brush and a chemical check' }
   ],
 
   /* Strictly laundry — pick a wash, then pick a finish. */
@@ -55,18 +62,36 @@ const CFG = {
     { id:'dryiron', name:'Dry, iron & fold',  hours:3.5, sub:'Dried, pressed and folded' }
   ],
 
-  /* Services. `estHours` on the non-bedroom services is a PLACEHOLDER —
-     the client has priced indoor house cleaning and laundry, not these. */
+  /* WINDOW CLEANING — his numbers, 22 Aug. "4 rooms = est 4 hours and
+     for each rooms added, its an extra 30 minutes ... make the base fee
+     110". So the flat rate is R110 on this one service, not R155.      */
+  windowRooms: { base:4, hours:4, addMins:30, max:16 },
+
+  /* CAR WASH — his sizes, 22 Aug. The hours are PLACEHOLDERS; he gave
+     the list of vehicles but no times or prices for them.              */
+  vehicles: [
+    { id:'small',  name:'Small car',  hours:1,   sub:'Hatchback or city car' },
+    { id:'medium', name:'Medium car', hours:1.5, sub:'Sedan' },
+    { id:'big',    name:'Big car',    hours:2,   sub:'Large sedan or estate' },
+    { id:'suv',    name:'SUV',        hours:2.5, sub:'Crossover or 4x4' },
+    { id:'bakkie', name:'Bakkie',     hours:2.5, sub:'Single or double cab' },
+    { id:'truck',  name:'Truck',      hours:3,   sub:'Light commercial' }
+  ],
+
+  /* Services. `estHours` on the hours-model services is a PLACEHOLDER —
+     the client has priced indoor house cleaning, laundry and windows.
+     `extraSet` says which extra tasks this service offers.
+     `flatRate` overrides the R155 flat rate for that one service.      */
   services: [
-    { id:'standard', group:'indoor',  name:'Standard house cleaning', model:'bedrooms', icon:'home',    addHours:0,   desc:'Kitchen, bathrooms, bedrooms and living areas' },
-    { id:'deep',     group:'indoor',  name:'Deep clean',              model:'bedrooms', icon:'sparkle', addHours:2,   desc:'Everything in a standard clean, done to the corners', placeholder:true },
-    { id:'move',     group:'indoor',  name:'Move-in / move-out',      model:'bedrooms', icon:'box',     addHours:3,   desc:'Empty property, cupboards and appliances inside', placeholder:true },
+    { id:'standard', group:'indoor',  name:'Standard house cleaning', model:'bedrooms', icon:'home',    addHours:0,   extraSet:'home',    desc:'Kitchen, bathrooms, bedrooms and living areas' },
+    { id:'deep',     group:'indoor',  name:'Deep clean',              model:'bedrooms', icon:'sparkle', addHours:2,   extraSet:'home',    desc:'Everything in a standard clean, done to the corners', placeholder:true },
+    { id:'move',     group:'indoor',  name:'Move-in / move-out',      model:'bedrooms', icon:'box',     addHours:3,   extraSet:'home',    desc:'Empty property, cupboards and appliances inside', placeholder:true },
     { id:'laundry',  group:'indoor',  name:'Laundry & ironing',       model:'laundry',  icon:'shirt',   desc:'Wash, dry, iron and fold' },
     { id:'office',   group:'indoor',  name:'Office cleaning',         model:'hours',    icon:'office',  estHours:5,   desc:'Desks, floors, kitchen and bathrooms', placeholder:true },
-    { id:'outdoor',  group:'outdoor', name:'Outdoor cleaning',        model:'hours',    icon:'leaf',    estHours:4,   desc:'Patios, driveways, walls and paving', placeholder:true },
-    { id:'garden',   group:'outdoor', name:'Gardening',               model:'hours',    icon:'shovel',  estHours:4,   desc:'Mowing, weeding, trimming and clearing', placeholder:true },
-    { id:'windows',  group:'outdoor', name:'Window cleaning',         model:'hours',    icon:'window',  estHours:3,   desc:'Inside and outside, frames and sills', placeholder:true },
-    { id:'pool',     group:'outdoor', name:'Pool service',            model:'hours',    icon:'wave',    estHours:2,   desc:'Skim, vacuum, brush and chemical check', placeholder:true }
+    { id:'outdoor',  group:'outdoor', name:'Outdoor cleaning',        model:'hours',    icon:'leaf',    estHours:4,   extraSet:'outdoor', desc:'Patios, driveways, walls and paving', placeholder:true },
+    { id:'garden',   group:'outdoor', name:'Gardening',               model:'hours',    icon:'shovel',  estHours:4,   extraSet:'outdoor', desc:'Mowing, weeding, trimming and clearing', placeholder:true },
+    { id:'windows',  group:'outdoor', name:'Window cleaning',         model:'rooms',    icon:'window',  flatRate:110, extraSet:'outdoor', desc:'In and out — glass, frames and sills, both sides' },
+    { id:'carwash',  group:'outdoor', name:'Car wash',                model:'vehicle',  icon:'car',     desc:'Wash, rinse and dry, inside and out', placeholder:true }
   ],
 
   slots: ['07:00','08:00','09:00','10:00','11:00','12:00','13:00'],
@@ -109,6 +134,12 @@ const hoursLabel = h => {
    So: floor = estimate − 30 min. Ceiling = whatever is left under
    the 10-hour cap once the chosen extras are counted.
    ============================================================ */
+/* Window cleaning: 4 rooms is 4 hours, and every room after that adds
+   half an hour. Below 4 rooms he gave no figure, so 4 is the floor.  */
+const roomsOf = b => Math.min(Math.max(Number(b.rooms) || CFG.windowRooms.base, CFG.windowRooms.base), CFG.windowRooms.max);
+const roomHours = rooms => CFG.windowRooms.hours +
+  Math.max(0, rooms - CFG.windowRooms.base) * CFG.windowRooms.addMins / 60;
+
 function baseHoursFor(b){
   const svc = svcOf(b.service);
   if(!svc) return 0;
@@ -121,15 +152,32 @@ function baseHoursFor(b){
     const f = CFG.laundryFinish.find(x => x.id === b.finish);
     return (w ? w.hours : 0) + (f ? f.hours : 0);
   }
+  if(svc.model === 'rooms')   return roomHours(roomsOf(b));
+  if(svc.model === 'vehicle') return CFG.vehicles.find(v => v.id === b.vehicle)?.hours || 0;
   return svc.estHours || 0;
 }
 
-const extrasMins = b => (b.extras || [])
-  .reduce((n, id) => n + (CFG.extras.find(x => x.id === id)?.mins || 0), 0);
+/* Which extra tasks this service offers, and which of them are ticked.
+   Filtering by the set means an id left over from a previous service
+   cannot quietly keep billing on the next one.                        */
+const extrasFor = b => {
+  const set = svcOf(b.service)?.extraSet;
+  return set ? CFG.extras.filter(e => e.set === set) : [];
+};
+const chosenExtras = b => {
+  const offered = extrasFor(b);
+  return (b.extras || []).map(id => offered.find(e => e.id === id)).filter(Boolean);
+};
+const extrasMins = b => chosenExtras(b).reduce((n, e) => n + e.mins, 0);
 
-/* Extras are only offered on the indoor house-cleaning services —
-   laundry has its own choices and the outdoor services have none.  */
-const allowsExtras = b => svcOf(b.service)?.model === 'bedrooms';
+const allowsExtras = b => extrasFor(b).length > 0;
+
+/* The flat rate is R155 everywhere except window cleaning, where he
+   set it to R110 on 22 Aug.                                          */
+const flatOf = b => {
+  const f = svcOf(b.service)?.flatRate;
+  return f == null ? CFG.flatRate : f;
+};
 
 function hoursWindow(b){
   const est   = baseHoursFor(b);
@@ -144,7 +192,7 @@ function hoursWindow(b){
    work leaves only 2 hours of extras before the cap bites.            */
 function extraAllowed(b, id){
   if((b.extras || []).includes(id)) return true;      // already on, always removable
-  const e = CFG.extras.find(x => x.id === id);
+  const e = extrasFor(b).find(x => x.id === id);
   if(!e) return false;
   const svcH = b.hours != null ? b.hours : baseHoursFor(b);
   return svcH + extrasMins(b) / 60 + e.mins / 60 <= CFG.maxHours + 1e-9;
@@ -171,21 +219,21 @@ function priceBooking(b){
   const hours   = svcH + exMins / 60;
 
   const labour  = svcH * CFG.hourlyRate;
-  const extras  = allowsExtras(b)
-    ? (b.extras || []).reduce((n, id) => n + (CFG.extras.find(x => x.id === id)?.price || 0), 0)
-    : 0;
+  const extras  = chosenExtras(b).reduce((n, e) => n + e.price, 0);
+  const flat    = flatOf(b);
 
-  const total = CFG.flatRate + labour + extras + CFG.serviceFee;
+  const total = flat + labour + extras + CFG.serviceFee;
 
   return {
     serviceName: svc.name, model: svc.model,
-    flat: CFG.flatRate, labour, extras,
+    flat, labour, extras,
     fee: CFG.serviceFee, total,
     serviceHours: svcH, hours,
     estHours: win.est, minHours: win.min, maxHours: win.max,
     hoursLabel: hoursLabel(hours), serviceHoursLabel: hoursLabel(svcH),
     overEstimate: Math.round((svcH - win.est) * 60),
-    placeholder: !!svc.placeholder
+    placeholder: !!svc.placeholder,
+    extrasPlaceholder: chosenExtras(b).some(e => e.placeholder)
   };
 }
 
@@ -242,7 +290,8 @@ const DB = {
     { id:'SPW-104201', cust:'cu1', service:'laundry',  wash:'machine', finish:'dryiron', extras:[],     addr:'a3', cleaner:'cl3', date:'2026-08-25', time:'07:00', status:'upcoming', note:'', rating:null },
     { id:'SPW-103980', cust:'cu1', service:'standard', band:'b34', hours:6,   extras:['washfold'],      addr:'a1', cleaner:'cl1', date:'2026-08-11', time:'09:00', status:'completed', note:'', rating:{ stars:5, comment:'Nomsa was early, thorough and lovely with the cats. Booking her again.' } },
     { id:'SPW-103844', cust:'cu1', service:'deep',     band:'b34', hours:8,   extras:['oven'],          addr:'a1', cleaner:'cl3', date:'2026-07-29', time:'08:00', status:'completed', note:'', rating:{ stars:4, comment:'Great clean overall, skirting boards in the hallway were missed.' } },
-    { id:'SPW-103702', cust:'cu1', service:'windows',  hours:3,               extras:[],                addr:'a2', cleaner:'cl2', date:'2026-07-15', time:'10:00', status:'completed', note:'', rating:null },
+    { id:'SPW-103702', cust:'cu1', service:'windows',  rooms:5, hours:4.5,    extras:[],                addr:'a2', cleaner:'cl2', date:'2026-07-15', time:'10:00', status:'completed', note:'', rating:null },
+    { id:'SPW-103688', cust:'cu1', service:'carwash',  vehicle:'suv', hours:2.5, extras:[],             addr:'a1', cleaner:'cl8', date:'2026-07-04', time:'11:00', status:'completed', note:'Parked in bay 12.', rating:{ stars:5, comment:'Thabo did the inside as well without being asked.' } },
     { id:'SPW-103551', cust:'cu1', service:'outdoor',  hours:4,               extras:[],                addr:'a1', cleaner:'cl8', date:'2026-06-30', time:'13:00', status:'cancelled', note:'', rating:null },
     { id:'SPW-104355', cust:'cu2', service:'standard', band:'b12', hours:4,   extras:['fridge'],        addr:'a1', cleaner:'cl7', date:'2026-08-20', time:'10:00', status:'upcoming', note:'Gate code 4471.', rating:null },
     { id:'SPW-104361', cust:'cu3', service:'standard', band:'b5',  hours:8,   extras:['oven','fridge'], addr:'a1', cleaner:'cl3', date:'2026-08-20', time:'08:00', status:'upcoming', note:'', rating:null },
@@ -297,6 +346,28 @@ const ACCOUNT = {
   pending:  { label:'Pending',  cls:'wait' },
   declined: { label:'Declined', cls:'bad'  }
 };
+
+/* What was actually booked, in one line. The cleaner needs to know it
+   is an SUV and not a hatchback before they arrive, so all three
+   dashboards print this.                                            */
+function jobDetail(b){
+  const svc = svcOf(b.service);
+  if(!svc) return '';
+  if(svc.model === 'bedrooms')
+    return (CFG.bedroomBands.find(x => x.id === b.band) || CFG.bedroomBands[0]).label;
+  if(svc.model === 'laundry'){
+    const w = CFG.laundryWash.find(x => x.id === b.wash);
+    const f = CFG.laundryFinish.find(x => x.id === b.finish);
+    return [w && w.name, f && f.name].filter(Boolean).join(' · ') || svc.desc;
+  }
+  if(svc.model === 'rooms'){
+    const n = roomsOf(b);
+    return `${n} room${n > 1 ? 's' : ''} · windows in and out`;
+  }
+  if(svc.model === 'vehicle')
+    return CFG.vehicles.find(v => v.id === b.vehicle)?.name || svc.desc;
+  return svc.desc;
+}
 
 /* ============================================================
    AVAILABILITY — "list all the workers available around the area
@@ -380,6 +451,7 @@ const I = {
   shirt:'<path d="M8 4l4 2 4-2 4 3-2 3-1-1v11H7V9L6 10 4 7z"/>',
   window:'<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M12 4v16M4 12h16"/>',
   wave:'<path d="M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>',
+  car:'<path d="M4 16v2.5a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5V12l2.2-5.4a1 1 0 0 1 .93-.6h9.74a1 1 0 0 1 .93.6L18 12v6.5a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5V16"/><path d="M2 12h16"/><circle cx="6" cy="14" r="1"/><circle cx="14" cy="14" r="1"/><path d="M20 9l2 1.5-2 1.5"/>',
   grid:'<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',
   cal:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
   heart:'<path d="M12 20s-7-4.4-7-9.2A3.8 3.8 0 0 1 12 8a3.8 3.8 0 0 1 7 2.8C19 15.6 12 20 12 20z"/>',

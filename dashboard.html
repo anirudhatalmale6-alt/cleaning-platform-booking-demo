@@ -90,6 +90,7 @@ function orderCard(b, opts = {}){
       ${statusPill(b.status)}
     </div>
     <dl class="kv" style="margin-bottom:12px">
+      <dt>Job</dt><dd>${esc(jobDetail(b))}</dd>
       <dt>Where</dt><dd>${esc([a.unit, a.line].filter(Boolean).join(', '))}, ${esc(a.suburb)}</dd>
       ${b.extras && b.extras.length ? `<dt>Extras</dt><dd>${b.extras.map(id => CFG.extras.find(e => e.id === id).name).join(', ')}</dd>` : ''}
       ${b.note ? `<dt>Your note</dt><dd>“${esc(b.note)}”</dd>` : ''}
