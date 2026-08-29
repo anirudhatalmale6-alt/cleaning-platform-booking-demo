@@ -1,0 +1,378 @@
+{
+  "version": "1.0",
+  "brand": "Sparrow",
+  "note": "The single source of truth for the cleaner registration conversation. The Python bot (bot/engine.py) and the browser simulator (web/wa-sim.js) both interpret THIS file, so the demo can never drift from what WhatsApp actually says.",
+
+  "commands": {
+    "restart": ["restart", "start over", "start again", "begin again"],
+    "back": ["back", "previous", "go back"],
+    "help": ["help", "menu", "options", "?"],
+    "cancel": ["cancel", "stop", "quit", "exit"]
+  },
+
+  "texts": {
+    "help": "Here is what you can type at any time:\n\nback — change your last answer\nrestart — start the application again\ncancel — stop and delete what you have entered\n\nAn admin reviews every application by hand. It takes up to two working days and you hear back on WhatsApp, email and SMS.",
+    "cancelled": "No problem — I have deleted what you entered. Send *hi* whenever you want to apply.",
+    "back_at_start": "You are at the first question, so there is nothing to go back to.",
+    "restarted": "Right, starting again from the top.",
+    "unknown_option": "Sorry, I did not catch that. Please tap one of the buttons above.",
+    "resume": "Welcome back. You were busy with your application.",
+    "resume_options": "Carry on where you stopped, or start again?",
+    "already_applied": "You have already applied — your reference is *{appId}*, sent on {submitted}.\n\nIt is with our admin team. You will hear from us within two working days. Type *status* if you want me to repeat this."
+  },
+
+  "steps": [
+    {
+      "id": "welcome",
+      "kind": "buttons",
+      "text": "Hello 👋 I am the *Sparrow* hiring assistant.\n\nWe take on indoor and outdoor cleaners across South Africa. I can take your application right here on WhatsApp — it is about 15 questions and takes roughly 5 minutes.",
+      "options": [
+        { "id": "apply", "title": "Apply now" },
+        { "id": "needs", "title": "What do I need?" },
+        { "id": "later", "title": "Not now" }
+      ],
+      "routes": { "apply": "first_name", "needs": "requirements", "later": "goodbye" }
+    },
+    {
+      "id": "requirements",
+      "kind": "buttons",
+      "text": "To finish the application you need these four things on your phone:\n\n1. Your *SA ID*, passport or work permit — the number, and a photo of it\n2. A *head and shoulders photo* of yourself. This is the picture customers see when they choose a cleaner\n3. A *police clearance* issued in the last 12 months\n4. *Two references* — people who have paid you for cleaning work. We phone them\n\nYou must also be 18 or older.",
+      "options": [
+        { "id": "apply", "title": "I have those" },
+        { "id": "later", "title": "I will come back" }
+      ],
+      "routes": { "apply": "first_name", "later": "goodbye" }
+    },
+    {
+      "id": "goodbye",
+      "kind": "end",
+      "text": "No problem. Send *hi* whenever you are ready and we will pick it up from here."
+    },
+
+    {
+      "id": "first_name",
+      "kind": "text",
+      "field": "first",
+      "validator": "name",
+      "text": "Let's start. What is your *first name*?",
+      "hint": "Exactly as it appears on your ID or passport.",
+      "next": "last_name"
+    },
+    {
+      "id": "last_name",
+      "kind": "text",
+      "field": "last",
+      "validator": "name",
+      "text": "Thanks {first}. And your *surname*?",
+      "next": "dob"
+    },
+    {
+      "id": "dob",
+      "kind": "text",
+      "field": "dob",
+      "validator": "dob",
+      "text": "What is your *date of birth*?",
+      "hint": "Day/month/year, like 14/03/1994. You have to be 18 or older to work with us.",
+      "next": "phone"
+    },
+    {
+      "id": "phone",
+      "kind": "text",
+      "field": "phone",
+      "validator": "sa_mobile",
+      "text": "What is your *mobile number*?",
+      "hint": "Tap the button if this WhatsApp number is the best one to reach you on.",
+      "options": [{ "id": "use_this", "title": "Use this number" }],
+      "next": "email"
+    },
+    {
+      "id": "email",
+      "kind": "text",
+      "field": "email",
+      "validator": "email",
+      "text": "What is your *email address*?",
+      "hint": "We send your application updates here as well as on WhatsApp.",
+      "next": "work_group"
+    },
+    {
+      "id": "work_group",
+      "kind": "buttons",
+      "field": "group",
+      "text": "Which work are you applying for?",
+      "hint": "Indoor is house cleaning, laundry and offices. Outdoor is windows, gardening, the car wash and pools.",
+      "options": [
+        { "id": "indoor", "title": "Indoor cleaner" },
+        { "id": "outdoor", "title": "Outdoor cleaner" },
+        { "id": "both", "title": "Both" }
+      ],
+      "next": "years"
+    },
+    {
+      "id": "years",
+      "kind": "text",
+      "field": "years",
+      "validator": "years",
+      "text": "How many *years of cleaning experience* do you have?",
+      "hint": "A number. Put 0 if you are starting out — we still read every application.",
+      "next": "province"
+    },
+    {
+      "id": "province",
+      "kind": "list",
+      "field": "prov",
+      "text": "Which *province* do you work in?",
+      "button": "Choose province",
+      "optionsFrom": "provinces",
+      "next": "cities"
+    },
+    {
+      "id": "cities",
+      "kind": "multi",
+      "field": "cities",
+      "text": "Which *cities and towns* can you get to?",
+      "hint": "You are only shown to customers in the places you pick. Choose as many as you like.",
+      "button": "Choose a city",
+      "optionsFrom": "cities",
+      "doneTitle": "That is all of them",
+      "doneId": "cities_done",
+      "min": 1,
+      "next": "languages"
+    },
+    {
+      "id": "languages",
+      "kind": "multi",
+      "field": "langs",
+      "text": "Which *languages* do you speak?",
+      "hint": "Customers can filter on this, so pick every language you are comfortable working in.",
+      "button": "Choose a language",
+      "optionsFrom": "languages",
+      "doneTitle": "That is all of them",
+      "doneId": "langs_done",
+      "min": 1,
+      "next": "transport"
+    },
+    {
+      "id": "transport",
+      "kind": "buttons",
+      "field": "transport",
+      "text": "Do you have your *own transport*?",
+      "options": [
+        { "id": "yes", "title": "Yes" },
+        { "id": "no", "title": "No, I use taxis" }
+      ],
+      "next": "id_kind"
+    },
+
+    {
+      "id": "id_kind",
+      "kind": "buttons",
+      "field": "idKind",
+      "text": "What are you working on?",
+      "options": [
+        { "id": "id", "title": "SA ID" },
+        { "id": "passport", "title": "Passport" },
+        { "id": "permit", "title": "Work permit" }
+      ],
+      "next": "id_number"
+    },
+    {
+      "id": "id_number",
+      "kind": "text",
+      "field": "idNum",
+      "validator": "id_number",
+      "text": "Please type your *{idKindLabel} number*.",
+      "hint": "A South African ID number is 13 digits.",
+      "next": "up_id"
+    },
+    {
+      "id": "up_id",
+      "kind": "media",
+      "field": "upId",
+      "accepts": ["image", "document"],
+      "text": "Now send a *photo of your {idKindLabel}*.",
+      "hint": "A clear picture taken on your phone is fine. A PDF works too.",
+      "next": "up_photo"
+    },
+    {
+      "id": "up_photo",
+      "kind": "media",
+      "field": "upPhoto",
+      "accepts": ["image"],
+      "text": "Send a *head and shoulders photo* of yourself.",
+      "hint": "This is the picture customers see when they pick a cleaner, so face the camera in good light. It has to be a photo, not a file.",
+      "next": "up_crim"
+    },
+    {
+      "id": "up_crim",
+      "kind": "media",
+      "field": "upCrim",
+      "accepts": ["image", "document"],
+      "text": "Last one — send your *police clearance*.",
+      "hint": "It must have been issued in the last 12 months.",
+      "next": "r1_name"
+    },
+
+    {
+      "id": "r1_name",
+      "kind": "text",
+      "field": "r1Name",
+      "validator": "name",
+      "text": "Two references now. These must be people who have *paid you for cleaning work*, because we phone them.\n\nWhat is the *full name* of your first reference?",
+      "next": "r1_phone"
+    },
+    {
+      "id": "r1_phone",
+      "kind": "text",
+      "field": "r1Phone",
+      "validator": "sa_phone",
+      "text": "What is {r1Name}'s *contact number*?",
+      "next": "r1_rel"
+    },
+    {
+      "id": "r1_rel",
+      "kind": "text",
+      "field": "r1Rel",
+      "validator": "sentence",
+      "text": "How does {r1Name} know you?",
+      "hint": "For example: cleaned their home every Tuesday for 3 years.",
+      "next": "r2_name"
+    },
+    {
+      "id": "r2_name",
+      "kind": "text",
+      "field": "r2Name",
+      "validator": "name",
+      "text": "And the *full name* of your second reference?",
+      "next": "r2_phone"
+    },
+    {
+      "id": "r2_phone",
+      "kind": "text",
+      "field": "r2Phone",
+      "validator": "sa_phone",
+      "text": "What is {r2Name}'s *contact number*?",
+      "next": "r2_rel"
+    },
+    {
+      "id": "r2_rel",
+      "kind": "text",
+      "field": "r2Rel",
+      "validator": "sentence",
+      "text": "How does {r2Name} know you?",
+      "next": "consent"
+    },
+
+    {
+      "id": "consent",
+      "kind": "buttons",
+      "field": "agree",
+      "text": "Almost done.\n\nDo you confirm that everything you have told me is true, and do you agree to a *background check*?",
+      "options": [
+        { "id": "yes", "title": "I agree" },
+        { "id": "no", "title": "No" }
+      ],
+      "routes": { "yes": "review", "no": "consent_declined" }
+    },
+    {
+      "id": "consent_declined",
+      "kind": "end",
+      "text": "We cannot place a cleaner in someone's home without a background check, so I have to stop the application there. If you change your mind, send *hi* and we will start again."
+    },
+    {
+      "id": "review",
+      "kind": "buttons",
+      "text": "Here is everything I have. Please check it:\n\n{summary}",
+      "options": [
+        { "id": "submit", "title": "Send it in" },
+        { "id": "fix", "title": "Change something" },
+        { "id": "restart", "title": "Start over" }
+      ],
+      "routes": { "submit": "submitted", "fix": "fix_pick", "restart": "__restart" }
+    },
+    {
+      "id": "fix_pick",
+      "kind": "list",
+      "text": "Which answer would you like to change?",
+      "button": "Choose an answer",
+      "optionsFrom": "editable",
+      "next": "__edit"
+    },
+    {
+      "id": "submitted",
+      "kind": "end",
+      "text": "Done — your application is in. ✅\n\nYour reference is *{appId}*.\n\nAn admin reads every application by hand. We come back to you within two working days on WhatsApp, email and SMS. You cannot sign in to the cleaner app until you are approved, and that is normal.\n\nType *status* any time to see where your application stands."
+    }
+  ],
+
+  "optionSets": {
+    "languages": ["English", "Afrikaans", "isiZulu", "isiXhosa", "Sesotho", "Setswana", "Sepedi", "Xitsonga"],
+    "provinces": {
+      "Western Cape":  ["Cape Town", "Stellenbosch", "Paarl", "George", "Somerset West"],
+      "Gauteng":       ["Johannesburg", "Pretoria", "Sandton", "Midrand", "Soweto"],
+      "KwaZulu-Natal": ["Durban", "Pietermaritzburg", "Ballito", "Umhlanga", "Richards Bay"],
+      "Eastern Cape":  ["Gqeberha", "East London", "Mthatha"],
+      "Free State":    ["Bloemfontein", "Welkom"],
+      "Mpumalanga":    ["Nelspruit", "Witbank"],
+      "Limpopo":       ["Polokwane", "Tzaneen"],
+      "North West":    ["Rustenburg", "Potchefstroom"],
+      "Northern Cape": ["Kimberley", "Upington"]
+    }
+  },
+
+  "idKindLabels": { "id": "ID", "passport": "passport", "permit": "work permit" },
+
+  "valueLabels": {
+    "group":     { "indoor": "Indoor cleaner", "outdoor": "Outdoor cleaner", "both": "Indoor and outdoor" },
+    "transport": { "yes": "Own transport", "no": "Taxis" },
+    "idKind":    { "id": "SA ID", "passport": "Passport", "permit": "Work permit" }
+  },
+
+  "editable": [
+    { "title": "Name",            "from": "first_name", "to": "last_name" },
+    { "title": "Date of birth",   "from": "dob",        "to": "dob" },
+    { "title": "Contact details", "from": "phone",      "to": "email" },
+    { "title": "Indoor/outdoor",  "from": "work_group", "to": "work_group" },
+    { "title": "Experience",      "from": "years",      "to": "years" },
+    { "title": "Where you work",  "from": "province",   "to": "cities" },
+    { "title": "Languages",       "from": "languages",  "to": "languages" },
+    { "title": "Transport",       "from": "transport",  "to": "transport" },
+    { "title": "ID document",     "from": "id_kind",    "to": "up_id" },
+    { "title": "References",      "from": "r1_name",    "to": "r2_rel" }
+  ],
+
+  "summaryRows": [
+    { "label": "Name",        "fields": ["first", "last"] },
+    { "label": "Born",        "fields": ["dob"] },
+    { "label": "Mobile",      "fields": ["phone"] },
+    { "label": "Email",       "fields": ["email"] },
+    { "label": "Applying as", "fields": ["group"] },
+    { "label": "Experience",  "fields": ["years"], "suffix": " years" },
+    { "label": "Works in",    "fields": ["cities"] },
+    { "label": "Languages",   "fields": ["langs"] },
+    { "label": "Transport",   "fields": ["transport"] },
+    { "label": "Document",    "fields": ["idKind", "idNum"] },
+    { "label": "Reference 1", "fields": ["r1Name", "r1Phone"] },
+    { "label": "Reference 2", "fields": ["r2Name", "r2Phone"] }
+  ],
+
+  "validators": {
+    "name":      { "error": "That does not look like a name. Please type it in letters only." },
+    "sentence":  { "error": "Please give me a little more than that — a few words is enough." },
+    "dob":       { "error": "I could not read that date. Please send it as day/month/year, like 14/03/1994." },
+    "sa_mobile": { "error": "That is not a South African mobile number. It should look like 082 000 0000 or +27 82 000 0000." },
+    "sa_phone":  { "error": "That does not look like a South African number. A landline like 021 000 0000 is fine too." },
+    "email":     { "error": "That email address does not look right. Please check it and send it again." },
+    "years":     { "error": "Please send just a number, between 0 and 50." },
+    "id_number": { "error": "That does not look right. A South African ID number is 13 digits and I check the last digit against the rest." }
+  },
+
+  "specialErrors": {
+    "under_age": "You have to be 18 or older to work with us. Thank you for your interest — please come back when you turn 18.",
+    "dob_mismatch": "The birth date inside that ID number is not the one you gave me earlier. One of the two has a typo. Please send the ID number again, or type *back* to fix your date of birth."
+  },
+
+  "mediaErrors": {
+    "image": "I need a *photo* for this one. Please take a picture and send it as a photo, not as a file.",
+    "any": "Please send a photo or a PDF for this step."
+  }
+}

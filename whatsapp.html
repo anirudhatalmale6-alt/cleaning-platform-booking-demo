@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sparrow — WhatsApp cleaner registration bot</title>
+<style>
+:root{
+  --wa-teal:#075E54; --wa-green:#128C7E; --wa-light:#25D366;
+  --wa-bg:#ECE5DD; --wa-out:#DCF8C6; --wa-in:#fff;
+  --ink:#111b21; --ink-45:#667781;
+  --page:#0f1b17;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--page);color:#e9f0ec;min-height:100vh;
+  display:flex;align-items:flex-start;justify-content:center;gap:34px;padding:34px 20px;flex-wrap:wrap;
+}
+
+/* ---------- the phone ---------- */
+.phone{
+  width:390px;height:800px;background:#000;border-radius:42px;padding:11px;
+  box-shadow:0 30px 70px rgba(0,0,0,.55);flex:0 0 auto;position:relative
+}
+.screen{width:100%;height:100%;border-radius:32px;overflow:hidden;display:flex;flex-direction:column;background:var(--wa-bg)}
+.notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:132px;height:26px;background:#000;border-radius:0 0 16px 16px;z-index:5}
+
+.bar{background:var(--wa-teal);color:#fff;padding:34px 12px 10px;display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.bar .av{width:38px;height:38px;border-radius:50%;background:#2F5D50;display:grid;place-items:center;font-weight:700;font-size:15px;flex:0 0 auto}
+.bar .nm{font-weight:600;font-size:16px;line-height:1.15}
+.bar .st{font-size:11.5px;opacity:.8}
+
+.log{
+  flex:1;overflow-y:auto;padding:14px 10px 8px;
+  background:var(--wa-bg);
+  background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);
+  background-size:18px 18px;
+}
+.row{display:flex;margin-bottom:8px}
+.row.out{justify-content:flex-end}
+.bub{
+  max-width:80%;padding:7px 10px 6px;border-radius:9px;background:var(--wa-in);color:var(--ink);
+  font-size:14.2px;line-height:1.42;white-space:pre-wrap;word-wrap:break-word;
+  box-shadow:0 1px .5px rgba(0,0,0,.13);position:relative
+}
+.row.out .bub{background:var(--wa-out)}
+.bub .tm{font-size:10.5px;color:var(--ink-45);float:right;margin:6px 0 -2px 8px}
+.bub b{font-weight:600}
+.bub i{font-style:italic;color:var(--ink-45)}
+
+.btns{display:flex;flex-direction:column;gap:1px;margin-top:7px;border-top:1px solid #e6e9ea;padding-top:3px}
+.btns button{
+  border:0;background:transparent;color:#00a5f4;font-weight:500;font-size:14px;
+  padding:9px 4px;cursor:pointer;font-family:inherit;border-top:1px solid #eef1f2
+}
+.btns button:first-child{border-top:0}
+.btns button:hover{background:#f4f7f8}
+.listbtn{
+  margin-top:7px;border-top:1px solid #e6e9ea;padding-top:6px;width:100%;
+  border:0;background:transparent;color:#00a5f4;font-weight:500;font-size:14px;
+  padding:9px 4px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px
+}
+.listbtn:hover{background:#f4f7f8}
+
+.compose{background:#f0f0f0;padding:8px;display:flex;gap:7px;align-items:center;flex:0 0 auto}
+.compose input{flex:1;border:0;border-radius:20px;padding:10px 14px;font:inherit;font-size:14.5px;outline:none}
+.compose button{
+  width:40px;height:40px;border-radius:50%;border:0;background:var(--wa-green);color:#fff;
+  cursor:pointer;font-size:17px;display:grid;place-items:center;flex:0 0 auto
+}
+.compose button.clip{background:#8a9aa2;font-size:15px}
+
+/* the list sheet */
+.sheet{position:absolute;inset:11px;border-radius:32px;background:rgba(0,0,0,.35);display:none;z-index:6}
+.sheet.on{display:block}
+.sheet .inner{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:14px 14px 32px 32px;max-height:78%;overflow-y:auto;color:var(--ink)}
+.sheet h4{padding:14px 16px 10px;font-size:15px;border-bottom:1px solid #eef1f2}
+.sheet .r{padding:12px 16px;border-bottom:1px solid #f2f5f6;cursor:pointer}
+.sheet .r:hover{background:#f7fafb}
+.sheet .r .t{font-size:14.5px}
+.sheet .r .d{font-size:12px;color:var(--ink-45);margin-top:2px}
+.sheet .close{padding:13px 16px;text-align:center;color:#00a5f4;cursor:pointer;font-weight:500}
+
+/* ---------- the side panel ---------- */
+.side{width:400px;flex:0 0 auto}
+.side h1{font-size:25px;font-weight:650;letter-spacing:-.4px;margin-bottom:6px}
+.side .lead{color:#9fb3a9;font-size:14px;margin-bottom:20px}
+.card{background:#17251f;border:1px solid #24382f;border-radius:14px;padding:15px 16px;margin-bottom:13px}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:.13em;color:#7f9a8d;margin-bottom:9px;font-weight:600}
+.card p{font-size:13.4px;color:#c7d6ce;margin-bottom:8px}
+.card p:last-child{margin-bottom:0}
+.card code{background:#0f1b17;padding:1px 5px;border-radius:4px;font-size:12.4px;color:#8fd7b5}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips button{
+  background:#0f1b17;border:1px solid #2c4437;color:#bfe3d0;border-radius:20px;
+  padding:6px 12px;font:inherit;font-size:12.6px;cursor:pointer
+}
+.chips button:hover{border-color:#4a7a63;color:#fff}
+.st-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #21332b}
+.st-row:last-child{border-bottom:0}
+.st-row span:last-child{color:#8fd7b5;font-weight:500;text-align:right;max-width:60%}
+@media(max-width:900px){body{padding:18px 12px}.phone{width:100%;max-width:390px;height:720px}.side{width:100%;max-width:390px}}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="bar">
+      <div class="av">S</div>
+      <div><div class="nm">Sparrow Hiring</div><div class="st" id="status">online</div></div>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="compose">
+      <button class="clip" id="clip" title="Send a photo or document">📎</button>
+      <input id="inp" placeholder="Type a message" autocomplete="off">
+      <button id="send" title="Send">➤</button>
+    </div>
+  </div>
+  <div class="sheet" id="sheet"><div class="inner">
+    <h4 id="sheetTitle">Choose</h4>
+    <div id="sheetRows"></div>
+    <div class="close" id="sheetClose">Cancel</div>
+  </div></div>
+</div>
+
+<div class="side">
+  <h1>Cleaner registration on WhatsApp</h1>
+  <div class="lead">This is the real bot. The conversation you see here is driven by the
+    same <code>flow.json</code> and the same rules the live WhatsApp number runs on —
+    nothing is faked for the demo.</div>
+
+  <div class="card">
+    <h3>Try it</h3>
+    <p>Type <code>hi</code> to start, then tap the buttons. The paperclip sends a
+      pretend photo when the bot asks for a document.</p>
+    <div class="chips">
+      <button data-q="hi">hi</button>
+      <button data-q="help">help</button>
+      <button data-q="back">back</button>
+      <button data-q="restart">restart</button>
+      <button data-q="cancel">cancel</button>
+      <button id="fill">Fill it in for me</button>
+      <button id="reset">Clear the chat</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>What it checks</h3>
+    <p>Mobile numbers in any format South Africans actually type. Email. Age 18+.
+      SA ID numbers by their Luhn check digit — and the birth date hidden inside
+      the ID has to match the one they gave, which catches a typo before an admin
+      ever sees it.</p>
+  </div>
+
+  <div class="card">
+    <h3>Application so far</h3>
+    <div id="stateBox"><div class="st-row"><span>Nothing yet</span><span>—</span></div></div>
+  </div>
+</div>
+
+<script src="wa-sim.js"></script>
+<script>
+let FLOW = null, S = null, sender = '27821234567';
+const log = document.getElementById('log');
+const TODAY = new URLSearchParams(location.search).get('today') || null;
+
+const esc = s => (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+/* WhatsApp's own *bold* and _italic_ */
+const fmt = s => esc(s).replace(/\*([^*\n]+)\*/g,'<b>$1</b>').replace(/_([^_\n]+)_/g,'<i>$1</i>');
+const now = () => { const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+
+function bubble(side, html, extra){
+  const row = document.createElement('div');
+  row.className = 'row ' + side;
+  row.innerHTML = `<div class="bub">${html}<span class="tm">${now()}</span></div>`;
+  if(extra) row.querySelector('.bub').appendChild(extra);
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+  return row;
+}
+
+function showReply(r){
+  let extra = null;
+  if(r.kind === 'buttons'){
+    extra = document.createElement('div');
+    extra.className = 'btns';
+    r.options.forEach(o => {
+      const b = document.createElement('button');
+      b.textContent = o.title;
+      b.onclick = () => { send({type:'text', id:o.id, text:o.title}, o.title); };
+      extra.appendChild(b);
+    });
+  } else if(r.kind === 'list'){
+    extra = document.createElement('button');
+    extra.className = 'listbtn';
+    extra.innerHTML = '☰ ' + (r.button || 'Choose');
+    extra.onclick = () => openSheet(r);
+  }
+  bubble('in', fmt(r.text), extra);
+}
+
+function openSheet(r){
+  const sheet = document.getElementById('sheet');
+  document.getElementById('sheetTitle').textContent = r.button || 'Choose';
+  const box = document.getElementById('sheetRows');
+  box.innerHTML = '';
+  r.rows.forEach(row => {
+    const el = document.createElement('div');
+    el.className = 'r';
+    el.innerHTML = `<div class="t">${esc(row.title)}</div>` +
+                   (row.description ? `<div class="d">${esc(row.description)}</div>` : '');
+    el.onclick = () => { sheet.classList.remove('on'); send({type:'text', id:row.id, text:row.title}, row.title); };
+    box.appendChild(el);
+  });
+  sheet.classList.add('on');
+}
+document.getElementById('sheetClose').onclick = () => document.getElementById('sheet').classList.remove('on');
+
+function send(msg, echo){
+  bubble('out', fmt(echo !== undefined ? echo : (msg.text || '')));
+  document.getElementById('status').textContent = 'typing…';
+  setTimeout(() => {
+    const [ns, replies] = WA.handle(S, msg, FLOW, {today: TODAY, sender});
+    S = ns;
+    document.getElementById('status').textContent = 'online';
+    replies.forEach(showReply);
+    paintState();
+  }, 260);
+}
+
+function paintState(){
+  const box = document.getElementById('stateBox');
+  const rows = [];
+  if(S && S.step) rows.push(['Question', S.step]);
+  for(const row of FLOW.summaryRows){
+    const vals = row.fields.map(f => S.answers[f]).filter(v => v !== undefined && v !== null && v !== '');
+    if(!vals.length) continue;
+    /* Mask the ID here too — it is masked in the chat, and a screenshot of
+       this panel should not be the one place a full ID number is readable. */
+    const shown = row.fields.map(f => {
+      const v = S.answers[f];
+      if(v === undefined || v === null || v === '') return null;
+      if(f === 'idNum' && String(v).length > 6) return String(v).slice(0,6) + '•'.repeat(String(v).length - 6);
+      return Array.isArray(v) ? v.join(', ') : v;
+    }).filter(v => v !== null);
+    rows.push([row.label, shown.join(' · ')]);
+  }
+  const docs = ['upId','upPhoto','upCrim'].filter(f => S.media[f]).length;
+  if(docs) rows.push(['Documents', docs + ' of 3']);
+  if(S.appId) rows.push(['Reference', S.appId]);
+  box.innerHTML = rows.length
+    ? rows.map(([k, v]) => `<div class="st-row"><span>${esc(k)}</span><span>${esc(String(v))}</span></div>`).join('')
+    : '<div class="st-row"><span>Nothing yet</span><span>—</span></div>';
+}
+
+/* ---- input ---- */
+function typed(){
+  const inp = document.getElementById('inp');
+  const t = inp.value.trim();
+  if(!t) return;
+  inp.value = '';
+  send({type:'text', text:t});
+}
+document.getElementById('send').onclick = typed;
+document.getElementById('inp').addEventListener('keydown', e => { if(e.key === 'Enter') typed(); });
+document.getElementById('clip').onclick = () => {
+  const step = FLOW.steps.find(s => s.id === S.step);
+  const asDoc = step && step.kind === 'media' && step.accepts.includes('document') && Math.random() < 0;
+  send({type: asDoc ? 'document' : 'image', media_id:'sim-' + Date.now(),
+        mime:'image/jpeg', text:''}, '📷 Photo');
+};
+document.querySelectorAll('[data-q]').forEach(b =>
+  b.onclick = () => send({type:'text', text:b.dataset.q}));
+document.getElementById('reset').onclick = () => { log.innerHTML = ''; S = WA.newState(); paintState(); };
+
+/* ---- a one-tap walk-through, so nobody has to type 20 answers ---- */
+const SCRIPT = [
+  ['text','hi'], ['id','apply'],
+  ['text','Nomsa'], ['text','Dlamini'], ['text','14/03/1994'],
+  ['text','082 555 0134'], ['text','nomsa.dlamini@gmail.com'],
+  ['id','indoor'], ['text','6'],
+  ['id','Western Cape'], ['id','Cape Town'], ['id','Stellenbosch'], ['id','cities_done'],
+  ['id','English'], ['id','isiXhosa'], ['id','langs_done'],
+  ['id','no'], ['id','id'], ['text','9403145021082'],
+  ['media',null], ['media',null], ['media',null],
+  ['text','Mrs Adams'], ['text','021 555 0199'], ['text','Cleaned her home every Tuesday for 3 years'],
+  ['text','Mr Pillay'], ['text','083 555 0102'], ['text','Weekly cleaning at his flat since 2022'],
+  ['id','yes']
+];
+document.getElementById('fill').onclick = async () => {
+  log.innerHTML = ''; S = WA.newState();
+  for(const [kind, val] of SCRIPT){
+    const msg = kind === 'text' ? {type:'text', text:val}
+              : kind === 'id'   ? {type:'text', id:val, text:val}
+              : {type:'image', media_id:'sim-' + val, mime:'image/jpeg'};
+    const echo = kind === 'media' ? '📷 Photo' : val;
+    bubble('out', fmt(echo));
+    const [ns, replies] = WA.handle(S, msg, FLOW, {today:TODAY, sender});
+    S = ns;
+    replies.forEach(showReply);
+    paintState();
+    await new Promise(r => setTimeout(r, 120));
+  }
+};
+
+fetch('wa-flow.json').then(r => r.json()).then(f => {
+  FLOW = f;
+  S = WA.newState();
+  paintState();
+  window.__ready = true;
+});
+</script>
+</body>
+</html>
