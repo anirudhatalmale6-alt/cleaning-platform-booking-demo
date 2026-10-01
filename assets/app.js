@@ -67,15 +67,20 @@ const CFG = {
      110". So the flat rate is R110 on this one service, not R155.      */
   windowRooms: { base:4, hours:4, addMins:30, max:16 },
 
-  /* CAR WASH — his sizes, 22 Aug. The hours are PLACEHOLDERS; he gave
-     the list of vehicles but no times or prices for them.              */
+  /* CAR WASH — his sizes (22 Aug), his time (1 Oct): "each car is
+     estimated to take about 1hour 30 minutes and cleaning rates apply
+     there". So every size is 1.5 h on the standard R155 flat rate and
+     R35/hr, and the six sizes no longer change the price. They are still
+     asked because the cleaner needs to know what is in the driveway, and
+     because the customer can push the hours up from the stepper.       */
+  carWashHours: 1.5,
   vehicles: [
-    { id:'small',  name:'Small car',  hours:1,   sub:'Hatchback or city car' },
-    { id:'medium', name:'Medium car', hours:1.5, sub:'Sedan' },
-    { id:'big',    name:'Big car',    hours:2,   sub:'Large sedan or estate' },
-    { id:'suv',    name:'SUV',        hours:2.5, sub:'Crossover or 4x4' },
-    { id:'bakkie', name:'Bakkie',     hours:2.5, sub:'Single or double cab' },
-    { id:'truck',  name:'Truck',      hours:3,   sub:'Light commercial' }
+    { id:'small',  name:'Small car',  sub:'Hatchback or city car' },
+    { id:'medium', name:'Medium car', sub:'Sedan' },
+    { id:'big',    name:'Big car',    sub:'Large sedan or estate' },
+    { id:'suv',    name:'SUV',        sub:'Crossover or 4x4' },
+    { id:'bakkie', name:'Bakkie',     sub:'Single or double cab' },
+    { id:'truck',  name:'Truck',      sub:'Light commercial' }
   ],
 
   /* Services. `estHours` on the hours-model services is a PLACEHOLDER —
@@ -91,7 +96,7 @@ const CFG = {
     { id:'outdoor',  group:'outdoor', name:'Outdoor cleaning',        model:'hours',    icon:'leaf',    estHours:4,   extraSet:'outdoor', desc:'Patios, driveways, walls and paving', placeholder:true },
     { id:'garden',   group:'outdoor', name:'Gardening',               model:'hours',    icon:'shovel',  estHours:4,   extraSet:'outdoor', desc:'Mowing, weeding, trimming and clearing', placeholder:true },
     { id:'windows',  group:'outdoor', name:'Window cleaning',         model:'rooms',    icon:'window',  flatRate:110, extraSet:'outdoor', desc:'In and out — glass, frames and sills, both sides' },
-    { id:'carwash',  group:'outdoor', name:'Car wash',                model:'vehicle',  icon:'car',     desc:'Wash, rinse and dry, inside and out', placeholder:true }
+    { id:'carwash',  group:'outdoor', name:'Car wash',                model:'vehicle',  icon:'car',     desc:'Wash, rinse and dry, inside and out' }
   ],
 
   slots: ['07:00','08:00','09:00','10:00','11:00','12:00','13:00'],
@@ -153,7 +158,8 @@ function baseHoursFor(b){
     return (w ? w.hours : 0) + (f ? f.hours : 0);
   }
   if(svc.model === 'rooms')   return roomHours(roomsOf(b));
-  if(svc.model === 'vehicle') return CFG.vehicles.find(v => v.id === b.vehicle)?.hours || 0;
+  /* every vehicle size is the same 1.5 h — his figure, 1 Oct */
+  if(svc.model === 'vehicle') return b.vehicle ? CFG.carWashHours : 0;
   return svc.estHours || 0;
 }
 
@@ -173,7 +179,10 @@ const extrasMins = b => chosenExtras(b).reduce((n, e) => n + e.mins, 0);
 const allowsExtras = b => extrasFor(b).length > 0;
 
 /* The flat rate is R155 everywhere except window cleaning, where he
-   set it to R110 on 22 Aug.                                          */
+   set it to R110 on 22 Aug. Confirmed 1 Oct: "the R110 is for all
+   windows base fee" — it covers every window job whatever the room
+   count, and it does NOT extend to the other outdoor services. Car
+   washes therefore stay on R155.                                      */
 const flatOf = b => {
   const f = svcOf(b.service)?.flatRate;
   return f == null ? CFG.flatRate : f;
@@ -291,7 +300,7 @@ const DB = {
     { id:'SPW-103980', cust:'cu1', service:'standard', band:'b34', hours:6,   extras:['washfold'],      addr:'a1', cleaner:'cl1', date:'2026-08-11', time:'09:00', status:'completed', note:'', rating:{ stars:5, comment:'Nomsa was early, thorough and lovely with the cats. Booking her again.' } },
     { id:'SPW-103844', cust:'cu1', service:'deep',     band:'b34', hours:8,   extras:['oven'],          addr:'a1', cleaner:'cl3', date:'2026-07-29', time:'08:00', status:'completed', note:'', rating:{ stars:4, comment:'Great clean overall, skirting boards in the hallway were missed.' } },
     { id:'SPW-103702', cust:'cu1', service:'windows',  rooms:5, hours:4.5,    extras:[],                addr:'a2', cleaner:'cl2', date:'2026-07-15', time:'10:00', status:'completed', note:'', rating:null },
-    { id:'SPW-103688', cust:'cu1', service:'carwash',  vehicle:'suv', hours:2.5, extras:[],             addr:'a1', cleaner:'cl8', date:'2026-07-04', time:'11:00', status:'completed', note:'Parked in bay 12.', rating:{ stars:5, comment:'Thabo did the inside as well without being asked.' } },
+    { id:'SPW-103688', cust:'cu1', service:'carwash',  vehicle:'suv', hours:1.5, extras:[],             addr:'a1', cleaner:'cl8', date:'2026-07-04', time:'11:00', status:'completed', note:'Parked in bay 12.', rating:{ stars:5, comment:'Thabo did the inside as well without being asked.' } },
     { id:'SPW-103551', cust:'cu1', service:'outdoor',  hours:4,               extras:[],                addr:'a1', cleaner:'cl8', date:'2026-06-30', time:'13:00', status:'cancelled', note:'', rating:null },
     { id:'SPW-104355', cust:'cu2', service:'standard', band:'b12', hours:4,   extras:['fridge'],        addr:'a1', cleaner:'cl7', date:'2026-08-20', time:'10:00', status:'upcoming', note:'Gate code 4471.', rating:null },
     { id:'SPW-104361', cust:'cu3', service:'standard', band:'b5',  hours:8,   extras:['oven','fridge'], addr:'a1', cleaner:'cl3', date:'2026-08-20', time:'08:00', status:'upcoming', note:'', rating:null },

@@ -15,6 +15,9 @@ price engine in `assets/app.js`. All four surfaces read the same records, so
 a rating left on the customer dashboard changes the average on that cleaner's
 profile and in the admin employee list.
 
+**Writing the database:** see [SCHEMA-NOTES.md](SCHEMA-NOTES.md) for every
+field the four screens capture, so the client's tables and the app agree.
+
 **Opening it in VS Code:** see [RUN-IN-VSCODE.md](RUN-IN-VSCODE.md). There is
 no build step — open the folder, right-click `index.html`, Open with Live
 Server. `.vscode/` carries the extension recommendations and the tasks.
@@ -76,14 +79,19 @@ the one service on a different base fee:
 
 | | |
 |---|---|
-| Base fee | **R110** (not R155) |
+| Base fee | **R110** (not R155) — confirmed 1 Oct as the base fee for *all* window jobs, and for window cleaning only |
 | 4 rooms | 4 hours |
 | Every room after that | +30 minutes |
 
 It is stated on screen that this covers the windows **inside and out**.
 
-**Car wash** is priced off the vehicle — small car, medium car, big car,
-SUV, bakkie, truck. The hours are placeholders (see below).
+**Car wash** asks which vehicle it is — small car, medium car, big car,
+SUV, bakkie, truck — but **every size is estimated at 1 h 30 m** on the
+standard R155 flat rate, so the size does not change the price. It is asked
+because the cleaner needs to know what is in the driveway, and the customer
+can still push the hours up from the stepper. Client's figure, 1 Oct 2026:
+"each car is estimated to take about 1hour 30 minutes and cleaning rates
+apply there". Every car wash therefore comes to R242.50 before extras.
 
 **Pool service** is an extra task on the outdoor jobs, not a service of its
 own.
@@ -122,13 +130,14 @@ There is no mail server yet; this is the wording, for sign-off.
 
 ## Placeholders — mine, not the client's
 
+Two of these closed on 1 Oct 2026: the car wash hours (1 h 30 m for every
+size) and the scope of the R110 base fee (window cleaning only). Both are
+now the client's numbers and are no longer flagged on screen.
+
 - Office cleaning, outdoor cleaning and gardening have **estimated hours I
-  made up**. The price list covers indoor house cleaning, laundry and window
-  cleaning. These are marked on screen wherever they appear.
-- The six **car wash** durations are mine — the client gave the vehicle
-  sizes but no times or prices. Car washes are on the R155 flat rate;
-  whether they should be on the R110 base like window cleaning is an open
-  question, asked on screen and in chat.
+  made up**. The price list covers indoor house cleaning, laundry, window
+  cleaning and the car wash. These are marked on screen wherever they
+  appear.
 - **Pool service** costs R70, which is its 2 hours at the client's own
   R35/hr, because he has not priced it. Both the time and the price are
   labelled "my estimate" on the task itself.

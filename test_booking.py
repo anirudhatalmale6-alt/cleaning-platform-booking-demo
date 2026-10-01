@@ -21,7 +21,10 @@ EXTRA  = {  # id: (minutes, price)
     "washfold": (60, 180), "washiron": (120, 250),
 }
 POOL   = (120, 70)          # the outdoor extra — time and price are my placeholders
-VEHICLE_H = {"small": 1, "medium": 1.5, "big": 2, "suv": 2.5, "bakkie": 2.5, "truck": 3}
+# 1 Oct: "each car is estimated to take about 1hour 30 minutes and cleaning
+# rates apply there" — one figure for every size, on the standard R155 flat.
+CAR_WASH_H = 1.5
+VEHICLES = ["small", "medium", "big", "suv", "bakkie", "truck"]
 
 def window_hours(rooms):
     """4 rooms is 4 hours; every room after that adds 30 minutes."""
@@ -171,16 +174,33 @@ def run(pw):
     check("all six vehicle sizes are offered", pg.locator("[data-vehicle]").count(), 6)
     check("no hours until one is picked", pg.locator("#hVal").count(), 0)
     check("cannot continue yet", pg.locator("#nextBtn").is_disabled(), True)
-    for veh in ("small", "suv", "truck"):
+    # Every size is the same 1.5 h now, so the thing worth proving is that
+    # the price does NOT move between a hatchback and a truck — the old
+    # ladder would have charged R52.50 more for the truck.
+    totals = []
+    for veh in VEHICLES:
         pg.click(f"[data-vehicle='{veh}']")
-        h = VEHICLE_H[veh]
-        check(f"{veh} is {h}h", pg.locator("#hVal").inner_text(), hlabel(h))
-        check(f"{veh} total", amt(pg.locator("#sumTot").inner_text()), cents(total_for(h)))
+        check(f"{veh} is {CAR_WASH_H}h", pg.locator("#hVal").inner_text(), hlabel(CAR_WASH_H))
+        totals.append(amt(pg.locator("#sumTot").inner_text()))
+    check("every size costs the same", len(set(totals)), 1)
+    check("and that price is his formula",
+          totals[0], cents(FLAT + CAR_WASH_H * RATE + FEE))
+    check("car wash is on the R155 flat, not the R110 window base",
+          cents(FLAT + CAR_WASH_H * RATE + FEE) != cents(FLAT_WINDOWS + CAR_WASH_H * RATE + FEE), True)
     check("can continue now", pg.locator("#nextBtn").is_disabled(), False)
     check("the vehicle shows on the summary",
           "Truck" in pg.locator("#sum .mini").first.inner_text(), True)
-    check("the hours are declared as mine",
-          "estimates above are mine" in pg.locator(".pane .note.warn").last.text_content(), True)
+    check("the hours are no longer flagged as my guess",
+          pg.locator(".pane .note.warn").count(), 0)
+    check("but the size is explained as information for the washer",
+          "does not change the price" in pg.locator(".pane .note").first.text_content(), True)
+    # the stepper still has to let them add time to a car wash
+    pg.click("#hPlus")
+    check("the customer can still add 30 minutes",
+          pg.locator("#hVal").inner_text(), hlabel(CAR_WASH_H + 0.5))
+    check("and the total follows", amt(pg.locator("#sumTot").inner_text()),
+          cents(FLAT + (CAR_WASH_H + 0.5) * RATE + FEE))
+    pg.click("#hMinus")
     pg.screenshot(path=str(SHOTS / "book-carwash.png"))
 
     print("\n6. Laundry is its own flow, with its own estimates")

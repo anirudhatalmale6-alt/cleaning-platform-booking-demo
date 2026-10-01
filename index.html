@@ -531,15 +531,16 @@ function vehicleBlock(){
       <button class="task ${B.vehicle === v.id ? 'on' : ''}" data-vehicle="${v.id}">
         <span class="tk-box">${ico('check',14,3)}</span>
         <span class="tk-main"><span class="tk-t">${v.name}</span><span class="tk-s">${v.sub}</span></span>
-        <span class="tk-p">est ${hoursLabel(v.hours)}</span>
+        <span class="tk-p">est ${hoursLabel(CFG.carWashHours)}</span>
       </button>`).join('')}</div>
     ${chosen ? `
       <div class="fieldset-t">Hours</div>
       ${stepperBlock(priceBooking(B))}` : `
       <div class="cap-note">${ico('info',15,2)}<span>Pick the vehicle first.</span></div>`}
-    <div class="note warn" style="margin-top:14px">${ico('info',16,2)}
-      <span>You gave me the list of vehicles but no times or prices for them, so the estimates above are mine.
-      The R${CFG.flatRate} flat rate is being used here — tell me if car washes should be on the R110 base like window cleaning.</span></div>`;
+    <div class="note">${ico('info',16,2)}
+      <span>Every vehicle is estimated at ${hoursLabel(CFG.carWashHours)} and charged at the standard rates,
+      so the size does not change the price — it tells your washer what is in the driveway.
+      Add hours above if the car needs more.</span></div>`;
 }
 
 function laundryBlock(){
