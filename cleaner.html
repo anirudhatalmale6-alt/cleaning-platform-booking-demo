@@ -7,6 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+/* Re-apply the saved palette before the first paint. Doing this from
+   app.js instead would show the default colours for a frame, then flip. */
+try{var _t=localStorage.getItem('sparrow-theme');
+    if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}
+</script>
 <link rel="stylesheet" href="assets/app.css">
 <style>
   .land{max-width:760px;margin:0 auto;padding:40px 0 70px}
@@ -248,7 +254,7 @@ function fs3(){
 
 function fs4(){
   return `<div style="text-align:center;padding:10px 0">
-    <div style="width:66px;height:66px;border-radius:50%;background:var(--gold);color:#332800;display:grid;place-items:center;margin:0 auto 16px">${ico('clock',30,2.4)}</div>
+    <div style="width:66px;height:66px;border-radius:50%;background:var(--gold);color:var(--on-gold);display:grid;place-items:center;margin:0 auto 16px">${ico('clock',30,2.4)}</div>
     <h2 style="font-size:27px;margin-bottom:6px">Application sent</h2>
     <p class="mini" style="max-width:44ch;margin:0 auto 18px">Thanks ${esc(F.first||'')}. An admin will look at it within two working days. You will get an email and an SMS either way — and you cannot sign in until you are approved.</p>
     <div class="rows" style="text-align:left">

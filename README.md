@@ -15,6 +15,38 @@ price engine in `assets/app.js`. All four surfaces read the same records, so
 a rating left on the customer dashboard changes the average on that cleaner's
 profile and in the admin employee list.
 
+**Opening it in VS Code:** see [RUN-IN-VSCODE.md](RUN-IN-VSCODE.md). There is
+no build step — open the folder, right-click `index.html`, Open with Live
+Server. `.vscode/` carries the extension recommendations and the tasks.
+
+## Colours
+
+Four palettes, switchable from the dot row in the prototype bar at the top of
+every page:
+
+| | |
+|---|---|
+| **Fresh** *(default)* | Bright emerald on white, with coral, amber and blue accents |
+| **Electric** | The same shape, pushed harder — neon spring green and hot coral |
+| **Forest** | Dark premium — the page inverts, the green stays bright |
+| **Heritage** | The muted paper-and-moss palette the demo first shipped with |
+
+Every colour on all four surfaces resolves from the variables at the top of
+`assets/app.css`; there is no hardcoded green anywhere else, so a repaint is
+one block of tokens.
+
+Two tokens do different jobs and must not be collapsed into one:
+
+- `--primary` is a **fill** — bright, with `--on-primary` (near-black green)
+  as the text on it. A vivid green behind dark text is both louder and more
+  legible than a vivid green behind white text.
+- `--moss` is **text** — the same hue held dark enough to read on white.
+
+The choice is remembered per browser and follows the visitor across all four
+screens. The prototype bar, and the switcher with it, comes out before
+launch — it is there so the palette can be chosen by looking rather than by
+describing.
+
 ## Pricing — the client's numbers, used verbatim
 
     total  =  R155 flat rate
@@ -110,11 +142,12 @@ There is no mail server yet; this is the wording, for sign-off.
 ## Tests
 
 ```
-python3 run_tests.py          # all four suites
+python3 run_tests.py          # all five suites
 python3 test_booking.py       # pricing, the hours stepper, the 10-hour cap, availability
 python3 test_customer.py      # ratings with comments, addresses, cancelling
 python3 test_cleaner.py       # the sign-in gate, the application form, the calendar
 python3 test_admin.py         # approve, decline-with-reason, employees by role, search
+python3 test_theme.py         # the palettes, and a contrast audit of every one
 ```
 
 Playwright drives the real pages, desktop and mobile. Prices are recomputed
@@ -122,3 +155,12 @@ in Python from the client's list and compared against what the page renders —
 in cents, because half-hours land on 50c and comparing whole rands would hide
 a real drift. The availability checks prove *why* a cleaner was excluded, not
 just that the list was short.
+
+`test_theme.py` measures WCAG contrast on real rendered text in all four
+palettes — compositing semi-transparent colours over whatever is actually
+behind them — so a palette cannot be made prettier at the cost of being
+readable. It has to freeze CSS transitions before measuring: the tiles are
+declared `transition:.22s` with no property list, so `all` animates, and a
+style read straight after the palette changes returns a value part-way
+through the fade. That is how the first run "found" a 2.93:1 service tile
+that is really 17:1.

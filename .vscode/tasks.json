@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Terminal > Run Task > Serve the site. Needs nothing installed:
+      // Python ships with macOS and Linux, and the Windows Store installs
+      // it in a click. Live Server is nicer, this is the no-extension path.
+      "label": "Serve the site (http://localhost:5500)",
+      "type": "shell",
+      "command": "python3 -m http.server 5500 --bind 127.0.0.1",
+      "windows": { "command": "py -3 -m http.server 5500 --bind 127.0.0.1" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Install the test tools (one time)",
+      "type": "shell",
+      "command": "python3 -m pip install playwright && python3 -m playwright install chromium",
+      "windows": { "command": "py -3 -m pip install playwright && py -3 -m playwright install chromium" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run all tests",
+      "type": "shell",
+      "command": "python3 run_tests.py",
+      "windows": { "command": "py -3 run_tests.py" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}

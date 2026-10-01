@@ -1,0 +1,11 @@
+{
+  // Live Server opens index.html on this port when you hit "Go Live".
+  "liveServer.settings.port": 5500,
+  "liveServer.settings.root": "/",
+  "liveServer.settings.CustomBrowser": "chrome",
+  // Stop VS Code offering to reformat the demo files on save — the HTML
+  // files hold template strings whose indentation is deliberate.
+  "editor.formatOnSave": false,
+  "files.associations": { "*.html": "html" },
+  "files.exclude": { "**/__pycache__": true, "shots": false }
+}

@@ -7,6 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+/* Re-apply the saved palette before the first paint. Doing this from
+   app.js instead would show the default colours for a frame, then flip. */
+try{var _t=localStorage.getItem('sparrow-theme');
+    if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}
+</script>
 <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>

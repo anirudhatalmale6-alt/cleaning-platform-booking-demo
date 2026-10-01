@@ -1,0 +1,9 @@
+{
+  // VS Code offers to install these the first time the folder is opened.
+  // Only the first one is needed to see the site; the rest are for the tests.
+  "recommendations": [
+    "ritwickdey.liveserver",
+    "ms-python.python",
+    "esbenp.prettier-vscode"
+  ]
+}

@@ -554,6 +554,42 @@ function sendNotice({ channel, to, subject, body }){
   });
 }
 
+/* ---------- colour themes ----------
+   The palette lives entirely in CSS variables keyed off
+   <html data-theme>, so switching is one attribute. The choice is kept
+   in localStorage and re-applied by a tiny inline script in the <head>
+   of every page — set here instead and the page would paint in the
+   default palette first and visibly flip. */
+const THEMES = [
+  { id:'fresh',    label:'Fresh',    swatch:'#13C26A', paper:'#F2F8F4' },
+  { id:'electric', label:'Electric', swatch:'#00E07A', paper:'#ECFBF3' },
+  { id:'forest',   label:'Forest',   swatch:'#2BE084', paper:'#06150F' },
+  { id:'heritage', label:'Heritage', swatch:'#2C5548', paper:'#F3EFE7' }
+];
+const THEME_KEY = 'sparrow-theme';
+const currentTheme = () => document.documentElement.getAttribute('data-theme') || 'fresh';
+
+function setTheme(id){
+  if (!THEMES.some(t => t.id === id)) return;
+  document.documentElement.setAttribute('data-theme', id);
+  try { localStorage.setItem(THEME_KEY, id); } catch (e) {}
+  $$('[data-theme-btn]').forEach(b =>
+    b.classList.toggle('on', b.dataset.themeBtn === id));
+  const t = THEMES.find(x => x.id === id);
+  toast(`${t.label} palette`, 'check');
+}
+
+function themePicker(){
+  const now = currentTheme();
+  return `<span class="pb-theme">
+    <span class="pt-l">Palette</span>
+    ${THEMES.map(t => `<button data-theme-btn="${t.id}" class="${t.id === now ? 'on' : ''}"
+        style="background:linear-gradient(135deg,${t.swatch} 50%,${t.paper} 50%);color:${t.swatch}"
+        title="${t.label}" aria-label="${t.label} palette"
+        onclick="setTheme('${t.id}')"></button>`).join('')}
+  </span>`;
+}
+
 /* ---------- shared chrome ---------- */
 function protoBar(active){
   const links = [
@@ -566,13 +602,14 @@ function protoBar(active){
     <span>Prototype — sample data, no backend yet</span>
     <span class="pb-links">${links.map(([h,t]) =>
       `<a href="${h}" class="${h === active ? 'on' : ''}">${t}</a>`).join('')}</span>
+    ${themePicker()}
   </div></div>`;
 }
 
 function topBar(role, links, active){
   return `<div class="topbar"><div class="wrap">
     <a class="brand" href="index.html">
-      <span class="brand-mark">${ico('home', 17, 2).replace('currentColor', '#F3EFE7')}</span>
+      <span class="brand-mark">${ico('home', 17, 2)}</span>
       <span class="brand-name">Sparrow<em>.</em></span>
       ${role ? `<span class="brand-role">${role}</span>` : ''}
     </a>
