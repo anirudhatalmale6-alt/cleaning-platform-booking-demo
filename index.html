@@ -84,6 +84,7 @@ try{var _t=localStorage.getItem('sparrow-theme');
 </div>
 
 <script src="assets/app.js"></script>
+<script src="assets/api.js"></script>
 <script>
 /* ============================================================
    Booking state. One object; every screen reads and writes it.
@@ -690,6 +691,24 @@ function paneCheckout(){
       </dl>
     </div>
 
+    ${B.signedIn ? '' : `
+    <div class="fieldset-t">Where do we send the confirmation?</div>
+    <div class="grid2">
+      <div class="field"><label>First name <span class="req">*</span></label>
+        <input id="coFirst" placeholder="Thandi" value="${esc((B.who && B.who.first) || '')}">
+        <div class="err">Required</div></div>
+      <div class="field"><label>Surname <span class="req">*</span></label>
+        <input id="coLast" placeholder="Mokoena" value="${esc((B.who && B.who.last) || '')}">
+        <div class="err">Required</div></div>
+    </div>
+    <div class="field"><label>Email address <span class="req">*</span></label>
+      <input id="coEmail" type="email" placeholder="you@example.co.za" value="${esc((B.who && B.who.email) || '')}">
+      <div class="err">Enter a valid email address</div></div>
+    <div class="field"><label>Mobile number <span class="req">*</span></label>
+      <input id="coPhone" placeholder="082 000 0000" value="${esc((B.who && B.who.phone) || '')}">
+      <div class="err">Enter a valid South African mobile number</div>
+      <div class="hint">Your cleaner gets this so they can reach you on the day.</div></div>`}
+
     <div class="fieldset-t">A note for ${cl.name}</div>
     <div class="field"><textarea id="cNote" rows="3" placeholder="Anything you want done first, or left alone.">${esc(B.note)}</textarea></div>
 
@@ -815,14 +834,34 @@ function canAdvance(){
   return true;
 }
 
-function next(){
+async function next(){
   if(step === 2 && !validateAddress()) return;
   if(!canAdvance()) return;
   if(step === 4) return pay();
+
+  /* Moving on to "choose your cleaner". With a database the shortlist has
+     to come from the server: this browser cannot see the other customers'
+     bookings, so it cannot know whose day is already full. */
+  if(step === 2 && API.live){
+    const btn = document.getElementById('nextBtn');
+    if(btn){ btn.disabled = true; btn.textContent = 'Checking who is free…'; }
+    try {
+      LIVE_CLEANERS = await API.availability(B, B.date, B.addr.city);
+    } catch (e) {
+      if(btn){ btn.disabled = false; btn.textContent = 'See who is free'; }
+      toast(e.message || 'Could not load the cleaner list', 'alert');
+      return;
+    }
+  }
   step = Math.min(step + 1, 5);
   render();
 }
-function back(){ step = Math.max(step - 1, 0); render(); }
+function back(){
+  // Going back past the address or the date invalidates who was free.
+  if(step <= 3) LIVE_CLEANERS = null;
+  step = Math.max(step - 1, 0);
+  render();
+}
 
 function validateAddress(){
   const need = [['aType', v => !!v], ['aLine', v => v.trim().length > 3], ['aSub', v => v.trim().length > 1]];
@@ -943,11 +982,63 @@ function adjustHours(d){
   render();
 }
 
-/* ---------- pay ---------- */
+/* ---------- pay ----------
+   With a database this posts the booking and lets the server price it.
+   The total shown on screen is never sent: the server works it out again
+   from its own tables, because anything this page sends can be edited by
+   whoever is looking at it. */
 let refSeq = 104400;
-function pay(){
+/* A guest's details, validated before anything is charged. Mirrors the
+   checks the API runs, so the customer is told here rather than by a 422. */
+function validateGuest(){
+  if(B.signedIn) return true;
+  const f = id => document.getElementById(id);
+  const tests = [
+    [f('coFirst'), f('coFirst').value.trim().length > 0],
+    [f('coLast'),  f('coLast').value.trim().length > 0],
+    [f('coEmail'), /\S+@\S+\.\S+/.test(f('coEmail').value.trim())],
+    [f('coPhone'), /^(\+?27|0)[\s-]?[6-8]\d([\s-]?\d){7}$/.test(f('coPhone').value.trim())]
+  ];
+  let ok = true;
+  tests.forEach(([el, good]) => {
+    el.closest('.field').classList.toggle('bad', !good);
+    if(!good) ok = false;
+  });
+  if(ok){
+    B.who = { first: f('coFirst').value.trim(), last: f('coLast').value.trim(),
+              email: f('coEmail').value.trim(), phone: f('coPhone').value.trim() };
+  }
+  return ok;
+}
+
+async function pay(){
+  if(!validateGuest()) return;
   const btn = document.getElementById('payBtn');
   if(btn){ btn.disabled = true; btn.textContent = 'Authorising…'; }
+
+  if(API.live){
+    try {
+      const r = await API.createOrder(B, {
+        street_line: B.addr.line, unit_number: B.addr.unit, suburb: B.addr.suburb,
+        city: B.addr.city, province: B.addr.prov, access_notes: B.addr.notes,
+        latitude: B.geo && B.geo.lat, longitude: B.geo && B.geo.lng
+      }, B.signedIn ? null : {
+        first_name: B.who.first, last_name: B.who.last,
+        email: B.who.email, phone: B.who.phone
+      });
+      B.ref = r.reference;
+      step = 5; render();
+      toast('Payment approved — ' + money(r.price.total));
+      // Re-read, so the dashboard shows the row the database actually holds
+      // rather than this page's idea of what it just wrote.
+      try { await API.boot({ role:'customer' }); } catch (e) {}
+    } catch (e) {
+      if(btn){ btn.disabled = false; btn.textContent = 'Pay ' + money(priceBooking(B).total); }
+      toast(e.message || 'That booking could not be completed', 'alert');
+    }
+    return;
+  }
+
   setTimeout(() => {
     B.ref = 'SPW-' + (++refSeq);
     const p = priceBooking(B);
@@ -962,7 +1053,19 @@ function pay(){
   }, 600);
 }
 
-go('home');
+/* ---------- boot ----------
+   The API is probed before the first paint. If it answers, CFG and DB have
+   already been replaced with database rows by the time anything renders,
+   so no screen ever shows sample data and then flips. */
+(async () => {
+  try { await API.boot({ role: 'customer' }); } catch (e) { console.warn('API boot', e); }
+  if (API.live && API.user){
+    B.signedIn = true;
+    B.who = { first: API.user.first_name, last: API.user.last_name, email: API.user.email };
+  }
+  go('home');
+  showMode();
+})();
 </script>
 </body>
 </html>

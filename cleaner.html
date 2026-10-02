@@ -37,6 +37,7 @@ try{var _t=localStorage.getItem('sparrow-theme');
 <body>
 <div id="app"></div>
 <script src="assets/app.js"></script>
+<script src="assets/api.js"></script>
 <script>
 /* ============================================================
    Cleaner portal.
@@ -534,6 +535,47 @@ function tabProfile(){
 /* ============================================================
    WIRING
    ============================================================ */
+/* Pull this cleaner's own record, jobs and calendar out of the database
+   and into the object the screens already read. */
+async function loadMe(){
+  const r = await API.get('employee/me');
+  const e = r.employee;
+  me = {
+    id: 'cl' + e.id, name: e.first_name, surname: e.last_name,
+    initials: (e.first_name[0] || '') + (e.last_name[0] || ''),
+    email: e.email, phone: e.phone,
+    rating: Number((r.rating && r.rating.rating_avg) || 0),
+    jobs: Number((r.rating && r.rating.jobs_completed) || 0),
+    years: Number(e.years_experience || 0),
+    langs: r.languages || [], group: e.service_group,
+    city: (r.areas[0] || {}).city || '', prov: (r.areas[0] || {}).province || '',
+    account: e.account_status, idNumber: e.id_number,
+    skin:'#8a5a3b', hair:'#2a1e18', shirt:'#2F5D50',
+    blocked: r.unavailable || []
+  };
+  DB.cleaners = [me];
+  DB.bookings = r.jobs.map(j => ({
+    id: j.reference, cust: 'cu' + j.customer_id, service: j.service_code,
+    band: j.bedroom_band || undefined, wash: j.laundry_wash || undefined,
+    finish: j.laundry_finish || undefined,
+    rooms: j.window_rooms == null ? undefined : Number(j.window_rooms),
+    vehicle: j.vehicle_size || undefined,
+    hours: Number(j.hours_booked), extras: [],
+    addr: { line: j.address_line, unit: j.address_unit || '', suburb: j.address_suburb,
+            city: j.address_city, prov: j.address_province, notes: j.access_notes || '',
+            label: 'Job address', type: 'House' },
+    cleaner: 'cl' + j.employee_id, date: j.scheduled_date,
+    time: (j.scheduled_time || '').slice(0, 5), status: j.status,
+    note: j.note_for_worker || '', rating: null
+  }));
+  DB.customers = r.jobs.map(j => ({
+    id: 'cu' + j.customer_id,
+    name: j.customer_first + ' ' + j.customer_last,
+    initials: (j.customer_first[0] || '') + (j.customer_last[0] || ''),
+    email: '', phone: j.customer_phone || '', tone: '', joined: ''
+  }));
+}
+
 function signIn(id){
   const c = cleaner(id);
   if(c.account !== 'approved'){ gate = c; view = 'gate'; render(); return; }
@@ -549,13 +591,34 @@ function wire(){
   on('gBack', () => { view = 'signin'; render(); });
   on('gReapply', () => { view = 'apply'; fstep = 0; render(); });
   on('backLand', () => { view = 'land'; render(); });
-  on('ciGo', () => {
+  on('ciGo', async () => {
     const em = document.getElementById('ciEmail'), pw = document.getElementById('ciPass');
     let bad = false;
     [[em, /\S+@\S+\.\S+/.test(em.value)], [pw, pw.value.length > 0]].forEach(([el, ok]) => {
       el.closest('.field').classList.toggle('bad', !ok); if(!ok) bad = true;
     });
     if(bad) return;
+
+    /* With a database, the gate lives in the API. Turning this button back
+       on in the browser achieves nothing: /employee/login refuses a pending
+       or declined account before any session exists. */
+    if(API.live){
+      try {
+        await API.post('employee/login', { email: em.value.trim(), password: pw.value });
+        await loadMe();
+        view = 'dash'; tab = 'today'; render();
+      } catch (e) {
+        const d = e.data || {};
+        if(d.account_status){
+          gate = { name: d.first_name || '', account: d.account_status,
+                   declineReason: d.decline_reason || '' };
+          view = 'gate'; render();
+        } else {
+          toast(e.message || 'Those details do not match an application', 'alert');
+        }
+      }
+      return;
+    }
     signIn('cl1');
   });
   document.querySelectorAll('[data-as]').forEach(b => b.onclick = () => signIn(b.dataset.as));
@@ -634,10 +697,26 @@ function wireTab(){
   const on = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
   on('calPrev', () => { calMonth--; if(calMonth < 0){ calMonth = 11; calYear--; } renderTab(); });
   on('calNext', () => { calMonth++; if(calMonth > 11){ calMonth = 0; calYear++; } renderTab(); });
-  document.querySelectorAll('[data-day]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-day]').forEach(b => b.onclick = async () => {
     const iso = b.dataset.day;
     me.blocked = me.blocked || [];
-    if(me.blocked.includes(iso)){ me.blocked = me.blocked.filter(d => d !== iso); toast('Available again on ' + fmtDate(iso)); }
+    const wasBlocked = me.blocked.includes(iso);
+
+    if(API.live){
+      b.disabled = true;
+      try {
+        await API.blockDay(iso, wasBlocked);
+      } catch (e) {
+        b.disabled = false;
+        // The server refuses a day the cleaner is already booked on. The
+        // calendar is not updated, so it keeps showing the truth.
+        toast(e.message || 'That day could not be changed', 'alert');
+        return;
+      }
+      b.disabled = false;
+    }
+
+    if(wasBlocked){ me.blocked = me.blocked.filter(d => d !== iso); toast('Available again on ' + fmtDate(iso)); }
     else { me.blocked.push(iso); toast('Marked unavailable on ' + fmtDate(iso)); }
     renderTab();
   });
@@ -645,7 +724,15 @@ function wireTab(){
   on('pSave', () => toast('Profile saved'));
 }
 
-render();
+(async () => {
+  try {
+    if (await API.boot()){
+      // Already signed in from an earlier visit? Go straight to the dashboard.
+      try { await loadMe(); view = 'dash'; tab = 'today'; } catch (e) {}
+    }
+  } catch (e) { console.warn('API boot', e); }
+  render();
+})();
 </script>
 </body>
 </html>

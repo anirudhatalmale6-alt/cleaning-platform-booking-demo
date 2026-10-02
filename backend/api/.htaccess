@@ -1,0 +1,10 @@
+# Send every /api/... request to index.php, which does the routing.
+# Apache on most shared hosting reads this automatically.
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]
+
+# Never serve the config or the local credentials as a file.
+<FilesMatch "^config(\.local)?(\.example)?\.php$">
+  Require all denied
+</FilesMatch>

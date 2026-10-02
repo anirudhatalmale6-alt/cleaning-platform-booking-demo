@@ -172,7 +172,12 @@ const extrasFor = b => {
 };
 const chosenExtras = b => {
   const offered = extrasFor(b);
-  return (b.extras || []).map(id => offered.find(e => e.id === id)).filter(Boolean);
+  /* Deduplicated: the same id twice is one oven clean, not two. The UI
+     toggles these so it cannot produce a duplicate, but the server does
+     dedupe and the two engines have to agree — and billing an oven clean
+     twice is the wrong half of that disagreement to keep. */
+  return [...new Set(b.extras || [])]
+    .map(id => offered.find(e => e.id === id)).filter(Boolean);
 };
 const extrasMins = b => chosenExtras(b).reduce((n, e) => n + e.mins, 0);
 
@@ -223,7 +228,11 @@ function priceBooking(b){
   if(!svc) return null;
 
   const win     = hoursWindow(b);
-  const svcH    = b.hours != null ? Math.min(Math.max(b.hours, win.min), win.max) : win.est;
+  /* The estimate is clamped too, not just a hand-picked number of hours.
+     extraAllowed() means the UI cannot reach a combination where the
+     estimate plus the extras breaks the 10-hour cap, but the server has
+     to cope with one anyway, and the two must agree. */
+  const svcH    = Math.min(Math.max(b.hours != null ? b.hours : win.est, win.min), win.max);
   const exMins  = allowsExtras(b) ? extrasMins(b) : 0;
   const hours   = svcH + exMins / 60;
 
@@ -391,7 +400,14 @@ function bookedHoursOn(cleanerId, date){
     .reduce((n, b) => n + (priceBooking(b)?.hours || 0), 0);
 }
 
+/* When a database is behind the site the shortlist comes from SQL, which
+   can see every customer's bookings, not just this browser's. LIVE_CLEANERS
+   holds that answer; with no API it stays null and the sample data below
+   is used instead. */
+let LIVE_CLEANERS = null;
+
 function availableCleaners(b){
+  if (LIVE_CLEANERS) return LIVE_CLEANERS;
   const svc = svcOf(b.service);
   const ad  = addrOf(b);
   if(!svc || !ad || !b.date) return [];
@@ -608,7 +624,7 @@ function protoBar(active){
     ['admin.html','Admin']
   ];
   return `<div class="protobar"><div class="wrap">
-    <span>Prototype — sample data, no backend yet</span>
+    <span id="pbMode">${modeLabel()}</span>
     <span class="pb-links">${links.map(([h,t]) =>
       `<a href="${h}" class="${h === active ? 'on' : ''}">${t}</a>`).join('')}</span>
     ${themePicker()}
@@ -631,6 +647,25 @@ function topBar(role, links, active){
 
 function mountChrome({ page, role, links }){
   document.body.insertAdjacentHTML('afterbegin', protoBar(page) + topBar(role, links, page));
+  showMode();
+}
+
+/* Nobody should have to guess whether the numbers on screen came out of a
+   database or out of the sample set.
+
+   The label is built inside protoBar() rather than patched in afterwards:
+   the booking flow re-renders its own chrome on every step, so a patched
+   banner said "Live" on the landing page and "no backend" from step two
+   onwards. Computing it where the bar is built means it cannot drift. */
+function modeLabel(){
+  return (typeof API !== 'undefined' && API.live)
+    ? 'Live — reading and writing your MySQL database'
+    : 'Prototype — sample data, no database connected';
+}
+
+function showMode(){
+  const el = document.getElementById('pbMode');
+  if (el) el.innerHTML = modeLabel();
 }
 
 /* ---------- side nav ---------- */

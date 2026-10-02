@@ -295,6 +295,31 @@ def run(pw):
     check("checkout total matches the summary",
           amt(pg.locator(".total .t-v").last.inner_text()), cents(total_for(6)))
     pg.fill("#cNote", "Please do the laundry first, the machine is in the garage.")
+
+    # A guest has to say who they are: the confirmation email needs an
+    # address and the cleaner needs a number for the day. Added once there
+    # was a real database behind this, because every guest booking would
+    # otherwise land on one placeholder customer row.
+    check("a guest is asked for their details", pg.locator("#coEmail").count(), 1)
+    pg.click("#payBtn")
+    check("paying without them is blocked",
+          pg.locator("#coFirst").evaluate("e => e.closest('.field').classList.contains('bad')"), True)
+    check("and nothing was booked", pg.locator(".ref").count(), 0)
+
+    pg.fill("#coFirst", "Thandi")
+    pg.fill("#coLast", "Mokoena")
+    pg.fill("#coEmail", "not-an-email")
+    pg.fill("#coPhone", "082 445 1190")
+    pg.click("#payBtn")
+    check("a malformed email is caught here, not by the server",
+          pg.locator("#coEmail").evaluate("e => e.closest('.field').classList.contains('bad')"), True)
+    pg.fill("#coEmail", "thandi.m@example.co.za")
+    pg.fill("#coPhone", "12345")
+    pg.click("#payBtn")
+    check("so is a number that is not a South African mobile",
+          pg.locator("#coPhone").evaluate("e => e.closest('.field').classList.contains('bad')"), True)
+    pg.fill("#coPhone", "082 445 1190")
+
     pg.screenshot(path=str(SHOTS / "book-checkout.png"))
     pg.click("#payBtn")
     pg.wait_for_selector(".ref")

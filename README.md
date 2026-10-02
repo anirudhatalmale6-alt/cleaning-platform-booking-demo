@@ -15,8 +15,17 @@ price engine in `assets/app.js`. All four surfaces read the same records, so
 a rating left on the customer dashboard changes the average on that cleaner's
 profile and in the admin employee list.
 
-**Writing the database:** see [SCHEMA-NOTES.md](SCHEMA-NOTES.md) for every
-field the four screens capture, so the client's tables and the app agree.
+**The database and the API:** see [backend/README.md](backend/README.md).
+MySQL 8 schema, seed data and a PHP API, with the four test suites that
+prove it. [SCHEMA-NOTES.md](SCHEMA-NOTES.md) lists every field the screens
+capture, in plain English.
+
+The same four HTML files run two ways. Served from GitHub Pages there is no
+PHP, so they run on the sample data in `assets/app.js` and the bar at the
+top says so. Served from a host with PHP and MySQL, `assets/api.js` finds
+the API on boot and every price, cleaner and booking comes out of the
+database instead. One build, both modes, and the page always says which
+one you are looking at.
 
 **Opening it in VS Code:** see [RUN-IN-VSCODE.md](RUN-IN-VSCODE.md). There is
 no build step — open the folder, right-click `index.html`, Open with Live
@@ -157,6 +166,9 @@ python3 test_customer.py      # ratings with comments, addresses, cancelling
 python3 test_cleaner.py       # the sign-in gate, the application form, the calendar
 python3 test_admin.py         # approve, decline-with-reason, employees by role, search
 python3 test_theme.py         # the palettes, and a contrast audit of every one
+
+python3 run_tests.py --with-backend \
+    --base http://localhost:8000 --mysql "-u root -pSECRET"   # all nine
 ```
 
 Playwright drives the real pages, desktop and mobile. Prices are recomputed

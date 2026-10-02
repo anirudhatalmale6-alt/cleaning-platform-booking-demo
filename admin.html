@@ -23,6 +23,7 @@ try{var _t=localStorage.getItem('sparrow-theme');
 <body>
 <div id="app"></div>
 <script src="assets/app.js"></script>
+<script src="assets/api.js"></script>
 <script>
 /* ============================================================
    Admin dashboard.
@@ -222,8 +223,26 @@ function showForm(id){
     ] });
 }
 
-function approve(id){
+async function approve(id){
   const c = cleaner(id);
+
+  /* With a database the decision is the API's to make: it sets the status,
+     generates the one-time password and records the email. Doing it here
+     first and telling the server afterwards would let the two disagree. */
+  if(API.live){
+    try {
+      const r = await API.decide(Number(String(id).replace('cl','')), 'approve');
+      c.account = 'approved';
+      DB.applications = DB.applications.filter(x => x.id !== id);
+      await loadAdmin();
+      render();
+      toast(`${c.name} approved — temporary password ${r.temp_password}`);
+    } catch (e) {
+      toast(e.message || 'That application could not be approved', 'alert');
+    }
+    return;
+  }
+
   c.account = 'approved';
   DB.applications = DB.applications.filter(x => x.id !== id);
   render();
@@ -252,6 +271,20 @@ function declineFlow(id){
           const t = veil.querySelector('#dcReason').value.trim();
           if(t.length < 8){ veil.querySelector('#dcErr').style.display = 'block'; return true; }
           const ch = veil.querySelector('#dcCh .on').dataset.c;
+
+          if(API.live){
+            API.decide(Number(String(id).replace('cl','')), 'decline', t)
+              .then(async () => {
+                c.account = 'declined'; c.declineReason = t;
+                DB.applications = DB.applications.filter(x => x.id !== id);
+                await loadAdmin();
+                render();
+                toast(`${c.name} declined — they have been told why`);
+              })
+              .catch(e => toast(e.message || 'That decline did not go through', 'alert'));
+            return;
+          }
+
           c.account = 'declined'; c.declineReason = t;
           DB.applications = DB.applications.filter(x => x.id !== id);
           render();
@@ -422,8 +455,96 @@ function wire(){
     toast('Downloading ' + b.dataset.dl, 'download'));
 }
 
-app().innerHTML = shell();
-render();
+/* Pull the admin's view of the whole business out of the database into the
+   objects the screens already read. The screens look people up by id, so an
+   order has to point at a customer and a cleaner that are actually in those
+   arrays, not at a placeholder. */
+async function loadAdmin(){
+  const [o, a, m, c] = await Promise.all([
+    API.get('admin/overview'), API.get('admin/applications'),
+    API.get('admin/messages'), API.get('admin/customers')
+  ]);
+
+  DB.cleaners = o.employees.map(e => ({
+    id: 'cl' + e.id, name: e.first_name, surname: e.last_name,
+    initials: (e.first_name[0] || '') + (e.last_name[0] || ''),
+    rating: Number(e.rating || 0), jobs: Number(e.jobs || 0),
+    years: Number(e.years_experience || 0), langs: [],
+    group: e.service_group, city: (e.cities || '').split(',')[0] || '',
+    prov: '', account: e.account_status, fav: false,
+    skin:  ['#8a5a3b','#6f4429','#a8734a','#7a4e30','#95643f'][e.id % 5],
+    hair:  ['#2a1e18','#181310','#3a2418','#241a14','#1e1712'][e.id % 5],
+    shirt: ['#2F5D50','#3E6FA3','#B4573A','#7A6A3A','#4C7A5A'][e.id % 5],
+    blocked: []
+  }));
+
+  /* `submitted` is the field name the screens use. Calling it appliedAt
+     here left fmtDate(undefined) to blow up three screens deep. */
+  DB.applications = a.applications.map(x => ({
+    id: 'cl' + x.id,
+    submitted: (x.applied_at || '').slice(0, 10)
+  }));
+  DB.applicationDetail = {};
+  a.applications.forEach(x => {
+    DB.applicationDetail['cl' + x.id] = x;
+    const person = DB.cleaners.find(p => p.id === 'cl' + x.id);
+    if (person){
+      person.email = x.email; person.phone = x.phone;
+      person.dob = x.date_of_birth; person.idNumber = x.id_number;
+      person.transport = !!Number(x.has_own_transport);
+      person.docs = x.documents || [];
+    }
+  });
+
+  DB.customers = c.customers.map(x => ({
+    id: 'cu' + x.id, name: x.first_name + ' ' + x.last_name,
+    initials: (x.first_name[0] || '') + (x.last_name[0] || ''),
+    email: x.email, phone: x.phone || '', tone: '',
+    joined: (x.created_at || '').slice(0, 7),
+    orderCount: Number(x.order_count || 0), spent: Number(x.spent || 0)
+  }));
+
+  DB.bookings = o.orders.map(x => ({
+    id: x.reference, cust: 'cu' + x.customer_id,
+    service: x.service_code,
+    band: x.bedroom_band || undefined, wash: x.laundry_wash || undefined,
+    finish: x.laundry_finish || undefined,
+    rooms: x.window_rooms == null ? undefined : Number(x.window_rooms),
+    vehicle: x.vehicle_size || undefined,
+    hours: Number(x.hours_booked),
+    extras: (x.extras || []).map(e => e.extra_code),
+    addr: { line: x.address_line || '', unit: x.address_unit || '',
+            suburb: x.address_suburb || '', city: x.address_city || '',
+            prov: x.address_province || '', notes: x.access_notes || '',
+            label: 'Job address', type: 'House' },
+    cleaner: x.employee_id == null ? null : 'cl' + x.employee_id,
+    date: x.scheduled_date, time: (x.scheduled_time || '').slice(0, 5),
+    status: x.status, note: x.note_for_worker || '',
+    rating: x.rating_stars ? { stars: Number(x.rating_stars), comment: x.rating_comment || '' } : null,
+    frozen: { total: Number(x.total) }
+  }));
+
+  SENT.length = 0;
+  m.messages.forEach(x => SENT.push({
+    channel: x.channel, to: x.to_address, subject: x.subject || '',
+    body: (x.body || '').replace(/\n/g, '<br>'), at: x.created_at
+  }));
+}
+
+(async () => {
+  try {
+    if (await API.boot()){
+      try { await loadAdmin(); } catch (e) {
+        // Not signed in as an admin yet. The screens keep the sample set,
+        // and the bar at the top says so rather than pretending.
+        console.info('admin not signed in:', e.message);
+      }
+    }
+  } catch (e) { console.warn('API boot', e); }
+  app().innerHTML = shell();
+  render();
+  showMode();
+})();
 </script>
 </body>
 </html>
