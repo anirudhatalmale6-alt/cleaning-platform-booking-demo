@@ -677,3 +677,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
 .pb-theme button:hover{transform:scale(1.14)}
 .pb-theme button.on{box-shadow:0 0 0 2px var(--bar),0 0 0 4px currentColor}
 @media(max-width:700px){.pb-theme .pt-l{display:none}}
+
+/* A file input that is reachable by keyboard and by screen readers but
+   not seen: the styled .drop label in front of it is what gets clicked.
+   display:none would take it out of the tab order and out of the
+   accessibility tree, which is why it is not used here. */
+.visually-hidden{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+.drop{cursor:pointer}
+.drop:focus-within{border-color:var(--primary);box-shadow:0 0 0 4px var(--focus-ring)}

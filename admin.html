@@ -211,16 +211,44 @@ function showForm(id){
         <dt>2</dt><dd>Riaan van Wyk · 083 220 7712 · office clean, 2 years</dd>
       </dl>
       <div class="fieldset-t">Documents</div>
-      <div class="docs">${DOCS.map(d => `<div class="doc-row">${ico('doc',20,1.8)}
-        <div class="dr-main"><div class="dr-t">${d.name}</div><div class="dr-s">${d.file} · ${d.size}</div></div>
-        <button class="btn btn-outline sm" data-dl="${d.file}">${ico('download',15,2)} Download</button></div>`).join('')}</div>
-      <div class="note" style="margin-top:14px">${ico('info',16,2)}
-        <span>Downloads are stubbed until there is a backend holding the real uploads. The button proves the wiring, not the file.</span></div>`,
+      ${docRows(c.id)}`,
     actions:[
       { label:'Close', cls:'btn-outline' },
       { label:'Decline', cls:'btn-danger', fn:() => { setTimeout(() => declineFlow(id), 60); } },
       { label:'Approve', cls:'btn-primary', fn:() => { setTimeout(() => approve(id), 60); } }
     ] });
+}
+
+/* What this applicant actually uploaded. With a database these are real
+   files; without one it is the stubbed list, and the note says which. */
+const DOC_LABELS = { id:'ID / passport', photo:'Head & shoulders photo',
+                     criminal_check:'Criminal record check', work_permit:'Work permit' };
+const fileSize = n => !n ? '' : n < 1024 ? n + ' B'
+  : n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+
+function docRows(cleanerId){
+  const live = API.live ? (DB.applicationDetail || {})[cleanerId] : null;
+  const docs = live ? (live.documents || []) : null;
+
+  if(docs){
+    if(!docs.length){
+      return `<div class="note warn">${ico('info',16,2)}
+        <span>This applicant has not uploaded anything yet. Their application went
+        through but the files did not. Send them a new upload link.</span></div>`;
+    }
+    return `<div class="docs">${docs.map(d => `<div class="doc-row">${ico('doc',20,1.8)}
+      <div class="dr-main"><div class="dr-t">${DOC_LABELS[d.doc_type] || d.doc_type}</div>
+        <div class="dr-s">${esc(d.original_name)} · ${fileSize(+d.size_bytes)}${
+          d.width_px ? ` · ${d.width_px}×${d.height_px}` : ''}</div></div>
+      <button class="btn btn-outline sm" data-doc="${d.id}">${ico('download',15,2)} Download</button>
+      </div>`).join('')}</div>`;
+  }
+
+  return `<div class="docs">${DOCS.map(d => `<div class="doc-row">${ico('doc',20,1.8)}
+    <div class="dr-main"><div class="dr-t">${d.name}</div><div class="dr-s">${d.file} · ${d.size}</div></div>
+    <button class="btn btn-outline sm" data-dl="${d.file}">${ico('download',15,2)} Download</button></div>`).join('')}</div>
+    <div class="note" style="margin-top:14px">${ico('info',16,2)}
+      <span>Sample list. Connect the database and these become the files the applicant actually uploaded.</span></div>`;
 }
 
 async function approve(id){
@@ -453,6 +481,36 @@ function wire(){
   }
   document.querySelectorAll('[data-dl]').forEach(b => b.onclick = () =>
     toast('Downloading ' + b.dataset.dl, 'download'));
+
+  /* A real download. The file is streamed by the API after it checks the
+     admin session, so there is no URL that works without being signed in
+     and nothing to share by accident. */
+  document.querySelectorAll('[data-doc]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.doc;
+    const label = b.textContent.trim();
+    b.disabled = true; b.textContent = 'Fetching…';
+    try {
+      const res = await fetch(API.base + 'admin/documents/' + id, { credentials:'include' });
+      if(!res.ok){
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || ('Download failed: ' + res.status));
+      }
+      const blob = await res.blob();
+      // The filename comes from the Content-Disposition the server set,
+      // not from anything this page guessed.
+      const cd = res.headers.get('Content-Disposition') || '';
+      const m = /filename="([^"]+)"/.exec(cd);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = m ? m[1] : ('document-' + id);
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      toast('Downloaded ' + a.download, 'download');
+    } catch (e) {
+      toast(e.message || 'That file could not be downloaded', 'alert');
+    }
+    b.disabled = false; b.textContent = label;
+  });
 }
 
 /* Pull the admin's view of the whole business out of the database into the

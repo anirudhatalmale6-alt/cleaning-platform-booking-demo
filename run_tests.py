@@ -32,6 +32,7 @@ if "--with-backend" in args:
         ("backend/test_schema.py",       MYSQL.split()),
         ("backend/tests/test_parity.py", ["--base", BASE]),
         ("backend/tests/test_api.py",    ["--base", BASE]),
+        ("backend/tests/test_uploads.py", ["--base", BASE, "--mysql", MYSQL]),
         ("backend/tests/test_live.py",   ["--base", BASE, "--mysql", MYSQL]),
     ]
 

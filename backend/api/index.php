@@ -19,9 +19,11 @@
  *   POST /api/orders/{ref}/cancel
  *   POST /api/orders/{ref}/rate
  *
- *   POST /api/employee/apply
+ *   POST /api/employee/apply         returns a one-time upload token
+ *   POST /api/employee/documents     multipart. Token for an applicant,
+ *                                    session for an approved worker
  *   POST /api/employee/login         refuses pending and declined
- *   GET  /api/employee/me            jobs, calendar, profile
+ *   GET  /api/employee/me            jobs, calendar, profile, documents
  *   POST /api/employee/unavailability
  *
  *   POST /api/admin/login
@@ -30,10 +32,12 @@
  *   POST /api/admin/applications/{id}/decide
  *   GET  /api/admin/customers
  *   GET  /api/admin/messages
+ *   GET  /api/admin/documents/{id}   streams an uploaded file
  */
 declare(strict_types=1);
 
 require __DIR__ . '/lib.php';
+require __DIR__ . '/uploads.php';
 
 $c = cfg();
 if ($c['cors_origins'] && isset($_SERVER['HTTP_ORIGIN'])
@@ -88,7 +92,23 @@ $in     = body();
    ===================================================================== */
 
 if ($path === '/health') {
-    json_out(['ok' => true, 'service' => 'sparrow-api', 'time' => gmdate('c')]);
+    /* storage_exposed warns when the upload folder is inside the folder the
+       web server publishes. .htaccess covers Apache; nginx and PHP's own
+       server ignore it, and then an ID document is one guessed URL away.
+       Reported here so a deployment can be checked without taking anyone's
+       word for it. */
+    $docRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '') ?: null;
+    $store   = realpath(cfg()['storage_path'] ?? '') ?: null;
+    $wanted = (float)setting('max_upload_mb', '5');
+    json_out([
+        'ok'      => true,
+        'service' => 'sparrow-api',
+        'time'    => gmdate('c'),
+        'storage_exposed' => ($docRoot && $store && str_starts_with($store, $docRoot)),
+        'upload_mb'        => effective_upload_mb(),
+        // true when php.ini is the thing stopping a worker, not your setting
+        'upload_capped_by_php' => php_limit_mb() < $wanted,
+    ]);
 }
 
 if ($path === '/catalog') {
@@ -99,8 +119,11 @@ if ($path === '/catalog') {
     $extras   = q('SELECT code, name, description, extra_set, minutes, price,
                           price_is_estimated
                    FROM service_extras WHERE is_active = 1 ORDER BY sort_order');
+    $settings = settings_all();
+    // The limit the screens enforce is the one that will actually work.
+    $settings['max_upload_mb'] = (string)effective_upload_mb();
     json_out([
-        'settings' => settings_all(),
+        'settings' => $settings,
         'services' => $services,
         'extras'   => $extras,
     ]);
@@ -399,9 +422,25 @@ if ($path === '/orders' && $method === 'POST') {
         . "Your cleaner is {$emp['first_name']} {$emp['last_name']}.", $orderId);
     record_message('sms', 'employee', $employeeId, $emp['phone'], null,
         "New job: {$p['serviceName']}, $date at $time, {$addr['suburb']}. Ref $ref.", $orderId);
+    /* The new-order alert goes to the address in settings.orders_email,
+       which is the one line to change to start receiving these. Any admin
+       accounts on top of that get their own copy. */
+    $ordersTo = trim((string)setting('orders_email', ''));
+    $alertBody = "A new {$p['serviceName']} order came in.\n\n"
+        . "Reference: $ref\nWhen: $date at $time\n"
+        . "Customer: {$cust['first_name']} {$cust['last_name']} ({$cust['email']})\n"
+        . "Cleaner: {$emp['first_name']} {$emp['last_name']}\n"
+        . "Where: {$addr['suburb']}, {$addr['city']}\n"
+        . "Total: {$money($p['total'])}";
+    if ($ordersTo !== '') {
+        record_message('email', 'admin', null, $ordersTo, "New order $ref", $alertBody, $orderId);
+    }
     foreach (q('SELECT id, email FROM admins WHERE is_active = 1') as $a) {
+        if (strcasecmp((string)$a['email'], $ordersTo) === 0) {
+            continue;              // do not send the same person two copies
+        }
         record_message('email', 'admin', (int)$a['id'], $a['email'],
-            "New order $ref", "A new {$p['serviceName']} order came in for $date.", $orderId);
+            "New order $ref", $alertBody, $orderId);
     }
 
     json_out(['reference' => $ref, 'id' => $orderId, 'price' => $p], 201);
@@ -491,7 +530,54 @@ if ($path === '/employee/apply' && $method === 'POST') {
                      [$id, $a['province'] ?? '', $a['city']]);
         }
     }
-    json_out(['id' => $id, 'account_status' => 'pending'], 201);
+    /* The applicant has no account, and will not have one unless an admin
+       approves them, so the uploads that follow are authorised by this
+       one-time token rather than by a session. */
+    json_out([
+        'id'             => $id,
+        'account_status' => 'pending',
+        'upload_token'   => issue_upload_token($id),
+        'required_documents' => $in['id_type'] === 'passport'
+            ? ['id', 'photo', 'criminal_check', 'work_permit']
+            : ['id', 'photo', 'criminal_check'],
+    ], 201);
+}
+
+/**
+ * Upload one document or photo.
+ *
+ * multipart/form-data with: file, doc_type, and either employee_id +
+ * upload_token (an applicant) or nothing (an approved worker already
+ * signed in, changing their profile photo).
+ */
+if ($path === '/employee/documents' && $method === 'POST') {
+    $docType = $_POST['doc_type'] ?? '';
+    $user    = current_user();
+
+    if ($user && $user['role'] === 'employee') {
+        $employeeId = $user['id'];
+    } else {
+        $employeeId = (int)($_POST['employee_id'] ?? 0);
+        $token      = (string)($_POST['upload_token'] ?? '');
+        if (!$employeeId || !check_upload_token($employeeId, $token)) {
+            // One message whether the id is wrong, the token is wrong or
+            // the token has expired: a different answer for each would let
+            // someone probe which application ids exist.
+            fail('That upload link is not valid any more. Apply again, or '
+                 . 'contact the office.', 403);
+        }
+    }
+
+    $row = accept_upload($_FILES['file'] ?? [], $employeeId, $docType);
+    $id  = save_document($row);
+
+    json_out([
+        'id'        => $id,
+        'doc_type'  => $row['doc_type'],
+        'name'      => $row['original_name'],
+        'size'      => $row['size_bytes'],
+        'mime'      => $row['mime_type'],
+    ], 201);
 }
 
 if ($path === '/employee/login' && $method === 'POST') {
@@ -544,6 +630,10 @@ if ($path === '/employee/me') {
         'languages'     => array_column(
             q('SELECT language FROM employee_languages WHERE employee_id = ?', [$u['id']]), 'language'),
         'areas'         => q('SELECT province, city FROM employee_areas WHERE employee_id = ?', [$u['id']]),
+        'documents'     => q('SELECT id, doc_type, original_name, mime_type, size_bytes,
+                                     width_px, height_px, uploaded_at
+                              FROM employee_documents WHERE employee_id = ?
+                              ORDER BY doc_type', [$u['id']]),
     ]);
 }
 
@@ -691,6 +781,13 @@ if ($path === '/admin/customers') {
          FROM customers c
          LEFT JOIN orders o ON o.customer_id = c.id AND o.status <> "cancelled"
          GROUP BY c.id ORDER BY c.created_at DESC')]);
+}
+
+if (count($seg) === 3 && $seg[0] === 'admin' && $seg[1] === 'documents' && $method === 'GET') {
+    // Only an admin, and the file is read off disk rather than linked to,
+    // so there is no URL anyone could share or guess.
+    require_role('admin');
+    stream_document((int)$seg[2]);
 }
 
 if ($path === '/admin/messages') {

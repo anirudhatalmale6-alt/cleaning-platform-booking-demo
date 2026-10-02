@@ -88,6 +88,9 @@ function cfgFromCatalog(cat){
   CFG.stepMins     = Number(s.step_minutes);
   CFG.reduceMins   = Number(s.reduce_minutes);
   CFG.carWashHours = Number(s.car_wash_hours);
+  /* The server sends the SMALLER of your setting and what php.ini allows,
+     so the number on screen is one that will actually work. */
+  CFG.maxUploadMb  = Number(s.max_upload_mb) || 5;
 
   /* The icon is presentation, not data, so it stays on the client and is
      matched by code. A service added in the database that this build has

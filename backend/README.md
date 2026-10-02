@@ -45,6 +45,48 @@ cp api/config.local.example.php api/config.local.php
 `config.local.php` is gitignored. Your database password does not belong
 in a repository, not even a private one.
 
+### 3b. Where the uploads go, and your email address
+
+Two settings decide whether this is safe and whether you hear about
+orders.
+
+**storage_path**, in `config.local.php`. Point it somewhere **outside**
+your `public_html`. Worker ID copies and police clearances are written
+there, and nothing should be able to reach them except the admin download.
+`/api/health` reports `storage_exposed: true` if you have left it inside
+the public folder, so you can check rather than hope.
+
+**Your email addresses**, in the `settings` table. These are the lines to
+change:
+
+```sql
+UPDATE settings SET setting_value = 'you@yourcompany.co.za'  WHERE setting_key = 'orders_email';
+UPDATE settings SET setting_value = 'noreply@yourcompany.co.za' WHERE setting_key = 'from_email';
+UPDATE settings SET setting_value = 'Your Company'            WHERE setting_key = 'from_name';
+UPDATE settings SET setting_value = 'help@yourcompany.co.za'  WHERE setting_key = 'support_email';
+```
+
+`orders_email` is the one that matters most: every new order writes an
+alert addressed to it. If one of your admin accounts already uses that
+address it is not sent twice.
+
+### 3c. Upload size
+
+`settings.max_upload_mb` is what you want. PHP's `upload_max_filesize` and
+`post_max_size` are what the server will physically accept, and on a
+default install both are **2 MB**. The smaller of the two wins, and it is
+the number the application form shows the worker, so they are never told
+5 MB and stopped at 2.
+
+`/api/health` returns `upload_mb` (the real limit) and
+`upload_capped_by_php` (true when php.ini is the thing in the way). If it
+is true, raise both values in `php.ini` or `.htaccess`:
+
+```
+php_value upload_max_filesize 10M
+php_value post_max_size 12M
+```
+
 ### 4. Run it
 
 On your own machine, one command serves the website and the API together:
@@ -118,6 +160,9 @@ order moves.
 | | |
 | --- | --- |
 | `schema.sql` | The whole database. Comments explain why, not just what. |
+| `migrations/` | Run these only if you loaded `schema.sql` before the change they describe. |
+| `api/uploads.php` | Document and photo uploads, and everything they refuse. |
+| `api/gateway_ozow.php` | Ozow, written out but not switched on. See below. |
 | `seed.sql` | Demo rows, generated from the prototype's own data so the two cannot disagree. |
 | `api/index.php` | Every route, in one file, so the surface is visible at a glance. |
 | `api/lib.php` | Connection, sessions, validation, and the price engine. |
@@ -145,6 +190,7 @@ python3 ../run_tests.py --with-backend --base http://localhost:8000 --mysql "-u 
 | `test_schema.py` | The constraints reject what the screens cannot render; the money is frozen; the shortlist query excludes the right people |
 | `test_parity.py` | The browser and the server price 218 bookings identically |
 | `test_api.py` | The rules survive a client that lies: tampered totals, wrong roles, a full cleaner, a pending applicant |
+| `test_uploads.py` | A PHP script renamed to .pdf is refused, a filename cannot escape the folder, the files are not reachable by URL, and only an admin can download one |
 | `test_live.py` | A real browser books a job, and the row is then read back out of MySQL with the right money on it |
 
 `test_api.py` and `test_live.py` book, cancel and approve real rows, so
@@ -153,12 +199,56 @@ for you.
 
 ---
 
+## Uploads
+
+Workers attach their ID copy, a head-and-shoulders photo and a police
+clearance on the application form, and an approved worker can replace
+their photo from their dashboard afterwards.
+
+An applicant has no account yet, so the application is written first and
+hands back a **one-time upload token**, valid for two hours and stored
+hashed exactly as a password would be. The files are uploaded against
+that. Doing it the other way round would mean holding people's ID copies
+for applications that were never finished.
+
+What the server refuses, and why:
+
+| | |
+| --- | --- |
+| A PHP file renamed `.pdf` | The type is read out of the bytes with `finfo`, not taken from the request or the extension |
+| A file that only *starts* like a PNG | `getimagesize()` has to decode it |
+| A filename like `../../index.php` | The stored name is generated here; theirs is kept for display only, with any path stripped |
+| A PDF as a profile photo | That picture is what customers see |
+| Anything over the limit | And it says which limit, and how to raise it |
+
+The files are served only by `GET /api/admin/documents/{id}`, which checks
+for an admin session, sends `Content-Disposition: attachment` and
+`X-Content-Type-Options: nosniff`, so a stored file can never be rendered
+in place by a browser.
+
+## Ozow
+
+`api/gateway_ozow.php` has the whole integration written out with the live
+calls commented. Nothing calls it yet. To switch it on you need a SiteCode
+and a PrivateKey from Ozow Merchant Admin, both of which go in
+`config.local.php`.
+
+**One thing to check before trusting it.** Ozow's documentation and the
+community examples disagree about whether the private key is appended
+before or after the string is lowercased. If your key has uppercase
+letters in it the two produce different hashes, and the only symptom is
+"hash check failed". Both forms are in the file, one line apart. Confirm
+which against the documentation on your own merchant account.
+
+**The rule that matters once it is live:** the order is marked paid by the
+server-to-server notification, never by the customer arriving back at the
+success URL. Anyone can open a success URL without paying.
+
 ## Still to do, and what it needs from you
 
-- **Payments.** The order is marked paid and a `payments` row is written,
-  but no gateway is called yet. Paystack and Peach both work in South
-  Africa. Which one decides what goes in `api/index.php` at the `/orders`
-  endpoint, and nothing else changes.
+- **Payments.** `gateway_ozow.php` is written but not switched on, and the
+  order is marked paid directly so the demo can be clicked through. It
+  needs your Ozow credentials.
 - **Email and SMS.** Every message the brief describes is composed and
   stored in `messages_sent`, and the admin dashboard reads them back.
   Sending them is one function, `record_message()` in `api/lib.php`.
@@ -167,7 +257,5 @@ for you.
   It needs an API key on your billing account, and then the latitude and
   longitude columns on `customer_addresses` and `orders` start being
   filled in for real.
-- **File uploads.** `employee_documents` holds the paths. The upload
-  handler is not written yet, and when it is, those files must sit
-  **outside** the public web root: an ID document on a guessable URL is
-  the worst kind of leak.
+- **Virus scanning.** The uploads are type-checked but not scanned. If you
+  want ClamAV in front of them, it is one call in `accept_upload()`.

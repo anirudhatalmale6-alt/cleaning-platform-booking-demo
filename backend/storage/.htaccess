@@ -1,0 +1,7 @@
+# Belt and braces. These are ID copies and police clearances: nothing
+# should ever be served from this folder directly.
+#
+# This file only helps on Apache. The real protection is putting
+# storage_path OUTSIDE your public folder in config.local.php, which is
+# the only thing that works on every server.
+Require all denied

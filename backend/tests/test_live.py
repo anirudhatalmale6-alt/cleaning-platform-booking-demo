@@ -157,10 +157,15 @@ with sync_playwright() as pw:
           len(sql(f"SELECT * FROM payments WHERE order_id={o['id']}")), 1)
 
     print("\n5. The three automatic messages are in the database")
-    msgs = sql(f"SELECT channel, recipient_type FROM messages_sent WHERE order_id={o['id']}")
-    check("customer, cleaner and both admins were told",
-          sorted(m["recipient_type"] for m in msgs),
-          ["admin", "admin", "customer", "employee"])
+    msgs = sql("SELECT channel, recipient_type, to_address FROM messages_sent "
+               f"WHERE order_id={o['id']}")
+    kinds = sorted(m["recipient_type"] for m in msgs)
+    check("the customer was told", kinds.count("customer"), 1)
+    check("the cleaner was told", kinds.count("employee"), 1)
+    orders_to = sql("SELECT setting_value v FROM settings "
+                    "WHERE setting_key='orders_email'")[0]["v"]
+    check("and the new-order alert went to settings.orders_email",
+          any(m["to_address"] == orders_to for m in msgs), True)
     check("the cleaner got an sms",
           next(m["channel"] for m in msgs if m["recipient_type"] == "employee"), "sms")
 

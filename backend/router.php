@@ -11,6 +11,16 @@
  */
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
+/* Uploaded ID copies and police clearances are never served as files.
+   Apache gets this from backend/storage/.htaccess, but the built-in
+   server ignores .htaccess entirely, so without this line the dev setup
+   would happily hand out a scan of somebody's ID. */
+if (preg_match('#/storage(/|$)#', $path)) {
+    http_response_code(403);
+    echo 'Forbidden';
+    return true;
+}
+
 if (preg_match('#^/api(/.*)?$#', $path, $m)) {
     $_SERVER['PATH_INFO'] = $m[1] ?? '/';
     require __DIR__ . '/api/index.php';

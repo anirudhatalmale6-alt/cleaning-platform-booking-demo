@@ -210,11 +210,17 @@ st, r = adm.call("/admin/login", {"email": "lebo@sparrow.co.za", "password": "de
 check("admin signs in", st, 200)
 st, msgs = adm.call("/admin/messages")
 mine = [m for m in msgs["messages"] if ref in (m["body"] or "") or ref in (m["subject"] or "")]
-# One per admin, so the count follows how many admins exist rather than
-# being a magic number that breaks when a second admin is added.
-check("one message per party",
-      sorted(m["recipient_type"] for m in mine),
-      ["admin", "admin", "customer", "employee"])
+# The customer, the cleaner, the address in settings.orders_email, and
+# each admin account. Asserted by party rather than by count, so adding an
+# admin does not break the test for no reason.
+kinds = sorted(m["recipient_type"] for m in mine)
+check("the customer was told", kinds.count("customer"), 1)
+check("the cleaner was told", kinds.count("employee"), 1)
+check("and the office", kinds.count("admin") >= 1, True)
+st, cat = adm.call("/catalog")
+orders_to = cat["settings"]["orders_email"]
+check("one of them went to the address in settings.orders_email",
+      any(m["to_address"] == orders_to for m in mine), True)
 check("the customer got an email",
       any(m["recipient_type"] == "customer" and m["channel"] == "email" for m in mine), True)
 check("the cleaner got an sms",

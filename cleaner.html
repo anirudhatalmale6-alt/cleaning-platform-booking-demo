@@ -218,23 +218,38 @@ function fs2(){
       <div class="err" id="fIdErr">${kind==='id'?'A South African ID number is 13 digits':'Enter the number on the document'}</div></div>
 
     <div class="fieldset-t">Uploads</div>
-    <div class="field"><label>A copy of your ${kind==='id'?'ID':kind==='passport'?'passport':'work permit'} <span class="req">*</span></label>
-      <div class="drop ${F.upId?'filled':''}" data-up="upId">${F.upId
-        ? `${ico('check',20,2.4)}<div><div class="d-t">${esc(F.upId)}</div><div class="d-s">Tap to replace</div></div>`
-        : `${ico('upload',22,1.8)}<div class="d-t">Upload your document</div><div class="d-s">PDF or photo, under 5 MB</div>`}</div>
-      <div class="err" id="fUpIdErr">Required</div></div>
-    <div class="field"><label>Head and shoulders photo <span class="req">*</span></label>
-      <div class="drop ${F.upPhoto?'filled':''}" data-up="upPhoto">${F.upPhoto
-        ? `${ico('check',20,2.4)}<div><div class="d-t">${esc(F.upPhoto)}</div><div class="d-s">Tap to replace</div></div>`
-        : `${ico('camera',22,1.8)}<div class="d-t">Upload your photo</div><div class="d-s">This is the picture customers see when they pick you</div>`}</div>
-      <div class="err" id="fUpPhErr">Required</div></div>
-    <div class="field"><label>Criminal record check <span class="req">*</span></label>
-      <div class="drop ${F.upCrim?'filled':''}" data-up="upCrim">${F.upCrim
-        ? `${ico('check',20,2.4)}<div><div class="d-t">${esc(F.upCrim)}</div><div class="d-s">Tap to replace</div></div>`
-        : `${ico('shield',22,1.8)}<div class="d-t">Upload your police clearance</div><div class="d-s">Issued in the last 12 months</div>`}</div>
-      <div class="err" id="fUpCrErr">Required</div></div>
+    ${dropField('upId', 'upload',
+        `A copy of your ${kind==='id'?'ID':kind==='passport'?'passport':'work permit'}`,
+        'Upload your document', `PDF or photo, under ${uploadLimitMb()} MB`, 'fUpIdErr')}
+    ${dropField('upPhoto', 'camera', 'Head and shoulders photo',
+        'Upload your photo', 'This is the picture customers see when they pick you',
+        'fUpPhErr', 'image/*')}
+    ${dropField('upCrim', 'shield', 'Criminal record check',
+        'Upload your police clearance', 'Issued in the last 12 months', 'fUpCrErr')}
     ${navBtns()}`;
 }
+
+/* A real file picker behind a styled box.
+   `accept` only filters the picker, it does not stop anything: the server
+   sniffs the bytes and is the thing that decides. */
+function dropField(key, icon, label, callToAction, hint, errId, accept){
+  const picked = F[key];
+  return `<div class="field"><label>${label} <span class="req">*</span></label>
+    <input type="file" id="file_${key}" data-file="${key}" class="visually-hidden"
+      ${accept ? `accept="${accept}"` : 'accept="image/*,application/pdf"'}>
+    <label class="drop ${picked ? 'filled' : ''}" for="file_${key}" data-up="${key}">${picked
+      ? `${ico('check',20,2.4)}<div><div class="d-t">${esc(picked.name)}</div>
+           <div class="d-s">${fileSize(picked.size)} · tap to replace</div></div>`
+      : `${ico(icon,22,1.8)}<div class="d-t">${callToAction}</div><div class="d-s">${hint}</div>`}</label>
+    <div class="err" id="${errId}">Required</div></div>`;
+}
+
+const uploadLimitMb = () =>
+  (typeof CFG.maxUploadMb === 'number' && CFG.maxUploadMb > 0) ? CFG.maxUploadMb : 5;
+
+const fileSize = n => n < 1024 ? n + ' B'
+  : n < 1048576 ? (n / 1024).toFixed(0) + ' KB'
+  : (n / 1048576).toFixed(1) + ' MB';
 
 function fs3(){
   return `<h2 style="font-size:25px;margin-bottom:4px">Two references</h2>
@@ -348,6 +363,10 @@ function validateStep(){
       const e = document.getElementById(err);
       if(!F[key]){ e.style.display = 'block'; ok = false; } else e.style.display = 'none';
     });
+    // `redraw()` rebuilds this step, and a file input cannot be refilled
+    // from script, so the chosen File is held on F and the box shows its
+    // name. Losing it on a redraw would be invisible until submit.
+
   }
 
   if(fstep === 3){
@@ -509,9 +528,13 @@ function tabProfile(){
           <div class="mini">${me.group === 'indoor' ? 'Indoor' : 'Outdoor'} cleaner · ${me.city} · ${me.years} years</div>
         </div>
       </div>
-      <div class="drop" id="photoDrop">${ico('camera',22,1.8)}
+      <input type="file" id="photoFile" class="visually-hidden" accept="image/*">
+      <label class="drop" id="photoDrop" for="photoFile">${ico('camera',22,1.8)}
         <div class="d-t">Change your photo</div>
-        <div class="d-s">Head and shoulders, face clearly visible. This is the picture on your card.</div></div>
+        <div class="d-s">Head and shoulders, face clearly visible. This is the picture on your card.</div></label>
+      ${(me.documents || []).some(d => d.doc_type === 'photo') ? `
+        <div class="mini" style="margin-top:8px">Current photo: ${
+          esc((me.documents.find(d => d.doc_type === 'photo') || {}).original_name || '')}</div>` : ''}
       <div class="grid2" style="margin-top:16px">
         <div class="field"><label>Mobile number</label><input id="pPhone" value="+27 82 000 0000"></div>
         <div class="field"><label>Email address</label><input id="pEmail" value="${me.name.toLowerCase()}.${me.surname[0].toLowerCase()}@example.co.za"></div>
@@ -551,7 +574,8 @@ async function loadMe(){
     city: (r.areas[0] || {}).city || '', prov: (r.areas[0] || {}).province || '',
     account: e.account_status, idNumber: e.id_number,
     skin:'#8a5a3b', hair:'#2a1e18', shirt:'#2F5D50',
-    blocked: r.unavailable || []
+    blocked: r.unavailable || [],
+    documents: r.documents || []
   };
   DB.cleaners = [me];
   DB.bookings = r.jobs.map(j => ({
@@ -646,10 +670,25 @@ function wireForm(){
     F.langs = (F.langs || []).includes(l) ? F.langs.filter(x => x !== l) : [...(F.langs || []), l];
     b.classList.toggle('on');
   });
-  document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => {
-    const key = b.dataset.up;
-    F[key] = { upId:'id-document.pdf', upPhoto:'profile-photo.jpg', upCrim:'police-clearance.pdf' }[key];
-    redraw(); toast('File attached');
+  /* The file is held here until the application is submitted. It cannot be
+     uploaded earlier: there is no employee row to attach it to yet, and
+     parking files against applications that are never finished would mean
+     storing people's ID copies for no reason. */
+  document.querySelectorAll('[data-file]').forEach(inp => inp.onchange = () => {
+    const key = inp.dataset.file;
+    const file = inp.files && inp.files[0];
+    if(!file) return;
+    // The real limit comes from the server, because php.ini can be lower
+    // than the setting and the worker would otherwise be told 5 MB and
+    // stopped at 2.
+    const maxMb = (typeof CFG.maxUploadMb === 'number' && CFG.maxUploadMb > 0)
+      ? CFG.maxUploadMb : 5;
+    if(file.size > maxMb * 1024 * 1024){
+      toast(`That file is ${(file.size/1048576).toFixed(1)} MB. The limit is ${maxMb} MB.`, 'alert');
+      inp.value = ''; return;
+    }
+    F[key] = file;
+    redraw(); toast(file.name + ' attached');
   });
   on('fAgree', () => { F.agree = !F.agree; redraw(); });
 
@@ -680,7 +719,8 @@ function fillCityChips(){
   });
 }
 
-function submitApplication(){
+async function submitApplication(){
+  if(API.live) return submitApplicationLive();
   const id = 'cl' + (DB.cleaners.length + 20);
   DB.cleaners.push({
     id, name:F.first, surname:F.last, initials:(F.first[0] + F.last[0]).toUpperCase(),
@@ -691,6 +731,78 @@ function submitApplication(){
   DB.applications.unshift({ id, submitted:TODAY });
   fstep = 4; render();
   toast('Application submitted');
+}
+
+/* The real thing: the application is written first, which hands back a
+   one-time token, and the documents are uploaded against it. Done in that
+   order because an applicant has no account to authenticate with, and
+   because an application that lands without its files can still be chased,
+   whereas files with no application are just somebody's ID sitting on a
+   disk. */
+async function submitApplicationLive(){
+  const btn = document.getElementById('fNext');
+  const setBusy = t => { if(btn){ btn.disabled = true; btn.textContent = t; } };
+  setBusy('Sending your application…');
+
+  let created;
+  try {
+    created = await API.post('employee/apply', {
+      first_name: F.first, last_name: F.last, email: F.email, phone: F.phone,
+      date_of_birth: F.dob,
+      id_type: F.idKind === 'passport' ? 'passport' : 'sa_id',
+      id_number: F.idNum,
+      service_group: F.group,
+      years_experience: +F.years || 0,
+      has_own_transport: !!F.transport,
+      languages: F.langs || ['English'],
+      areas: (F.cities || []).map(city => ({ province: F.prov, city }))
+    });
+  } catch (e) {
+    if(btn){ btn.disabled = false; btn.textContent = 'Submit application'; }
+    toast(e.message || 'That application could not be sent', 'alert');
+    return;
+  }
+
+  const files = [['upId','id'], ['upPhoto','photo'], ['upCrim','criminal_check']]
+    .filter(([key]) => F[key] instanceof File);
+  const failed = [];
+  for(let i = 0; i < files.length; i++){
+    const [key, docType] = files[i];
+    setBusy(`Uploading ${i + 1} of ${files.length}…`);
+    const fd = new FormData();
+    fd.append('file', F[key]);
+    fd.append('doc_type', docType);
+    fd.append('employee_id', created.id);
+    fd.append('upload_token', created.upload_token);
+    try {
+      const res = await fetch(API.base + 'employee/documents',
+                              { method:'POST', credentials:'include', body: fd });
+      if(!res.ok){
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Upload failed');
+      }
+    } catch (e) {
+      failed.push(`${F[key].name}: ${e.message}`);
+    }
+  }
+
+  F.applicationId = created.id;
+  fstep = 4; render();
+  if(failed.length){
+    // The application exists either way. Saying so beats a silent failure
+    // that the applicant only discovers when they are declined for a
+    // missing document.
+    toast('Application sent, but ' + failed.length + ' file did not upload', 'alert');
+    modal({ title:'Some files did not upload',
+      sub:'Your application has been sent. These documents need another try.',
+      body:`<ul style="margin:0;padding-left:18px">${failed.map(x =>
+              `<li>${esc(x)}</li>`).join('')}</ul>
+            <div class="note warn" style="margin-top:12px">${ico('info',16,2)}
+              <span>Contact the office and they will send you a new upload link.</span></div>`,
+      actions:[{ label:'Close', cls:'btn-outline' }] });
+  } else {
+    toast('Application and documents sent');
+  }
 }
 
 function wireTab(){
@@ -720,7 +832,34 @@ function wireTab(){
     else { me.blocked.push(iso); toast('Marked unavailable on ' + fmtDate(iso)); }
     renderTab();
   });
-  on('photoDrop', () => toast('Photo updated — customers see it right away'));
+  /* A real photo upload for an approved cleaner. No token here: she is
+     signed in, and the API takes the employee id from the session rather
+     than from anything this page sends, so she can only replace her own. */
+  const pf = document.getElementById('photoFile');
+  if(pf) pf.onchange = async () => {
+    const file = pf.files && pf.files[0];
+    if(!file) return;
+    if(!API.live){ toast('Photo updated — customers see it right away'); return; }
+    const drop = document.getElementById('photoDrop');
+    const was = drop ? drop.innerHTML : '';
+    if(drop) drop.innerHTML = '<div class="d-t">Uploading…</div>';
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('doc_type', 'photo');
+    try {
+      const res = await fetch(API.base + 'employee/documents',
+                              { method:'POST', credentials:'include', body: fd });
+      const d = await res.json().catch(() => ({}));
+      if(!res.ok) throw new Error(d.error || 'Upload failed');
+      await loadMe();
+      renderTab();
+      toast('Photo updated — customers see it right away');
+    } catch (e) {
+      if(drop) drop.innerHTML = was;
+      pf.value = '';
+      toast(e.message || 'That photo could not be uploaded', 'alert');
+    }
+  };
   on('pSave', () => toast('Profile saved'));
 }
 

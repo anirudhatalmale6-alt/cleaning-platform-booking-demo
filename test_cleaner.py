@@ -13,6 +13,23 @@ HERE  = pathlib.Path(__file__).parent
 URL   = (HERE / "cleaner.html").as_uri()
 SHOTS = HERE / "shots"; SHOTS.mkdir(exist_ok=True)
 
+import struct, zlib
+
+
+def _png(w=400, h=400):
+    """A small but genuine PNG, built here so the suite needs no fixture file."""
+    def chunk(tag, data):
+        c = tag + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c) & 0xFFFFFFFF)
+    raw = b"".join(b"\x00" + bytes([(x * 5) % 256 for x in range(w * 3)]) for _ in range(h))
+    return (b"\x89PNG\r\n\x1a\n"
+            + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw))
+            + chunk(b"IEND", b""))
+
+
+PNG_BYTES = _png(300, 300)
+
 fails = []
 def check(label, got, want):
     ok = got == want
@@ -143,11 +160,25 @@ def run(pw):
     pg.wait_for_timeout(150)
     check("short ID rejected", pg.locator("#fIdNum").evaluate("e => e.closest('.field').className"), "field bad")
     check("missing uploads called out", pg.locator("#fUpIdErr").is_visible(), True)
-    pg.fill("#fIdNum", "9403045800083")
-    for k in ("upId", "upPhoto", "upCrim"):
-        pg.click(f"[data-up='{k}']")
-        pg.wait_for_timeout(120)
+    pg.fill("#fIdNum", "9403045800081")
+    # These are real <input type="file"> elements now, not boxes that fake a
+    # filename, so the test has to hand them actual bytes. Clicking the
+    # label only opens the operating system's picker, which a browser
+    # automation cannot answer.
+    files = {
+        "upId":    ("id-copy.pdf",   b"%PDF-1.4\ntrailer<</Root 1 0 R>>\n%%EOF\n", "application/pdf"),
+        "upPhoto": ("me.png",        PNG_BYTES, "image/png"),
+        "upCrim":  ("clearance.pdf", b"%PDF-1.4\ntrailer<</Root 1 0 R>>\n%%EOF\n", "application/pdf"),
+    }
+    for key, (name, data, mime) in files.items():
+        pg.set_input_files(f"#file_{key}",
+                           {"name": name, "mimeType": mime, "buffer": data})
+        pg.wait_for_timeout(150)
     check("all three attached", pg.locator(".drop.filled").count(), 3)
+    check("and the box shows the real filename, not a stub",
+          "id-copy.pdf" in pg.locator("[data-up='upId']").inner_text(), True)
+    check("with its size", "KB" in pg.locator("[data-up='upPhoto']").inner_text()
+          or "B" in pg.locator("[data-up='upPhoto']").inner_text(), True)
     pg.click("#fNext")
     pg.wait_for_selector("#fR1Name")
 

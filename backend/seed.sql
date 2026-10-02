@@ -46,14 +46,14 @@ INSERT INTO service_extras (code,name,description,extra_set,minutes,price,price_
 
 -- Demo password for every account below is: demo1234
 INSERT INTO admins (id,first_name,last_name,email,phone,password_hash,role) VALUES
-  (1,'Lebo','Mthembu','lebo@sparrow.co.za','+27 82 111 0001','$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','superadmin'),
-  (2,'Pieter','Naude','pieter@sparrow.co.za','+27 82 111 0002','$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','admin');
+  (1,'Lebo','Mthembu','lebo@sparrow.co.za','+27 82 111 0001','$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','superadmin'),
+  (2,'Pieter','Naude','pieter@sparrow.co.za','+27 82 111 0002','$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','admin');
 
 INSERT INTO customers (id,first_name,last_name,email,phone,password_hash,is_guest) VALUES
-  (1,'Thandi','Mokoena','thandi.m@example.co.za','+27 82 445 1190','$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi',0),
-  (2,'Riaan','van Wyk','riaan.vw@example.co.za','+27 83 220 7712','$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi',0),
-  (3,'Aisha','Patel','aisha.p@example.co.za','+27 71 998 0032','$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi',0),
-  (4,'Johan','Botha','j.botha@example.co.za','+27 84 551 3390','$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi',0);
+  (1,'Thandi','Mokoena','thandi.m@example.co.za','+27 82 445 1190','$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni',0),
+  (2,'Riaan','van Wyk','riaan.vw@example.co.za','+27 83 220 7712','$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni',0),
+  (3,'Aisha','Patel','aisha.p@example.co.za','+27 71 998 0032','$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni',0),
+  (4,'Johan','Botha','j.botha@example.co.za','+27 84 551 3390','$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni',0);
 
 INSERT INTO customer_addresses (id,customer_id,label,property_type,street_line,unit_number,suburb,city,province,access_notes,is_primary) VALUES
   (1,1,'Home','Flat / Apartment','18 Ocean View Drive','Flat 4B','Sea Point','Cape Town','Western Cape','Buzzer 12. Two cats — keep the balcony door shut.',1),
@@ -66,15 +66,15 @@ INSERT INTO customer_addresses (id,customer_id,label,property_type,street_line,u
 -- Workers. cl5 and cl6 are still pending, cl9 was declined with a
 -- reason, so the sign-in gate has all three states to show.
 INSERT INTO employees (id,first_name,last_name,email,phone,date_of_birth,id_type,id_number,service_group,years_experience,has_own_transport,password_hash,account_status,decline_reason,decided_by_admin_id) VALUES
-  (1,'Nomsa','Mabaso','nomsa.m@example.co.za','+27 71 103 1011','2001-06-08','sa_id','0106085101084','indoor',6,0,'$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','approved',NULL,1),
-  (2,'Sipho','Dlamini','sipho.d@example.co.za','+27 72 106 1022','1998-11-15','sa_id','9811155102081','outdoor',4,0,'$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','approved',NULL,1),
-  (3,'Grace','Nkosi','grace.n@example.co.za','+27 73 109 1033','1995-04-22','sa_id','9504225103083','indoor',9,1,'$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','approved',NULL,1),
-  (4,'Zanele','Ndlovu','zanele.n@example.co.za','+27 74 112 1044','1992-09-02','sa_id','9209025104084','indoor',3,0,'$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','approved',NULL,1),
-  (5,'Thabo','Maseko','thabo.m@example.co.za','+27 75 115 1055','1989-02-09','sa_id','8902095105088','outdoor',2,0,'$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','approved',NULL,1),
-  (6,'Lerato','Molefe','lerato.m@example.co.za','+27 76 118 1066','1986-07-16','sa_id','8607165106086','indoor',3,1,'$2y$10$HeJ./aMXdfdaAgEjXLZLpuVyFcuJq3T4B/eZbnHETNPniLVUFDsOi','approved',NULL,1),
-  (7,'Andile','Khumalo','andile.k@example.co.za','+27 77 121 1077','1983-12-23','sa_id','8312235107082','outdoor',2,0,NULL,'pending',NULL,NULL),
-  (8,'Precious','Sithole','precious.s@example.co.za','+27 78 124 1088','2004-05-03','sa_id','0405035108080','indoor',5,0,NULL,'pending',NULL,NULL),
-  (9,'Bongani','Zulu','bongani.z@example.co.za','+27 79 127 1099','2001-10-10','sa_id','0110105109086','outdoor',1,1,NULL,'declined','Criminal record check came back unresolved. Welcome to reapply once it clears.',1);
+  (1,'Nomsa','Mabaso','nomsa.m@example.co.za','+27 71 103 1011','2001-06-08','sa_id','0106085101082','indoor',6,0,'$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','approved',NULL,1),
+  (2,'Sipho','Dlamini','sipho.d@example.co.za','+27 72 106 1022','1998-11-15','sa_id','9811155102081','outdoor',4,0,'$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','approved',NULL,1),
+  (3,'Grace','Nkosi','grace.n@example.co.za','+27 73 109 1033','1995-04-22','sa_id','9504225103086','indoor',9,1,'$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','approved',NULL,1),
+  (4,'Zanele','Ndlovu','zanele.n@example.co.za','+27 74 112 1044','1992-09-02','sa_id','9209025104082','indoor',3,0,'$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','approved',NULL,1),
+  (5,'Thabo','Maseko','thabo.m@example.co.za','+27 75 115 1055','1989-02-09','sa_id','8902095105085','outdoor',2,0,'$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','approved',NULL,1),
+  (6,'Lerato','Molefe','lerato.m@example.co.za','+27 76 118 1066','1986-07-16','sa_id','8607165106083','indoor',3,1,'$2y$10$KNC84mm0k7C3WF0QTJtBpOWyCK/tk34dyo.y9OtXMTkhz7SIDd2ni','approved',NULL,1),
+  (7,'Andile','Khumalo','andile.k@example.co.za','+27 77 121 1077','1983-12-23','sa_id','8312235107084','outdoor',2,0,NULL,'pending',NULL,NULL),
+  (8,'Precious','Sithole','precious.s@example.co.za','+27 78 124 1088','2004-05-03','sa_id','0405035108084','indoor',5,0,NULL,'pending',NULL,NULL),
+  (9,'Bongani','Zulu','bongani.z@example.co.za','+27 79 127 1099','2001-10-10','sa_id','0110105109083','outdoor',1,1,NULL,'declined','Criminal record check came back unresolved. Welcome to reapply once it clears.',1);
 
 INSERT INTO employee_languages (employee_id,language) VALUES
   (1,'English'),

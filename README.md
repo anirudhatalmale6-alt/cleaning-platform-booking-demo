@@ -168,7 +168,7 @@ python3 test_admin.py         # approve, decline-with-reason, employees by role,
 python3 test_theme.py         # the palettes, and a contrast audit of every one
 
 python3 run_tests.py --with-backend \
-    --base http://localhost:8000 --mysql "-u root -pSECRET"   # all nine
+    --base http://localhost:8000 --mysql "-u root -pSECRET"   # all ten
 ```
 
 Playwright drives the real pages, desktop and mobile. Prices are recomputed
